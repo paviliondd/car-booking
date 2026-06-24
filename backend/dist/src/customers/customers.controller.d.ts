@@ -1,0 +1,102 @@
+import { CustomersService } from './customers.service';
+import { CustomerSegment } from '@prisma/client';
+export declare class CustomersController {
+    private readonly customersService;
+    constructor(customersService: CustomersService);
+    findAll(): Promise<{
+        id: string;
+        fullName: string;
+        phone: string;
+        idCardNo: string;
+        segment: import("@prisma/client").$Enums.CustomerSegment;
+        notes: string | null;
+        totalBookings: number;
+        totalRevenue: number;
+        lastRentalDate: Date | null;
+        createdAt: Date;
+    }[]>;
+    findOne(id: string): Promise<{
+        bookings: ({
+            vehicle: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                plateNumber: string;
+                brand: string;
+                model: string;
+                year: number;
+                seats: number;
+                transmission: string;
+                fuel: string;
+                color: string;
+                dailyPrice: number;
+                weekendPrice: number;
+                holidayPrice: number;
+                penaltyRate: number;
+                images: string[];
+                videoUrl: string | null;
+                status: import("@prisma/client").$Enums.VehicleStatus;
+            };
+            payment: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                status: import("@prisma/client").$Enums.PaymentStatus;
+                amount: number;
+                transactionId: string | null;
+                bookingId: string;
+                method: import("@prisma/client").$Enums.PaymentMethod;
+                paidAt: Date | null;
+            } | null;
+        } & {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            notes: string | null;
+            status: import("@prisma/client").$Enums.BookingStatus;
+            startDate: Date;
+            endDate: Date;
+            vehicleId: string;
+            bookingNumber: string;
+            customerId: string;
+            pickupLocation: string;
+            dropoffLocation: string;
+            totalDays: number;
+            basePrice: number;
+            discountAmount: number;
+            totalPrice: number;
+            couponCode: string | null;
+            staffId: string | null;
+        })[];
+    } & {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        phone: string;
+        fullName: string;
+        idCardNo: string;
+        idCardFront: string | null;
+        idCardBack: string | null;
+        driverLicense: string | null;
+        segment: import("@prisma/client").$Enums.CustomerSegment;
+        notes: string | null;
+        affiliateId: string | null;
+        userId: string | null;
+    }>;
+    updateSegment(id: string, segment: CustomerSegment, notes?: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        phone: string;
+        fullName: string;
+        idCardNo: string;
+        idCardFront: string | null;
+        idCardBack: string | null;
+        driverLicense: string | null;
+        segment: import("@prisma/client").$Enums.CustomerSegment;
+        notes: string | null;
+        affiliateId: string | null;
+        userId: string | null;
+    }>;
+    private prismaCustomerUpdate;
+}

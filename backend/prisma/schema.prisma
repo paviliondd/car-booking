@@ -1,0 +1,226 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  STAFF
+  CUSTOMER
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  RENTED
+  MAINTENANCE
+  LOCKED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  RENTING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  DEPOSITED
+  PAID
+  REFUNDED
+}
+
+enum PaymentMethod {
+  MOMO
+  BANK_TRANSFER
+  CASH
+}
+
+enum CustomerSegment {
+  REGULAR
+  VIP
+  BLACKLIST
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  customer  Customer?
+  bookings  Booking[]   @relation("StaffBookings")
+  auditLogs AuditLog[]
+}
+
+model Customer {
+  id             String          @id @default(uuid())
+  userId         String?         @unique
+  phone          String          @unique
+  fullName       String
+  idCardNo       String          @unique // CCCD
+  idCardFront    String?         // URL ảnh mặt trước
+  idCardBack     String?         // URL ảnh mặt sau
+  driverLicense  String?         // URL ảnh GPLX
+  segment        CustomerSegment @default(REGULAR)
+  notes          String?         // Ghi chú CRM
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  user           User?           @relation(fields: [userId], references: [id])
+  bookings       Booking[]
+  affiliateId    String?
+  referrer       Affiliate?      @relation(fields: [affiliateId], references: [id])
+}
+
+model Vehicle {
+  id             String        @id @default(uuid())
+  plateNumber    String        @unique
+  brand          String
+  model          String
+  year           Int
+  seats          Int
+  transmission   String        // AUTO, MANUAL
+  fuel           String        // GASOLINE, DIESEL, ELECTRIC
+  color          String
+  dailyPrice     Float
+  weekendPrice   Float
+  holidayPrice   Float
+  penaltyRate    Float         // Phạt trả muộn/giờ
+  images         String[]      // URLs ảnh xe
+  videoUrl       String?
+  status         VehicleStatus @default(AVAILABLE)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  bookings       Booking[]
+  maintenances   Maintenance[]
+  expenses       Expense[]
+  revenues       Revenue[]
+}
+
+model Booking {
+  id              String        @id @default(uuid())
+  bookingNumber   String        @unique // Mã đặt xe VD: BK-102938
+  customerId      String
+  vehicleId       String
+  startDate       DateTime
+  endDate         DateTime
+  pickupLocation  String
+  dropoffLocation String
+  totalDays       Int
+  basePrice       Float
+  discountAmount  Float         @default(0)
+  totalPrice      Float
+  status          BookingStatus @default(PENDING)
+  notes           String?
+  couponCode      String?
+  staffId         String?       // Nhân viên xử lý đơn
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  customer        Customer      @relation(fields: [customerId], references: [id])
+  vehicle         Vehicle       @relation(fields: [vehicleId], references: [id])
+  staff           User?         @relation("StaffBookings", fields: [staffId], references: [id])
+  payment         Payment?
+  coupon          Coupon?       @relation(fields: [couponCode], references: [code])
+  auditLogs       AuditLog[]
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  bookingId     String        @unique
+  amount        Float
+  status        PaymentStatus @default(UNPAID)
+  method        PaymentMethod
+  transactionId String?       @unique // Mã giao dịch của MoMo hoặc PayOS
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  booking       Booking       @relation(fields: [bookingId], references: [id])
+}
+
+model Maintenance {
+  id             String        @id @default(uuid())
+  vehicleId      String
+  type           String        // OIL_CHANGE, INSPECTION, INSURANCE, REPAIR
+  scheduledDate  DateTime
+  completedDate  DateTime?
+  cost           Float         @default(0)
+  description    String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  vehicle        Vehicle       @relation(fields: [vehicleId], references: [id])
+}
+
+model Expense {
+  id             String        @id @default(uuid())
+  vehicleId      String
+  category       String        // MAINTENANCE, INSURANCE, REGISTRATION, DEPRECIATION
+  amount         Float
+  date           DateTime
+  description    String?
+  createdAt      DateTime      @default(now())
+
+  vehicle        Vehicle       @relation(fields: [vehicleId], references: [id])
+}
+
+model Revenue {
+  id             String        @id @default(uuid())
+  vehicleId      String
+  bookingId      String        @unique
+  amount         Float
+  date           DateTime
+  createdAt      DateTime      @default(now())
+
+  vehicle        Vehicle       @relation(fields: [vehicleId], references: [id])
+}
+
+model Coupon {
+  code           String        @id // Mã giảm giá
+  discountType   String        // PERCENTAGE, FIXED_AMOUNT
+  value          Float
+  minOrderValue  Float         @default(0)
+  maxDiscount    Float?
+  startDate      DateTime
+  endDate        DateTime
+  usageLimit     Int
+  usedCount      Int           @default(0)
+  createdAt      DateTime      @default(now())
+
+  bookings       Booking[]
+}
+
+model Affiliate {
+  id             String        @id @default(uuid())
+  code           String        @unique // Mã giới thiệu
+  userId         String        @unique
+  commissionRate Float         @default(0.05) // 5%
+  balance        Float         @default(0)
+  createdAt      DateTime      @default(now())
+
+  referrals      Customer[]
+}
+
+model AuditLog {
+  id             String        @id @default(uuid())
+  userId         String?
+  action         String        // UPDATE_PRICE, UPDATE_BOOKING, CRM_NOTE...
+  targetTable    String
+  targetId       String
+  oldValue       Json?
+  newValue       Json?
+  createdAt      DateTime      @default(now())
+
+  user           User?         @relation(fields: [userId], references: [id])
+  booking        Booking?      @relation(fields: [targetId], references: [id], map: "AuditLog_booking_fk")
+}
