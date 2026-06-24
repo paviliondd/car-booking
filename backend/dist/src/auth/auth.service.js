@@ -114,6 +114,88 @@ let AuthService = class AuthService {
             },
         };
     }
+    async oauthLogin(email, name) {
+        let user = await this.prisma.user.findUnique({
+            where: { email },
+        });
+        if (!user) {
+            const dummyPassword = await bcrypt.hash(`OAuth-${Math.random()}`, 10);
+            user = await this.prisma.user.create({
+                data: {
+                    email,
+                    password: dummyPassword,
+                    name,
+                    role: client_1.Role.CUSTOMER,
+                    customer: {
+                        create: {
+                            phone: `0000-${Date.now()}`,
+                            fullName: name,
+                            idCardNo: `CCCD-${Date.now()}`,
+                        },
+                    },
+                },
+            });
+        }
+        const payload = { email: user.email, sub: user.id, role: user.role };
+        return {
+            accessToken: this.jwtService.sign(payload),
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+            },
+        };
+    }
+    async upgradeOwner(userId, dto) {
+        return await this.prisma.user.update({
+            where: { id: userId },
+            data: {
+                phone: dto.phone,
+                idCardNo: dto.idCardNo,
+                address: dto.address,
+                ownerRequestAt: new Date(),
+                isVerifiedOwner: false,
+            },
+        });
+    }
+    async getOwnerRequests() {
+        return await this.prisma.user.findMany({
+            where: {
+                ownerRequestAt: { not: null },
+                isVerifiedOwner: false,
+            },
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                phone: true,
+                idCardNo: true,
+                address: true,
+                ownerRequestAt: true,
+            },
+        });
+    }
+    async verifyOwner(userId, approve) {
+        if (approve) {
+            return await this.prisma.user.update({
+                where: { id: userId },
+                data: {
+                    isVerifiedOwner: true,
+                    role: client_1.Role.OWNER,
+                },
+            });
+        }
+        else {
+            return await this.prisma.user.update({
+                where: { id: userId },
+                data: {
+                    ownerRequestAt: null,
+                    isVerifiedOwner: false,
+                },
+            });
+        }
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([

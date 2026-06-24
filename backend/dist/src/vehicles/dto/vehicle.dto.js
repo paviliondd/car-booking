@@ -27,6 +27,12 @@ class CreateVehicleDto {
     penaltyRate;
     images;
     videoUrl;
+    limitKmPerDay;
+    overLimitFee;
+    pickupLocation;
+    latitude;
+    longitude;
+    terms;
 }
 exports.CreateVehicleDto = CreateVehicleDto;
 __decorate([
@@ -100,6 +106,40 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateVehicleDto.prototype, "videoUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], CreateVehicleDto.prototype, "limitKmPerDay", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], CreateVehicleDto.prototype, "overLimitFee", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateVehicleDto.prototype, "pickupLocation", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], CreateVehicleDto.prototype, "latitude", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], CreateVehicleDto.prototype, "longitude", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateVehicleDto.prototype, "terms", void 0);
 class SearchVehicleDto {
     startDate;
     endDate;

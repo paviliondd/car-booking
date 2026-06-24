@@ -44,16 +44,38 @@ let VehiclesController = class VehiclesController {
             seats: seats ? parseInt(seats, 10) : undefined,
         });
     }
-    async create(dto) {
-        return await this.vehiclesService.create(dto);
+    async getMyCars(req) {
+        return await this.vehiclesService.findByOwner(req.user.id);
     }
-    async update(id, dto) {
+    async create(req, dto) {
+        const ownerId = req.user.role === client_1.Role.OWNER ? req.user.id : undefined;
+        return await this.vehiclesService.create(dto, ownerId);
+    }
+    async update(req, id, dto) {
+        if (req.user.role === client_1.Role.OWNER) {
+            const car = await this.vehiclesService.findOne(id);
+            if (car.ownerId !== req.user.id) {
+                throw new common_1.BadRequestException('Bạn không sở hữu phương tiện này');
+            }
+        }
         return await this.vehiclesService.update(id, dto);
     }
-    async updateStatus(id, status) {
+    async updateStatus(req, id, status) {
+        if (req.user.role === client_1.Role.OWNER) {
+            const car = await this.vehiclesService.findOne(id);
+            if (car.ownerId !== req.user.id) {
+                throw new common_1.BadRequestException('Bạn không sở hữu phương tiện này');
+            }
+        }
         return await this.vehiclesService.updateStatus(id, status);
     }
-    async delete(id) {
+    async delete(req, id) {
+        if (req.user.role === client_1.Role.OWNER) {
+            const car = await this.vehiclesService.findOne(id);
+            if (car.ownerId !== req.user.id) {
+                throw new common_1.BadRequestException('Bạn không sở hữu phương tiện này');
+            }
+        }
         return await this.vehiclesService.delete(id);
     }
 };
@@ -99,40 +121,53 @@ __decorate([
 ], VehiclesController.prototype, "findAll", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF),
-    (0, common_1.Post)(),
-    __param(0, (0, common_1.Body)()),
+    (0, roles_decorator_1.Roles)(client_1.Role.OWNER),
+    (0, common_1.Get)('owner/my-cars'),
+    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [vehicle_dto_1.CreateVehicleDto]),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], VehiclesController.prototype, "getMyCars", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF, client_1.Role.OWNER),
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, vehicle_dto_1.CreateVehicleDto]),
     __metadata("design:returntype", Promise)
 ], VehiclesController.prototype, "create", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF, client_1.Role.OWNER),
     (0, common_1.Put)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", Promise)
 ], VehiclesController.prototype, "update", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF, client_1.Role.OWNER),
     (0, common_1.Patch)(':id/status'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)('status')),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)('status')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [Object, String, String]),
     __metadata("design:returntype", Promise)
 ], VehiclesController.prototype, "updateStatus", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.OWNER),
     (0, common_1.Delete)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], VehiclesController.prototype, "delete", null);
 exports.VehiclesController = VehiclesController = __decorate([

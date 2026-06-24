@@ -11,6 +11,10 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { CustomersModule } from './customers/customers.module';
 import { AuditModule } from './audit/audit.module';
+import { ContractsModule } from './contracts/contracts.module';
+import { ReviewsModule } from './reviews/reviews.module';
+import { TicketsModule } from './tickets/tickets.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -28,6 +32,10 @@ import { AuditModule } from './audit/audit.module';
     MaintenanceModule,
     CustomersModule,
     AuditModule,
+    ContractsModule,
+    ReviewsModule,
+    TicketsModule,
+    ChatModule,
   ],
 })
 export class AppModule {}

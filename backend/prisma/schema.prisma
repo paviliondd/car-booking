@@ -10,6 +10,7 @@ enum Role {
   ADMIN
   STAFF
   CUSTOMER
+  OWNER
 }
 
 enum VehicleStatus {
@@ -47,17 +48,30 @@ enum CustomerSegment {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      Role     @default(CUSTOMER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(uuid())
+  email           String   @unique
+  password        String
+  name            String
+  role            Role     @default(CUSTOMER)
+  avatar          String?
+  phone           String?  @unique
+  idCardNo        String?  @unique
+  address         String?
   
-  customer  Customer?
-  bookings  Booking[]   @relation("StaffBookings")
-  auditLogs AuditLog[]
+  // Owner Verification
+  isVerifiedOwner Boolean  @default(false)
+  ownerRequestAt  DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  customer        Customer?
+  vehicles        Vehicle[]   @relation("OwnerVehicles")
+  bookings        Booking[]   @relation("StaffBookings")
+  auditLogs       AuditLog[]
+  tickets         SupportTicket[]
+  sentMessages    ChatMessage[]   @relation("SentMessages")
+  receivedMessages ChatMessage[]  @relation("ReceivedMessages")
 }
 
 model Customer {
@@ -76,6 +90,7 @@ model Customer {
 
   user           User?           @relation(fields: [userId], references: [id])
   bookings       Booking[]
+  reviews        Review[]
   affiliateId    String?
   referrer       Affiliate?      @relation(fields: [affiliateId], references: [id])
 }
@@ -97,6 +112,19 @@ model Vehicle {
   images         String[]      // URLs ảnh xe
   videoUrl       String?
   status         VehicleStatus @default(AVAILABLE)
+  
+  // Km Limit & Location Map
+  limitKmPerDay  Float?
+  overLimitFee   Float?
+  pickupLocation String        @default("Showroom Khuất Duy Tiến")
+  latitude       Float?
+  longitude      Float?
+  terms          String?       @db.Text
+  
+  // Owner link
+  ownerId        String?
+  owner          User?         @relation("OwnerVehicles", fields: [ownerId], references: [id])
+  
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
@@ -104,6 +132,7 @@ model Vehicle {
   maintenances   Maintenance[]
   expenses       Expense[]
   revenues       Revenue[]
+  reviews        Review[]
 }
 
 model Booking {
@@ -123,6 +152,13 @@ model Booking {
   notes           String?
   couponCode      String?
   staffId         String?       // Nhân viên xử lý đơn
+  
+  // Insurance & Deposit
+  insuranceType   String        @default("NONE") // NONE, BASIC, PREMIUM
+  insuranceFee    Float         @default(0)
+  depositPercent  Float         @default(30.0)
+  depositAmount   Float?
+  
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -131,6 +167,7 @@ model Booking {
   staff           User?         @relation("StaffBookings", fields: [staffId], references: [id])
   payment         Payment?
   coupon          Coupon?       @relation(fields: [couponCode], references: [code])
+  contract        Contract?
   auditLogs       AuditLog[]
 }
 
@@ -146,6 +183,56 @@ model Payment {
   updatedAt     DateTime      @updatedAt
 
   booking       Booking       @relation(fields: [bookingId], references: [id])
+}
+
+model Contract {
+  id              String    @id @default(uuid())
+  bookingId       String    @unique
+  renterSignature String?   @db.Text
+  ownerSignature  String?   @db.Text
+  signedAt        DateTime?
+  pdfUrl          String?
+  terms           String    @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  booking         Booking   @relation(fields: [bookingId], references: [id])
+}
+
+model Review {
+  id              String    @id @default(uuid())
+  vehicleId       String
+  customerId      String
+  rating          Int
+  comment         String?   @db.Text
+  createdAt       DateTime  @default(now())
+
+  vehicle         Vehicle   @relation(fields: [vehicleId], references: [id])
+  customer        Customer  @relation(fields: [customerId], references: [id])
+}
+
+model SupportTicket {
+  id              String    @id @default(uuid())
+  userId          String
+  subject         String
+  message         String    @db.Text
+  status          String    @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  reply           String?   @db.Text
+  repliedAt       DateTime?
+  createdAt       DateTime  @default(now())
+
+  user            User      @relation(fields: [userId], references: [id])
+}
+
+model ChatMessage {
+  id              String    @id @default(uuid())
+  senderId        String
+  receiverId      String
+  message         String    @db.Text
+  createdAt       DateTime  @default(now())
+
+  sender          User      @relation("SentMessages", fields: [senderId], references: [id])
+  receiver        User      @relation("ReceivedMessages", fields: [receiverId], references: [id])
 }
 
 model Maintenance {

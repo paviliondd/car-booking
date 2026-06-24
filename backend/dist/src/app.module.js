@@ -20,6 +20,10 @@ const analytics_module_1 = require("./analytics/analytics.module");
 const maintenance_module_1 = require("./maintenance/maintenance.module");
 const customers_module_1 = require("./customers/customers.module");
 const audit_module_1 = require("./audit/audit.module");
+const contracts_module_1 = require("./contracts/contracts.module");
+const reviews_module_1 = require("./reviews/reviews.module");
+const tickets_module_1 = require("./tickets/tickets.module");
+const chat_module_1 = require("./chat/chat.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -40,6 +44,10 @@ exports.AppModule = AppModule = __decorate([
             maintenance_module_1.MaintenanceModule,
             customers_module_1.CustomersModule,
             audit_module_1.AuditModule,
+            contracts_module_1.ContractsModule,
+            reviews_module_1.ReviewsModule,
+            tickets_module_1.TicketsModule,
+            chat_module_1.ChatModule,
         ],
     })
 ], AppModule);

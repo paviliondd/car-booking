@@ -34,6 +34,9 @@ let BookingsController = class BookingsController {
     async findAll() {
         return await this.bookingsService.findAll();
     }
+    async getOwnerRequests(req) {
+        return await this.bookingsService.findOwnerBookings(req.user.id);
+    }
     async findOne(id) {
         return await this.bookingsService.findOne(id);
     }
@@ -66,6 +69,15 @@ __decorate([
 ], BookingsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.OWNER),
+    (0, common_1.Get)('owner/my-requests'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "getOwnerRequests", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF),
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
@@ -75,7 +87,7 @@ __decorate([
 ], BookingsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF, client_1.Role.OWNER),
     (0, common_1.Patch)(':id/status'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)('status')),

@@ -58,6 +58,34 @@ export class CreateVehicleDto {
   @IsString()
   @IsOptional()
   videoUrl?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  limitKmPerDay?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  overLimitFee?: number;
+
+  @IsString()
+  @IsOptional()
+  pickupLocation?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  latitude?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  longitude?: number;
+
+  @IsString()
+  @IsOptional()
+  terms?: string;
 }
 
 export class SearchVehicleDto {

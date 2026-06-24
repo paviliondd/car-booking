@@ -22,6 +22,7 @@ async function main() {
   const adminPassword = await bcrypt.hash('adminpassword123', 10);
   const staffPassword = await bcrypt.hash('staffpassword123', 10);
   const customerPassword = await bcrypt.hash('customerpassword123', 10);
+  const ownerPassword = await bcrypt.hash('ownerpassword123', 10);
 
   const admin = await prisma.user.upsert({
     where: { email: 'admin@datxe.linuxunity.com' },
@@ -45,6 +46,21 @@ async function main() {
     },
   });
 
+  const owner = await prisma.user.upsert({
+    where: { email: 'owner@datxe.linuxunity.com' },
+    update: {},
+    create: {
+      email: 'owner@datxe.linuxunity.com',
+      password: ownerPassword,
+      name: 'Chủ Xe Nguyễn Văn B',
+      role: Role.OWNER,
+      phone: '0961234567',
+      idCardNo: '037200987654',
+      address: 'Số 20 Cầu Giấy, Hà Nội',
+      isVerifiedOwner: true,
+    },
+  });
+
   const customerUser = await prisma.user.upsert({
     where: { email: 'customer@gmail.com' },
     update: {},
@@ -63,7 +79,7 @@ async function main() {
     },
   });
 
-  console.log('Users seeded:', { admin: admin.email, staff: staff.email });
+  console.log('Users seeded:', { admin: admin.email, staff: staff.email, owner: owner.email });
 
   // 2. Tạo Vehicles
   const vehiclesData = [
@@ -82,6 +98,10 @@ async function main() {
       penaltyRate: 150000,
       images: ['https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=600&q=80'],
       status: VehicleStatus.AVAILABLE,
+      pickupLocation: 'Showroom Cầu Giấy, Hà Nội',
+      latitude: 21.028511,
+      longitude: 105.798123,
+      ownerId: null, // Xe của hệ thống
     },
     {
       plateNumber: '51G-123.45',
@@ -98,6 +118,10 @@ async function main() {
       penaltyRate: 80000,
       images: ['https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80'],
       status: VehicleStatus.AVAILABLE,
+      pickupLocation: 'Showroom Khuất Duy Tiến, Hà Nội',
+      latitude: 20.999123,
+      longitude: 105.801234,
+      ownerId: null, // Xe của hệ thống
     },
     {
       plateNumber: '43C-888.88',
@@ -114,6 +138,12 @@ async function main() {
       penaltyRate: 200000,
       images: ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80'],
       status: VehicleStatus.AVAILABLE,
+      pickupLocation: 'Số 20 Cầu Giấy, Hà Nội',
+      latitude: 21.029876,
+      longitude: 105.792345,
+      limitKmPerDay: 300,
+      overLimitFee: 3000,
+      ownerId: owner.id, // Xe thuộc về Chủ xe Nguyễn Văn B
     },
     {
       plateNumber: '30E-444.55',
@@ -130,6 +160,12 @@ async function main() {
       penaltyRate: 90000,
       images: ['https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=600&q=80'],
       status: VehicleStatus.AVAILABLE,
+      pickupLocation: 'Số 20 Cầu Giấy, Hà Nội',
+      latitude: 21.029876,
+      longitude: 105.792345,
+      limitKmPerDay: 250,
+      overLimitFee: 2500,
+      ownerId: owner.id, // Xe thuộc về Chủ xe Nguyễn Văn B
     },
   ];
 
@@ -223,6 +259,63 @@ async function main() {
       userId: admin.id, // CTV liên kết với tài khoản
       commissionRate: 0.05,
       balance: 150000,
+    },
+  });
+
+  // 6. Tạo Support Tickets mẫu
+  await prisma.supportTicket.create({
+    data: {
+      userId: customerUser.id,
+      subject: 'Hỏi về thủ tục nhận xe',
+      message: 'Tôi muốn hỏi khi nhận xe tự lái cần mang theo những giấy tờ gì ngoài CCCD và GPLX?',
+      status: 'OPEN',
+    },
+  });
+
+  // 7. Tạo Reviews mẫu
+  if (vehicles.length > 0) {
+    const v1 = vehicles[0]; // VinFast VF8
+    const v2 = vehicles[1]; // Toyota Vios
+    
+    const dbCustomer = await prisma.customer.findUnique({
+      where: { phone: '0987654321' },
+    });
+    
+    if (dbCustomer) {
+      await prisma.review.create({
+        data: {
+          vehicleId: v1.id,
+          customerId: dbCustomer.id,
+          rating: 5,
+          comment: 'Xe chạy êm, sạc đầy pin đi rất xa, chủ xe nhiệt tình!',
+        },
+      });
+
+      await prisma.review.create({
+        data: {
+          vehicleId: v2.id,
+          customerId: dbCustomer.id,
+          rating: 4,
+          comment: 'Xe sạch sẽ, tiết kiệm xăng, phù hợp đi gia đình nhỏ.',
+        },
+      });
+    }
+  }
+
+  // 8. Tạo Chat Message mẫu
+  await prisma.chatMessage.create({
+    data: {
+      senderId: customerUser.id,
+      receiverId: owner.id,
+      message: 'Xin chào, tôi muốn hỏi thuê xe Kia Carnival của bạn vào cuối tuần này có cần cọc thêm gì không?',
+    },
+  });
+
+  await prisma.chatMessage.create({
+    data: {
+      senderId: owner.id,
+      receiverId: customerUser.id,
+      message: 'Chào bạn, không cần cọc thêm gì ngoài tiền đặt cọc 30% trên hệ thống nhé. Khi đến nhận xe mang theo GPLX là được.',
     },
   });
 

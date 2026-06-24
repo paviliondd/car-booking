@@ -21,6 +21,7 @@ export declare class CustomersService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                limitKmPerDay: number | null;
                 plateNumber: string;
                 brand: string;
                 model: string;
@@ -36,6 +37,12 @@ export declare class CustomersService {
                 images: string[];
                 videoUrl: string | null;
                 status: import("@prisma/client").$Enums.VehicleStatus;
+                overLimitFee: number | null;
+                pickupLocation: string;
+                latitude: number | null;
+                longitude: number | null;
+                terms: string | null;
+                ownerId: string | null;
             };
             payment: {
                 id: string;
@@ -54,12 +61,12 @@ export declare class CustomersService {
             updatedAt: Date;
             notes: string | null;
             status: import("@prisma/client").$Enums.BookingStatus;
+            pickupLocation: string;
             startDate: Date;
             endDate: Date;
             vehicleId: string;
-            bookingNumber: string;
             customerId: string;
-            pickupLocation: string;
+            bookingNumber: string;
             dropoffLocation: string;
             totalDays: number;
             basePrice: number;
@@ -67,14 +74,18 @@ export declare class CustomersService {
             totalPrice: number;
             couponCode: string | null;
             staffId: string | null;
+            insuranceType: string;
+            insuranceFee: number;
+            depositPercent: number;
+            depositAmount: number | null;
         })[];
     } & {
         id: string;
+        phone: string;
+        idCardNo: string;
         createdAt: Date;
         updatedAt: Date;
-        phone: string;
         fullName: string;
-        idCardNo: string;
         idCardFront: string | null;
         idCardBack: string | null;
         driverLicense: string | null;

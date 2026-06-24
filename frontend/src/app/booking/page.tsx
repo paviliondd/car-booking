@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { 
   Car, Calendar, MapPin, User, Phone, 
-  CreditCard, Tag, Sparkles, ChevronLeft, Upload, Loader2, CheckCircle2 
+  CreditCard, Tag, Sparkles, ChevronLeft, Upload, Loader2, CheckCircle2,
+  Star, MessageSquare, Send, X, Shield, ShieldCheck, Map
 } from 'lucide-react';
 
 export default function BookingPage() {
@@ -34,6 +35,16 @@ export default function BookingPage() {
   const [couponCode, setCouponCode] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('BANK_TRANSFER');
   const [affiliateCode, setAffiliateCode] = useState('');
+
+  // New features states
+  const [insuranceType, setInsuranceType] = useState<'NONE' | 'BASIC' | 'PREMIUM'>('NONE');
+  const [depositPercent, setDepositPercent] = useState<30 | 50>(30);
+  const [reviewsList, setReviewsList] = useState<any[]>([]);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [newChatMessage, setNewChatMessage] = useState('');
+  const [chatSocket, setChatSocket] = useState<WebSocket | null>(null);
+  const [currentUser, setCurrentUser] = useState<any | null>(null);
   
   // File Upload State Mocking (lưu base64 hoặc file name để hiển thị)
   const [idCardFront, setIdCardFront] = useState<string | null>(null);
@@ -42,6 +53,80 @@ export default function BookingPage() {
 
   const [bookingLoading, setBookingLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      api.auth.me().then(me => setCurrentUser(me)).catch(() => {});
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedVehicle) {
+      // Load reviews
+      api.reviews.findByVehicle(selectedVehicle.id).then((revs) => {
+        setReviewsList(revs);
+      }).catch(err => console.error(err));
+    }
+  }, [selectedVehicle]);
+
+  // Chat socket connection
+  useEffect(() => {
+    if (showChatModal && selectedVehicle?.ownerId && currentUser) {
+      api.chat.getHistory(selectedVehicle.ownerId).then((history) => {
+        setChatMessages(history);
+      });
+
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:5000';
+      const socket = new WebSocket(wsUrl);
+      
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (
+          (data.senderId === currentUser.id && data.receiverId === selectedVehicle.ownerId) ||
+          (data.senderId === selectedVehicle.ownerId && data.receiverId === currentUser.id)
+        ) {
+          setChatMessages((prev) => [...prev, data]);
+        }
+      };
+      
+      setChatSocket(socket);
+
+      return () => {
+        socket.close();
+      };
+    }
+  }, [showChatModal, selectedVehicle, currentUser]);
+
+  const handleSendChatMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newChatMessage.trim() || !selectedVehicle?.ownerId || !currentUser) return;
+
+    const payload = {
+      senderId: currentUser.id,
+      receiverId: selectedVehicle.ownerId,
+      message: newChatMessage,
+    };
+
+    if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+      chatSocket.send(JSON.stringify({ event: 'sendMessage', data: payload }));
+    } else {
+      try {
+        const saved = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/chat/message`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(payload)
+        }).then(r => r.json());
+        setChatMessages((prev) => [...prev, saved]);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    setNewChatMessage('');
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +139,6 @@ export default function BookingPage() {
       const availableCars = await api.vehicles.search(startDateTime, endDateTime);
       setVehicles(availableCars);
       
-      // Nếu không có xe nào trống, lấy xe gợi ý tương tự
       if (availableCars.length === 0) {
         const suggs = await api.vehicles.getSuggestions('', 5, startDateTime, endDateTime);
         setSuggestions(suggs);
@@ -105,6 +189,8 @@ export default function BookingPage() {
         paymentMethod,
         couponCode: couponCode || undefined,
         affiliateCode: affiliateCode || undefined,
+        insuranceType,
+        depositPercent: Number(depositPercent),
       };
 
       const result = await api.bookings.create(bookingPayload);
@@ -119,6 +205,37 @@ export default function BookingPage() {
     }
   };
 
+  // Tính toán phí bảo hiểm và cọc hiển thị
+  const getInsuranceFee = () => {
+    if (insuranceType === 'NONE') return 0;
+    if (insuranceType === 'BASIC') return 100000;
+    return 250000;
+  };
+
+  const getDaysCount = () => {
+    const s = new Date(`${startDate}T${startTime}:00.000Z`);
+    const e = new Date(`${endDate}T${endTime}:00.000Z`);
+    const diff = e.getTime() - s.getTime();
+    if (diff <= 0) return 1;
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  };
+
+  const getSubTotal = () => {
+    if (!selectedVehicle) return 0;
+    const days = getDaysCount();
+    return selectedVehicle.dailyPrice * days;
+  };
+
+  const getTotalPrice = () => {
+    if (!selectedVehicle) return 0;
+    const days = getDaysCount();
+    return getSubTotal() + (getInsuranceFee() * days);
+  };
+
+  const getDepositAmount = () => {
+    return Math.round(getTotalPrice() * (depositPercent / 100));
+  };
+
   return (
     <div className="min-h-screen bg-[#080b11] py-12 px-6 md:px-12 max-w-7xl mx-auto flex flex-col gap-8">
       {/* Header Back */}
@@ -128,7 +245,7 @@ export default function BookingPage() {
             if (selectedVehicle) setSelectedVehicle(null);
             else router.push('/');
           }}
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition bg-gray-900/50 px-4 py-2 rounded-lg border border-white/5"
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition bg-gray-900/50 px-4 py-2 rounded-lg border border-white/5 cursor-pointer"
         >
           <ChevronLeft className="h-4 w-4" />
           <span>{selectedVehicle ? 'Quay lại danh sách' : 'Về trang chủ'}</span>
@@ -324,11 +441,13 @@ export default function BookingPage() {
         </div>
       )}
 
-      {/* ĐÃ CHỌN XE - HIỂN THỊ FORM ĐIỀN THÔNG TIN ĐẶT XE & HỒ SƠ */}
+      {/* ĐÃ CHỌN XE - HIỂN THỊ HỒ SƠ CHI TIẾT, BẢN ĐỒ VÀ RATING */}
       {selectedVehicle && (
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Cột Trái: Tóm tắt đơn đặt */}
+          {/* Cột Trái: Tóm tắt đơn đặt, Bản đồ & Đánh giá */}
           <div className="lg:col-span-1 flex flex-col gap-6">
+            
+            {/* 1. Tóm tắt chuyến đi */}
             <div className="glass-panel p-6 rounded-xl border border-white/5 flex flex-col gap-4">
               <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">Tóm tắt chuyến đi</h2>
               <div className="flex gap-4 items-center">
@@ -360,29 +479,98 @@ export default function BookingPage() {
               <hr className="border-white/5" />
               <div className="text-sm space-y-2">
                 <div className="flex justify-between text-gray-400">
-                  <span>Giá thuê/ngày:</span>
-                  <span className="text-white">{(selectedVehicle.dailyPrice).toLocaleString()}đ</span>
+                  <span>Tổng ngày thuê:</span>
+                  <span className="text-white font-bold">{getDaysCount()} Ngày</span>
                 </div>
                 <div className="flex justify-between text-gray-400">
-                  <span>Giá cuối tuần:</span>
-                  <span className="text-white">{(selectedVehicle.weekendPrice).toLocaleString()}đ</span>
+                  <span>Giá thuê:</span>
+                  <span className="text-white">{(getSubTotal()).toLocaleString()}đ</span>
                 </div>
                 <div className="flex justify-between text-gray-400">
-                  <span>Giá ngày lễ:</span>
-                  <span className="text-white">{(selectedVehicle.holidayPrice).toLocaleString()}đ</span>
+                  <span>Phí bảo hiểm:</span>
+                  <span className="text-white">{(getInsuranceFee() * getDaysCount()).toLocaleString()}đ</span>
+                </div>
+                <div className="flex justify-between text-gray-500 font-bold border-t border-white/5 pt-2">
+                  <span>Tổng tiền thanh toán:</span>
+                  <span className="text-purple-400">{(getTotalPrice()).toLocaleString()}đ</span>
+                </div>
+                <div className="flex justify-between text-green-400 font-black text-base">
+                  <span>Tiền đặt cọc ({depositPercent}%):</span>
+                  <span>{(getDepositAmount()).toLocaleString()}đ</span>
                 </div>
               </div>
+
+              {currentUser && selectedVehicle.ownerId && (
+                <button
+                  onClick={() => setShowChatModal(true)}
+                  className="w-full bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white py-2.5 rounded-lg text-sm font-semibold transition mt-2 flex items-center justify-center gap-2 cursor-pointer border border-blue-500/20"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span>Chat trực tiếp với chủ xe</span>
+                </button>
+              )}
             </div>
+
+            {/* 2. Bản đồ tọa độ (Map widget) */}
+            <div className="glass-panel p-6 rounded-xl border border-white/5 flex flex-col gap-4">
+              <h3 className="font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
+                <Map className="h-4.5 w-4.5 text-purple-400" />
+                <span>Vị Trí Nhận Xe</span>
+              </h3>
+              <p className="text-xs text-gray-400">Xe đặt tại tọa độ: Lat {selectedVehicle.latitude || '20.999'}, Lng {selectedVehicle.longitude || '105.798'}</p>
+              
+              <div className="rounded-lg overflow-hidden border border-white/10 h-40 bg-gray-950 flex flex-col items-center justify-center relative">
+                <iframe 
+                  src={`https://maps.google.com/maps?q=${selectedVehicle.latitude || 20.9996},${selectedVehicle.longitude || 105.7981}&z=14&output=embed`}
+                  width="100%" 
+                  height="100%" 
+                  style={{ border: 0 }} 
+                  allowFullScreen={true}
+                  loading="lazy"
+                ></iframe>
+              </div>
+            </div>
+
+            {/* 3. Đánh Giá & Nhận Xét */}
+            <div className="glass-panel p-6 rounded-xl border border-white/5 flex flex-col gap-4">
+              <h3 className="font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
+                <Star className="h-4.5 w-4.5 text-yellow-400 fill-current" />
+                <span>Nhận xét khách hàng ({reviewsList.length})</span>
+              </h3>
+              {reviewsList.length === 0 ? (
+                <p className="text-xs text-gray-500 text-center py-4">Chưa có đánh giá nào cho xe này.</p>
+              ) : (
+                <div className="space-y-4 max-h-[220px] overflow-y-auto pr-1">
+                  {reviewsList.map((rev) => (
+                    <div key={rev.id} className="p-3 rounded bg-white/2 border border-white/5 flex flex-col gap-1 text-xs">
+                      <div className="flex justify-between text-gray-400">
+                        <span className="font-bold text-white">{rev.customer?.fullName || 'Khách ẩn danh'}</span>
+                        <div className="flex gap-0.5 text-yellow-400">
+                          {Array.from({ length: rev.rating }).map((_, idx) => (
+                            <Star key={idx} className="h-3 w-3 fill-current" />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-gray-300 leading-relaxed">{rev.comment}</p>
+                      <span className="text-[10px] text-gray-500 block text-right mt-1">{new Date(rev.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
           </div>
 
-          {/* Cột Phải: Form thông tin, Upload tài liệu & Thanh toán */}
-          <div className="lg:col-span-2 glass-panel p-6 rounded-xl border border-white/5">
-            <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3 mb-6">Thông Tin Khách Thuê & Hồ Sơ</h2>
+          {/* Cột Phải: Form thông tin, Upload tài liệu, Insurance & Deposit */}
+          <div className="lg:col-span-2 glass-panel p-6 rounded-xl border border-white/5 flex flex-col gap-6">
+            <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">Thông Tin Đăng Ký Thuê Xe</h2>
 
             <form onSubmit={handleBook} className="flex flex-col gap-6">
+              
+              {/* Form cá nhân */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1.5 font-medium">Họ và tên (như trên CCCD)</label>
+                  <label className="text-xs text-gray-400 block mb-1.5 font-medium">Họ và tên (CCCD)</label>
                   <div className="relative">
                     <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                     <input 
@@ -391,7 +579,7 @@ export default function BookingPage() {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Nguyễn Văn A"
-                      className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-purple-500" 
+                      className="w-full bg-gray-950 border border-white/10 rounded-lg py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:border-purple-500" 
                     />
                   </div>
                 </div>
@@ -406,7 +594,7 @@ export default function BookingPage() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="0987654321"
-                      className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-purple-500" 
+                      className="w-full bg-gray-950 border border-white/10 rounded-lg py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:border-purple-500" 
                     />
                   </div>
                 </div>
@@ -438,11 +626,96 @@ export default function BookingPage() {
                 </div>
               </div>
 
+              {/* 1. Chọn gói Bảo Hiểm */}
+              <div>
+                <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-1.5">
+                  <Shield className="h-4.5 w-4.5 text-purple-400" />
+                  <span>Bảo Hiểm Thân Vỏ Tự Nguyện</span>
+                </h3>
+                <div className="grid md:grid-cols-3 gap-3">
+                  
+                  {/* None */}
+                  <label className={`border rounded-lg p-4 flex flex-col gap-1 cursor-pointer transition ${insuranceType === 'NONE' ? 'border-purple-500 bg-purple-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
+                    <div className="flex justify-between items-center w-full">
+                      <span className="text-xs font-semibold text-white">Gói Tiêu chuẩn</span>
+                      <input 
+                        type="radio" 
+                        name="insurance" 
+                        checked={insuranceType === 'NONE'}
+                        onChange={() => setInsuranceType('NONE')}
+                        className="accent-purple-500"
+                      />
+                    </div>
+                    <span className="text-[10px] text-gray-500">Khách tự chịu trách nhiệm va chạm</span>
+                    <strong className="text-xs text-purple-400 mt-2">0đ / ngày</strong>
+                  </label>
+
+                  {/* Basic */}
+                  <label className={`border rounded-lg p-4 flex flex-col gap-1 cursor-pointer transition ${insuranceType === 'BASIC' ? 'border-purple-500 bg-purple-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
+                    <div className="flex justify-between items-center w-full">
+                      <span className="text-xs font-semibold text-white">Gói Cơ Bản</span>
+                      <input 
+                        type="radio" 
+                        name="insurance" 
+                        checked={insuranceType === 'BASIC'}
+                        onChange={() => setInsuranceType('BASIC')}
+                        className="accent-purple-500"
+                      />
+                    </div>
+                    <span className="text-[10px] text-gray-500">Bồi thường va chạm đến 80%</span>
+                    <strong className="text-xs text-purple-400 mt-2">100,000đ / ngày</strong>
+                  </label>
+
+                  {/* Premium */}
+                  <label className={`border rounded-lg p-4 flex flex-col gap-1 cursor-pointer transition ${insuranceType === 'PREMIUM' ? 'border-purple-500 bg-purple-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
+                    <div className="flex justify-between items-center w-full">
+                      <span className="text-xs font-semibold text-white">Gói VIP Cao Cấp</span>
+                      <input 
+                        type="radio" 
+                        name="insurance" 
+                        checked={insuranceType === 'PREMIUM'}
+                        onChange={() => setInsuranceType('PREMIUM')}
+                        className="accent-purple-500"
+                      />
+                    </div>
+                    <span className="text-[10px] text-gray-500">Bảo hiểm 100% không khấu hao</span>
+                    <strong className="text-xs text-purple-400 mt-2">250,000đ / ngày</strong>
+                  </label>
+                </div>
+              </div>
+
+              {/* 2. Chọn Tỷ Lệ Cọc */}
+              <div>
+                <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-1.5">
+                  <CreditCard className="h-4.5 w-4.5 text-purple-400" />
+                  <span>Chọn Tỷ Lệ Đặt Cọc</span>
+                </h3>
+                <div className="flex gap-4">
+                  <button 
+                    type="button"
+                    onClick={() => setDepositPercent(30)}
+                    className={`flex-1 text-center py-2.5 rounded-lg text-sm font-semibold transition border cursor-pointer ${
+                      depositPercent === 30 ? 'border-purple-500 bg-purple-500/10 text-white' : 'border-white/10 text-gray-400 bg-gray-950 hover:border-white/20'
+                    }`}
+                  >
+                    Cọc trước 30%
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setDepositPercent(50)}
+                    className={`flex-1 text-center py-2.5 rounded-lg text-sm font-semibold transition border cursor-pointer ${
+                      depositPercent === 50 ? 'border-purple-500 bg-purple-500/10 text-white' : 'border-white/10 text-gray-400 bg-gray-950 hover:border-white/20'
+                    }`}
+                  >
+                    Cọc trước 50%
+                  </button>
+                </div>
+              </div>
+
               {/* Upload hồ sơ */}
               <div>
                 <h3 className="text-sm font-bold text-white mb-3">Tài Liệu Hồ Sơ Xác Thực (Bắt buộc)</h3>
                 <div className="grid md:grid-cols-3 gap-4">
-                  {/* CCCD Trước */}
                   <div className="border border-dashed border-white/10 rounded-lg p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-purple-500/50 transition relative">
                     {idCardFront ? (
                       <div className="w-full h-24 relative rounded overflow-hidden">
@@ -463,7 +736,6 @@ export default function BookingPage() {
                     />
                   </div>
 
-                  {/* CCCD Sau */}
                   <div className="border border-dashed border-white/10 rounded-lg p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-purple-500/50 transition relative">
                     {idCardBack ? (
                       <div className="w-full h-24 relative rounded overflow-hidden">
@@ -484,7 +756,6 @@ export default function BookingPage() {
                     />
                   </div>
 
-                  {/* GPLX */}
                   <div className="border border-dashed border-white/10 rounded-lg p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-purple-500/50 transition relative">
                     {driverLicense ? (
                       <div className="w-full h-24 relative rounded overflow-hidden">
@@ -553,7 +824,6 @@ export default function BookingPage() {
               <div>
                 <h3 className="text-sm font-bold text-white mb-3">Hình Thức Đặt Cọc</h3>
                 <div className="grid md:grid-cols-3 gap-3">
-                  {/* VietQR */}
                   <label className={`border rounded-lg p-4 flex items-center justify-between cursor-pointer transition ${paymentMethod === 'BANK_TRANSFER' ? 'border-purple-500 bg-purple-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
                     <div className="flex items-center gap-3">
                       <CreditCard className="h-5 w-5 text-purple-400" />
@@ -569,7 +839,6 @@ export default function BookingPage() {
                     />
                   </label>
 
-                  {/* MoMo */}
                   <label className={`border rounded-lg p-4 flex items-center justify-between cursor-pointer transition ${paymentMethod === 'MOMO' ? 'border-purple-500 bg-purple-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
                     <div className="flex items-center gap-3">
                       <div className="h-5 w-5 rounded bg-pink-600 text-white font-bold text-[10px] flex items-center justify-center">M</div>
@@ -585,7 +854,6 @@ export default function BookingPage() {
                     />
                   </label>
 
-                  {/* Tiền mặt */}
                   <label className={`border rounded-lg p-4 flex items-center justify-between cursor-pointer transition ${paymentMethod === 'CASH' ? 'border-purple-500 bg-purple-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
                     <div className="flex items-center gap-3">
                       <User className="h-5 w-5 text-green-400" />
@@ -615,6 +883,65 @@ export default function BookingPage() {
           </div>
         </div>
       )}
+
+      {/* CHAT MODAL CHO KHÁCH HÀNG CHAT VỚI CHỦ XE */}
+      {showChatModal && selectedVehicle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-[#0b0f19] border border-white/10 rounded-2xl overflow-hidden flex flex-col h-[500px]">
+            {/* Header */}
+            <div className="p-4 border-b border-white/5 bg-gray-950 flex justify-between items-center text-white font-bold">
+              <span>Chat với Chủ xe</span>
+              <button 
+                onClick={() => setShowChatModal(false)}
+                className="text-gray-400 hover:text-white transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-grow overflow-y-auto p-4 flex flex-col gap-3">
+              {chatMessages.length === 0 ? (
+                <div className="text-xs text-gray-500 text-center my-auto">Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện.</div>
+              ) : (
+                chatMessages.map((chat, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`max-w-[75%] p-3 rounded-xl text-sm ${
+                      chat.senderId === currentUser?.id 
+                        ? 'bg-purple-600 text-white self-end rounded-br-none' 
+                        : 'bg-white/5 text-gray-300 self-start rounded-bl-none border border-white/5'
+                    }`}
+                  >
+                    <p>{chat.message}</p>
+                    <span className="text-[8px] text-gray-400 block mt-1 text-right">
+                      {new Date(chat.createdAt).toLocaleTimeString()}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Input Form */}
+            <form onSubmit={handleSendChatMessage} className="p-4 border-t border-white/5 flex gap-2 bg-gray-950/40">
+              <input 
+                type="text" 
+                value={newChatMessage}
+                onChange={(e) => setNewChatMessage(e.target.value)}
+                placeholder="Nhập tin nhắn..."
+                className="flex-grow bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-purple-500 text-white" 
+              />
+              <button 
+                type="submit"
+                className="bg-purple-600 hover:bg-purple-500 text-white p-2 rounded-lg transition cursor-pointer"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

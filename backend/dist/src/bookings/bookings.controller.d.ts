@@ -12,12 +12,12 @@ export declare class BookingsController {
         updatedAt: Date;
         notes: string | null;
         status: import("@prisma/client").$Enums.BookingStatus;
+        pickupLocation: string;
         startDate: Date;
         endDate: Date;
         vehicleId: string;
-        bookingNumber: string;
         customerId: string;
-        pickupLocation: string;
+        bookingNumber: string;
         dropoffLocation: string;
         totalDays: number;
         basePrice: number;
@@ -25,19 +25,24 @@ export declare class BookingsController {
         totalPrice: number;
         couponCode: string | null;
         staffId: string | null;
+        insuranceType: string;
+        insuranceFee: number;
+        depositPercent: number;
+        depositAmount: number | null;
     }[]>;
+    getOwnerRequests(req: any): Promise<any[]>;
     findOne(id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
         notes: string | null;
         status: import("@prisma/client").$Enums.BookingStatus;
+        pickupLocation: string;
         startDate: Date;
         endDate: Date;
         vehicleId: string;
-        bookingNumber: string;
         customerId: string;
-        pickupLocation: string;
+        bookingNumber: string;
         dropoffLocation: string;
         totalDays: number;
         basePrice: number;
@@ -45,6 +50,10 @@ export declare class BookingsController {
         totalPrice: number;
         couponCode: string | null;
         staffId: string | null;
+        insuranceType: string;
+        insuranceFee: number;
+        depositPercent: number;
+        depositAmount: number | null;
     }>;
     updateStatus(id: string, status: BookingStatus, req: any): Promise<{
         id: string;
@@ -52,12 +61,12 @@ export declare class BookingsController {
         updatedAt: Date;
         notes: string | null;
         status: import("@prisma/client").$Enums.BookingStatus;
+        pickupLocation: string;
         startDate: Date;
         endDate: Date;
         vehicleId: string;
-        bookingNumber: string;
         customerId: string;
-        pickupLocation: string;
+        bookingNumber: string;
         dropoffLocation: string;
         totalDays: number;
         basePrice: number;
@@ -65,5 +74,9 @@ export declare class BookingsController {
         totalPrice: number;
         couponCode: string | null;
         staffId: string | null;
+        insuranceType: string;
+        insuranceFee: number;
+        depositPercent: number;
+        depositAmount: number | null;
     }>;
 }

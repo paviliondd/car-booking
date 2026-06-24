@@ -35,6 +35,11 @@ export const api = {
     login: (dto: any) => request('/auth/login', { method: 'POST', body: JSON.stringify(dto) }),
     register: (dto: any) => request('/auth/register', { method: 'POST', body: JSON.stringify(dto) }),
     me: () => request('/auth/me'),
+    googleLogin: (email: string, name: string) => request('/auth/google', { method: 'POST', body: JSON.stringify({ email, name }) }),
+    facebookLogin: (email: string, name: string) => request('/auth/facebook', { method: 'POST', body: JSON.stringify({ email, name }) }),
+    upgradeOwner: (dto: { phone: string; idCardNo: string; address: string }) => request('/auth/upgrade-owner', { method: 'POST', body: JSON.stringify(dto) }),
+    getOwnerRequests: () => request('/auth/owner-requests'),
+    verifyOwner: (userId: string, approve: boolean) => request(`/auth/verify-owner/${userId}`, { method: 'POST', body: JSON.stringify({ approve }) }),
   },
 
   // Vehicles
@@ -57,6 +62,7 @@ export const api = {
       const params = new URLSearchParams({ brand, seats: seats.toString(), startDate, endDate });
       return request(`/vehicles/suggestions?${params.toString()}`);
     },
+    getMyCars: () => request('/vehicles/owner/my-cars'),
     create: (dto: any) => request('/vehicles', { method: 'POST', body: JSON.stringify(dto) }),
     update: (id: string, dto: any) => request(`/vehicles/${id}`, { method: 'PUT', body: JSON.stringify(dto) }),
     updateStatus: (id: string, status: string) => request(`/vehicles/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
@@ -68,8 +74,34 @@ export const api = {
     create: (dto: any) => request('/bookings', { method: 'POST', body: JSON.stringify(dto) }),
     track: (phone: string) => request(`/bookings/track?phone=${phone}`),
     findAll: () => request('/bookings'),
+    getOwnerRequests: () => request('/bookings/owner/my-requests'),
     findOne: (id: string) => request(`/bookings/${id}`),
     updateStatus: (id: string, status: string) => request(`/bookings/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  },
+
+  // Contracts
+  contracts: {
+    get: (bookingId: string) => request(`/contracts/${bookingId}`),
+    sign: (bookingId: string, renterSignature: string) => request(`/contracts/${bookingId}/sign`, { method: 'POST', body: JSON.stringify({ renterSignature }) }),
+  },
+
+  // Reviews
+  reviews: {
+    create: (dto: { vehicleId: string; rating: number; comment: string }) => request('/reviews', { method: 'POST', body: JSON.stringify(dto) }),
+    findByVehicle: (vehicleId: string) => request(`/reviews/${vehicleId}`),
+  },
+
+  // Support Tickets
+  tickets: {
+    create: (dto: { subject: string; message: string }) => request('/tickets', { method: 'POST', body: JSON.stringify(dto) }),
+    findAll: () => request('/tickets'),
+    reply: (id: string, reply: string) => request(`/tickets/${id}/reply`, { method: 'PUT', body: JSON.stringify({ reply }) }),
+  },
+
+  // Chat
+  chat: {
+    getPartners: () => request('/chat/partners'),
+    getHistory: (partnerId: string) => request(`/chat/history/${partnerId}`),
   },
 
   // Payments Mocking helpers for test

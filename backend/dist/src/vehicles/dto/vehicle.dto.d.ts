@@ -13,6 +13,12 @@ export declare class CreateVehicleDto {
     penaltyRate: number;
     images?: string[];
     videoUrl?: string;
+    limitKmPerDay?: number;
+    overLimitFee?: number;
+    pickupLocation?: string;
+    latitude?: number;
+    longitude?: number;
+    terms?: string;
 }
 export declare class SearchVehicleDto {
     startDate: string;

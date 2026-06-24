@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TrackBookingDto = exports.CreateBookingDto = void 0;
 const class_validator_1 = require("class-validator");
 const client_1 = require("@prisma/client");
+const class_transformer_1 = require("class-transformer");
 class CreateBookingDto {
     vehicleId;
     startDate;
@@ -26,6 +27,8 @@ class CreateBookingDto {
     paymentMethod;
     couponCode;
     affiliateCode;
+    insuranceType;
+    depositPercent;
 }
 exports.CreateBookingDto = CreateBookingDto;
 __decorate([
@@ -93,6 +96,17 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateBookingDto.prototype, "affiliateCode", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateBookingDto.prototype, "insuranceType", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], CreateBookingDto.prototype, "depositPercent", void 0);
 class TrackBookingDto {
     phone;
 }

@@ -11,7 +11,8 @@ export declare class VehiclesService {
         totalDays: number;
         details: any[];
     };
-    create(dto: CreateVehicleDto): Promise<Vehicle>;
+    create(dto: CreateVehicleDto, ownerId?: string): Promise<Vehicle>;
+    findByOwner(ownerId: string): Promise<Vehicle[]>;
     findAll(filters: {
         brand?: string;
         seats?: number;
@@ -26,6 +27,7 @@ export declare class VehiclesService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            limitKmPerDay: number | null;
             plateNumber: string;
             brand: string;
             model: string;
@@ -41,6 +43,12 @@ export declare class VehiclesService {
             images: string[];
             videoUrl: string | null;
             status: import("@prisma/client").$Enums.VehicleStatus;
+            overLimitFee: number | null;
+            pickupLocation: string;
+            latitude: number | null;
+            longitude: number | null;
+            terms: string | null;
+            ownerId: string | null;
         };
         bookings: {
             id: string;

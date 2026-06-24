@@ -53,6 +53,51 @@ export class NotificationService {
     }
   }
 
+  async sendEmailWithAttachment(to: string, subject: string, body: string, attachmentBase64: string, filename: string): Promise<void> {
+    this.logger.log(`Sending email to ${to} with attachment "${filename}"...`);
+    if (this.sesClient) {
+      try {
+        const { SendRawEmailCommand } = require('@aws-sdk/client-ses');
+        
+        const boundary = `----=_Part_${Date.now()}`;
+        const rawMessage = [
+          `From: ${this.senderEmail}`,
+          `To: ${to}`,
+          `Subject: ${subject}`,
+          `MIME-Version: 1.0`,
+          `Content-Type: multipart/mixed; boundary="${boundary}"`,
+          ``,
+          `--${boundary}`,
+          `Content-Type: text/html; charset=UTF-8`,
+          `Content-Transfer-Encoding: 7bit`,
+          ``,
+          body,
+          ``,
+          `--${boundary}`,
+          `Content-Type: application/pdf; name="${filename}"`,
+          `Content-Transfer-Encoding: base64`,
+          `Content-Disposition: attachment; filename="${filename}"`,
+          ``,
+          attachmentBase64,
+          ``,
+          `--${boundary}--`
+        ].join('\r\n');
+
+        const command = new SendRawEmailCommand({
+          RawMessage: {
+            Data: Buffer.from(rawMessage),
+          },
+        });
+        await this.sesClient.send(command);
+        this.logger.log(`Email with attachment successfully sent to ${to}`);
+      } catch (error) {
+        this.logger.error(`Error sending email with attachment to ${to} via AWS SES`, error);
+      }
+    } else {
+      this.logger.log(`[MOCK EMAIL SENT WITH ATTACHMENT] To: ${to}\nSubject: ${subject}\nFilename: ${filename}\nBody:\n${body}\n----------------------`);
+    }
+  }
+
   async sendSMS(phoneNumber: string, message: string): Promise<void> {
     this.logger.log(`Sending SMS to ${phoneNumber}: "${message}"...`);
     if (this.snsClient) {

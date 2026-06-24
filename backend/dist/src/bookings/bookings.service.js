@@ -133,6 +133,16 @@ let BookingsService = BookingsService_1 = class BookingsService {
                     });
                 }
             }
+            const insType = dto.insuranceType || 'NONE';
+            let insFee = 0;
+            if (insType === 'BASIC') {
+                insFee = 100000 * pricing.totalDays;
+            }
+            else if (insType === 'PREMIUM') {
+                insFee = 250000 * pricing.totalDays;
+            }
+            const depPercent = dto.depositPercent || 30.0;
+            const depAmount = (totalPrice + insFee) * (depPercent / 100);
             const bookingNumber = `BK-${Date.now().toString().slice(-6)}-${Math.floor(10 + Math.random() * 90)}`;
             const result = await this.prisma.$transaction(async (tx) => {
                 const booking = await tx.booking.create({
@@ -151,12 +161,16 @@ let BookingsService = BookingsService_1 = class BookingsService {
                         status: client_1.BookingStatus.PENDING,
                         notes: dto.notes,
                         couponCode: dto.couponCode,
+                        insuranceType: insType,
+                        insuranceFee: insFee,
+                        depositPercent: depPercent,
+                        depositAmount: depAmount,
                     },
                 });
                 const payment = await tx.payment.create({
                     data: {
                         bookingId: booking.id,
-                        amount: totalPrice,
+                        amount: depAmount,
                         status: client_1.PaymentStatus.UNPAID,
                         method: dto.paymentMethod,
                     },
@@ -231,8 +245,26 @@ let BookingsService = BookingsService_1 = class BookingsService {
         }
         return booking;
     }
+    async findOwnerBookings(ownerId) {
+        return await this.prisma.booking.findMany({
+            where: {
+                vehicle: { ownerId },
+            },
+            include: {
+                customer: true,
+                vehicle: true,
+                payment: true,
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
     async updateStatus(id, status, user) {
         const currentBooking = (await this.findOne(id));
+        if (user.role === 'OWNER') {
+            if (currentBooking.vehicle.ownerId !== user.id) {
+                throw new common_1.BadRequestException('Bạn không sở hữu phương tiện của đơn đặt xe này.');
+            }
+        }
         const updated = await this.prisma.$transaction(async (tx) => {
             const book = await tx.booking.update({
                 where: { id },

@@ -13,6 +13,8 @@ export declare class CreateBookingDto {
     paymentMethod: PaymentMethod;
     couponCode?: string;
     affiliateCode?: string;
+    insuranceType?: string;
+    depositPercent?: number;
 }
 export declare class TrackBookingDto {
     phone: string;

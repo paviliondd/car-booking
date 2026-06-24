@@ -4,10 +4,12 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
   Car, ShieldCheck, HelpCircle, Phone, MapPin, 
-  Clock, Award, Calendar, ChevronRight, Menu, X 
+  Clock, Award, Calendar, ChevronRight, Menu, X, Sun, Moon 
 } from 'lucide-react';
+import { useTheme } from '@/providers/ThemeProvider';
 
 export default function HomePage() {
+  const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
 
@@ -82,11 +84,18 @@ export default function HomePage() {
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
+          <button 
+            onClick={toggleTheme} 
+            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition border border-white/5 cursor-pointer"
+            title="Chuyển đổi giao diện"
+          >
+            {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-purple-400" />}
+          </button>
           <a href="tel:19008888" className="flex items-center gap-2 text-sm text-purple-400 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20">
             <Phone className="h-4 w-4" />
             <span>1900 8888</span>
           </a>
-          <Link href="/dashboard" className="text-sm font-medium bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition border border-white/10">
+          <Link href="/owner" className="text-sm font-medium bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition border border-white/10">
             Chủ Xe
           </Link>
           <Link href="/booking" className="text-sm font-medium gradient-btn text-white px-5 py-2 rounded-lg transition">
@@ -112,8 +121,8 @@ export default function HomePage() {
           <Link href="/booking" onClick={() => setMobileMenuOpen(false)} className="gradient-btn text-center text-white py-3 rounded-lg">
             Đặt Xe Ngay
           </Link>
-          <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="bg-gray-800 text-center text-white py-3 rounded-lg border border-white/10">
-            Trang Quản Trị
+          <Link href="/owner" onClick={() => setMobileMenuOpen(false)} className="bg-gray-800 text-center text-white py-3 rounded-lg border border-white/10">
+            Trang Chủ Xe / Quản Trị
           </Link>
         </div>
       )}

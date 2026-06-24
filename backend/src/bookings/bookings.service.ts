@@ -143,6 +143,18 @@ export class BookingsService {
         }
       }
 
+      // 7.1. Calculate Insurance Fee and Deposit Amount
+      const insType = dto.insuranceType || 'NONE';
+      let insFee = 0;
+      if (insType === 'BASIC') {
+        insFee = 100000 * pricing.totalDays; // 100K/day
+      } else if (insType === 'PREMIUM') {
+        insFee = 250000 * pricing.totalDays; // 250K/day
+      }
+
+      const depPercent = dto.depositPercent || 30.0;
+      const depAmount = (totalPrice + insFee) * (depPercent / 100);
+
       // 8. Generate Booking Number
       const bookingNumber = `BK-${Date.now().toString().slice(-6)}-${Math.floor(10 + Math.random() * 90)}`;
 
@@ -164,13 +176,17 @@ export class BookingsService {
             status: BookingStatus.PENDING,
             notes: dto.notes,
             couponCode: dto.couponCode,
+            insuranceType: insType,
+            insuranceFee: insFee,
+            depositPercent: depPercent,
+            depositAmount: depAmount,
           },
         });
 
         const payment = await tx.payment.create({
           data: {
             bookingId: booking.id,
-            amount: totalPrice,
+            amount: depAmount,
             status: PaymentStatus.UNPAID,
             method: dto.paymentMethod,
           },
@@ -260,9 +276,30 @@ export class BookingsService {
     return booking;
   }
 
+  async findOwnerBookings(ownerId: string): Promise<any[]> {
+    return await this.prisma.booking.findMany({
+      where: {
+        vehicle: { ownerId },
+      },
+      include: {
+        customer: true,
+        vehicle: true,
+        payment: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   // Cập nhật trạng thái đơn (Duyệt, từ chối, nhận xe, trả xe) & Log Audit
   async updateStatus(id: string, status: BookingStatus, user: any): Promise<Booking> {
     const currentBooking = (await this.findOne(id)) as any;
+
+    // Nếu người thực hiện là OWNER, kiểm tra xem họ có sở hữu xe của đơn đặt này hay không
+    if (user.role === 'OWNER') {
+      if (currentBooking.vehicle.ownerId !== user.id) {
+        throw new BadRequestException('Bạn không sở hữu phương tiện của đơn đặt xe này.');
+      }
+    }
 
     const updated = await this.prisma.$transaction(async (tx) => {
       // 1. Cập nhật booking

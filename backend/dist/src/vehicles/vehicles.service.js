@@ -61,13 +61,19 @@ let VehiclesService = class VehiclesService {
         }
         return { totalPrice, totalDays, details };
     }
-    async create(dto) {
+    async create(dto, ownerId) {
         return await this.prisma.vehicle.create({
             data: {
                 ...dto,
                 images: dto.images || [],
                 status: client_1.VehicleStatus.AVAILABLE,
+                ownerId: ownerId || null,
             },
+        });
+    }
+    async findByOwner(ownerId) {
+        return await this.prisma.vehicle.findMany({
+            where: { ownerId },
         });
     }
     async findAll(filters) {

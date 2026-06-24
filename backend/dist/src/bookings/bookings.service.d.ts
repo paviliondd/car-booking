@@ -17,5 +17,6 @@ export declare class BookingsService {
     trackBookings(phone: string): Promise<any[]>;
     findAll(): Promise<Booking[]>;
     findOne(id: string): Promise<Booking>;
+    findOwnerBookings(ownerId: string): Promise<any[]>;
     updateStatus(id: string, status: BookingStatus, user: any): Promise<Booking>;
 }

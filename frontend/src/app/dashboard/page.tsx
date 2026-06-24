@@ -5,7 +5,7 @@ import { api } from '@/lib/api';
 import { 
   BarChart3, Car, Calendar, Users, Wrench, DollarSign, 
   Plus, Search, LogOut, Check, X, ShieldAlert, Award, FileText,
-  Activity, ArrowUpRight, CheckCircle2, AlertTriangle, Play, Loader2
+  Activity, ArrowUpRight, CheckCircle2, AlertTriangle, Play, Loader2, MessageSquare
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -19,7 +19,7 @@ export default function DashboardPage() {
   const [loginError, setLoginError] = useState('');
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'overview' | 'vehicles' | 'bookings' | 'customers' | 'maintenance' | 'financial'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'vehicles' | 'bookings' | 'customers' | 'maintenance' | 'financial' | 'owner-requests' | 'support-tickets'>('overview');
 
   // SaaS Data States
   const [stats, setStats] = useState<any>(null);
@@ -29,6 +29,9 @@ export default function DashboardPage() {
   const [maintenanceAlerts, setMaintenanceAlerts] = useState<any[]>([]);
   const [financials, setFinancials] = useState<any[]>([]);
   const [topVehicles, setTopVehicles] = useState<any>(null);
+  const [ownerRequests, setOwnerRequests] = useState<any[]>([]);
+  const [supportTickets, setSupportTickets] = useState<any[]>([]);
+
 
   // Form states for Create/Edit Vehicle
   const [showAddVehicle, setShowAddVehicle] = useState(false);
@@ -124,6 +127,12 @@ export default function DashboardPage() {
       } else if (activeTab === 'financial') {
         const report = await api.analytics.financial();
         setFinancials(report);
+      } else if (activeTab === 'owner-requests') {
+        const list = await api.auth.getOwnerRequests();
+        setOwnerRequests(list);
+      } else if (activeTab === 'support-tickets') {
+        const list = await api.tickets.findAll();
+        setSupportTickets(list);
       }
     } catch (err) {
       console.error('Lỗi nạp dữ liệu dashboard', err);
@@ -178,6 +187,32 @@ export default function DashboardPage() {
       loadDashboardData();
     } catch (err: any) {
       alert(err.message || 'Lỗi ghi nhận hoàn thành bảo dưỡng.');
+    }
+  };
+  const handleVerifyOwner = async (userId: string, approve: boolean) => {
+    try {
+      await api.auth.verifyOwner(userId, approve);
+      const list = await api.auth.getOwnerRequests();
+      setOwnerRequests(list);
+    } catch (err: any) {
+      alert(err.message || 'Lỗi xử lý duyệt yêu cầu.');
+    }
+  };
+
+  const [replyText, setReplyText] = useState('');
+  const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
+
+  const handleReplyTicket = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTicket || !replyText.trim()) return;
+    try {
+      await api.tickets.reply(selectedTicket.id, replyText);
+      setSelectedTicket(null);
+      setReplyText('');
+      const list = await api.tickets.findAll();
+      setSupportTickets(list);
+    } catch (err: any) {
+      alert(err.message || 'Lỗi gửi phản hồi ticket.');
     }
   };
 
@@ -300,6 +335,22 @@ export default function DashboardPage() {
             >
               <FileText className="h-4 w-4" />
               <span>Báo Cáo Tài Chính</span>
+            </button>
+
+            <button 
+              onClick={() => setActiveTab('owner-requests')}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition text-left cursor-pointer ${activeTab === 'owner-requests' ? 'bg-purple-500/10 text-purple-400 font-semibold' : 'text-gray-400 hover:text-white'}`}
+            >
+              <Award className="h-4 w-4" />
+              <span>Duyệt Chủ Xe ({ownerRequests.length})</span>
+            </button>
+
+            <button 
+              onClick={() => setActiveTab('support-tickets')}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition text-left cursor-pointer ${activeTab === 'support-tickets' ? 'bg-purple-500/10 text-purple-400 font-semibold' : 'text-gray-400 hover:text-white'}`}
+            >
+              <MessageSquare className="h-4 w-4" />
+              <span>Tickets Hỗ Trợ ({supportTickets.filter(t => t.status === 'OPEN').length})</span>
             </button>
           </div>
         </div>
@@ -810,6 +861,135 @@ export default function DashboardPage() {
                       </td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 7: DUYỆT CHỦ XE */}
+        {activeTab === 'owner-requests' && (
+          <div className="flex flex-col gap-6">
+            <h2 className="text-2xl font-bold text-white">Yêu Cầu Đăng Ký Chủ Xe Chờ Duyệt</h2>
+            <div className="glass-panel rounded-xl border border-white/5 overflow-hidden">
+              <table className="w-full text-sm text-left text-gray-400">
+                <thead className="text-xs text-gray-500 uppercase bg-white/2">
+                  <tr>
+                    <th className="px-6 py-4">Tên người dùng</th>
+                    <th className="px-6 py-4">Email</th>
+                    <th className="px-6 py-4">SĐT</th>
+                    <th className="px-6 py-4">Số CCCD</th>
+                    <th className="px-6 py-4 text-right">Phê duyệt</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {ownerRequests.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-8 text-gray-500">Không có yêu cầu nâng cấp chủ xe nào.</td>
+                    </tr>
+                  ) : (
+                    ownerRequests.map((req) => (
+                      <tr key={req.id} className="hover:bg-white/1">
+                        <td className="px-6 py-4 font-bold text-white">{req.name}</td>
+                        <td className="px-6 py-4">{req.email}</td>
+                        <td className="px-6 py-4">{req.phone || 'Chưa cập nhật'}</td>
+                        <td className="px-6 py-4">{req.idCardNo || 'Chưa cập nhật'}</td>
+                        <td className="px-6 py-4 text-right space-x-2">
+                          <button 
+                            onClick={() => handleVerifyOwner(req.id, true)}
+                            className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-xs font-semibold cursor-pointer"
+                          >
+                            Duyệt
+                          </button>
+                          <button 
+                            onClick={() => handleVerifyOwner(req.id, false)}
+                            className="bg-red-500/10 text-red-400 px-3 py-1 rounded text-xs hover:bg-red-500 hover:text-white transition cursor-pointer"
+                          >
+                            Từ chối
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 8: TICKETS HỖ TRỢ */}
+        {activeTab === 'support-tickets' && (
+          <div className="flex flex-col gap-6">
+            <h2 className="text-2xl font-bold text-white">Tickets Khiếu Nại & Hỗ Trợ Từ Khách Hàng</h2>
+
+            {selectedTicket && (
+              <form onSubmit={handleReplyTicket} className="glass-panel p-6 rounded-xl border border-purple-500/20 flex flex-col gap-4">
+                <h3 className="font-bold text-white">Trả lời Ticket: {selectedTicket.subject}</h3>
+                <div className="text-xs text-gray-400 p-3 bg-white/2 rounded border border-white/5">
+                  <p><strong>Khách hàng:</strong> {selectedTicket.user.name} ({selectedTicket.user.email})</p>
+                  <p className="mt-1"><strong>Nội dung:</strong> {selectedTicket.message}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">Nội dung phản hồi</label>
+                  <textarea 
+                    rows={3} 
+                    required
+                    value={replyText} 
+                    onChange={(e) => setReplyText(e.target.value)}
+                    className="w-full bg-gray-950 border border-white/10 rounded py-2 px-3 text-xs text-white focus:outline-none"
+                    placeholder="Nhập nội dung phản hồi của hệ thống..." 
+                  />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <button type="button" onClick={() => { setSelectedTicket(null); setReplyText(''); }} className="bg-gray-800 text-gray-300 px-3 py-1.5 rounded text-xs cursor-pointer">Hủy</button>
+                  <button type="submit" className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-1.5 rounded text-xs font-semibold cursor-pointer">Gửi Phản Hồi</button>
+                </div>
+              </form>
+            )}
+
+            <div className="glass-panel rounded-xl border border-white/5 overflow-hidden">
+              <table className="w-full text-sm text-left text-gray-400">
+                <thead className="text-xs text-gray-500 uppercase bg-white/2">
+                  <tr>
+                    <th className="px-6 py-4">Khách hàng</th>
+                    <th className="px-6 py-4">Chủ đề</th>
+                    <th className="px-6 py-4">Tin nhắn</th>
+                    <th className="px-6 py-4">Trạng thái</th>
+                    <th className="px-6 py-4 text-right">Phản hồi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {supportTickets.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-8 text-gray-500">Không có ticket hỗ trợ nào.</td>
+                    </tr>
+                  ) : (
+                    supportTickets.map((t) => (
+                      <tr key={t.id} className="hover:bg-white/1">
+                        <td className="px-6 py-4">
+                          <strong className="text-white block">{t.user.name}</strong>
+                          <span className="text-[10px] text-gray-500">{t.user.email}</span>
+                        </td>
+                        <td className="px-6 py-4 font-semibold text-white">{t.subject}</td>
+                        <td className="px-6 py-4 text-xs truncate max-w-[200px]">{t.message}</td>
+                        <td className="px-6 py-4">
+                          {t.status === 'OPEN' ? (
+                            <span className="bg-amber-500/10 text-amber-400 text-xs px-2 py-0.5 rounded border border-amber-500/20 font-bold">Chưa xử lý</span>
+                          ) : (
+                            <span className="bg-green-500/10 text-green-400 text-xs px-2 py-0.5 rounded border border-green-500/20 font-bold">Đã xử lý</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button 
+                            onClick={() => setSelectedTicket(t)}
+                            className="bg-purple-500/10 text-purple-400 hover:bg-purple-500 hover:text-white px-3 py-1 rounded text-xs transition cursor-pointer"
+                          >
+                            Phản hồi
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

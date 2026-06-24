@@ -62,13 +62,20 @@ export class VehiclesService {
     return { totalPrice, totalDays, details };
   }
 
-  async create(dto: CreateVehicleDto): Promise<Vehicle> {
+  async create(dto: CreateVehicleDto, ownerId?: string): Promise<Vehicle> {
     return await this.prisma.vehicle.create({
       data: {
         ...dto,
         images: dto.images || [],
         status: VehicleStatus.AVAILABLE,
+        ownerId: ownerId || null,
       },
+    });
+  }
+
+  async findByOwner(ownerId: string): Promise<Vehicle[]> {
+    return await this.prisma.vehicle.findMany({
+      where: { ownerId },
     });
   }
 

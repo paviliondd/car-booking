@@ -1,5 +1,6 @@
-import { IsString, IsNotEmpty, IsEmail, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsEmail, IsOptional, IsEnum, IsNumber } from 'class-validator';
 import { PaymentMethod } from '@prisma/client';
+import { Type } from 'class-transformer';
 
 export class CreateBookingDto {
   @IsString()
@@ -54,6 +55,15 @@ export class CreateBookingDto {
   @IsString()
   @IsOptional()
   affiliateCode?: string;
+
+  @IsString()
+  @IsOptional()
+  insuranceType?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  depositPercent?: number;
 }
 
 export class TrackBookingDto {

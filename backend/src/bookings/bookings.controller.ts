@@ -30,7 +30,15 @@ export class BookingsController {
     return await this.bookingsService.findAll();
   }
 
-  // 4. Lấy chi tiết đơn đặt (Admin/Staff)
+  // 4.1. Lấy danh sách yêu cầu thuê xe của chủ xe (Owner)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.OWNER)
+  @Get('owner/my-requests')
+  async getOwnerRequests(@Req() req: any) {
+    return await this.bookingsService.findOwnerBookings(req.user.id);
+  }
+
+  // 4.2. Lấy chi tiết đơn đặt (Admin/Staff)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.STAFF)
   @Get(':id')
@@ -38,9 +46,9 @@ export class BookingsController {
     return await this.bookingsService.findOne(id);
   }
 
-  // 5. Duyệt/Cập nhật trạng thái đơn (Admin/Staff)
+  // 5. Duyệt/Cập nhật trạng thái đơn (Admin/Staff/Owner)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.STAFF)
+  @Roles(Role.ADMIN, Role.STAFF, Role.OWNER)
   @Patch(':id/status')
   async updateStatus(
     @Param('id') id: string,

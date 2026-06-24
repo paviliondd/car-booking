@@ -8,6 +8,7 @@ export declare class VehiclesController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        limitKmPerDay: number | null;
         plateNumber: string;
         brand: string;
         model: string;
@@ -23,11 +24,18 @@ export declare class VehiclesController {
         images: string[];
         videoUrl: string | null;
         status: import("@prisma/client").$Enums.VehicleStatus;
+        overLimitFee: number | null;
+        pickupLocation: string;
+        latitude: number | null;
+        longitude: number | null;
+        terms: string | null;
+        ownerId: string | null;
     }[]>;
     getSuggestions(brand: string, seats: string, startDate: string, endDate: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        limitKmPerDay: number | null;
         plateNumber: string;
         brand: string;
         model: string;
@@ -43,12 +51,19 @@ export declare class VehiclesController {
         images: string[];
         videoUrl: string | null;
         status: import("@prisma/client").$Enums.VehicleStatus;
+        overLimitFee: number | null;
+        pickupLocation: string;
+        latitude: number | null;
+        longitude: number | null;
+        terms: string | null;
+        ownerId: string | null;
     }[]>;
     getCalendar(id: string): Promise<{
         vehicle: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            limitKmPerDay: number | null;
             plateNumber: string;
             brand: string;
             model: string;
@@ -64,6 +79,12 @@ export declare class VehiclesController {
             images: string[];
             videoUrl: string | null;
             status: import("@prisma/client").$Enums.VehicleStatus;
+            overLimitFee: number | null;
+            pickupLocation: string;
+            latitude: number | null;
+            longitude: number | null;
+            terms: string | null;
+            ownerId: string | null;
         };
         bookings: {
             id: string;
@@ -81,6 +102,7 @@ export declare class VehiclesController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        limitKmPerDay: number | null;
         plateNumber: string;
         brand: string;
         model: string;
@@ -96,11 +118,18 @@ export declare class VehiclesController {
         images: string[];
         videoUrl: string | null;
         status: import("@prisma/client").$Enums.VehicleStatus;
+        overLimitFee: number | null;
+        pickupLocation: string;
+        latitude: number | null;
+        longitude: number | null;
+        terms: string | null;
+        ownerId: string | null;
     }>;
     findAll(brand?: string, seats?: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        limitKmPerDay: number | null;
         plateNumber: string;
         brand: string;
         model: string;
@@ -116,11 +145,18 @@ export declare class VehiclesController {
         images: string[];
         videoUrl: string | null;
         status: import("@prisma/client").$Enums.VehicleStatus;
+        overLimitFee: number | null;
+        pickupLocation: string;
+        latitude: number | null;
+        longitude: number | null;
+        terms: string | null;
+        ownerId: string | null;
     }[]>;
-    create(dto: CreateVehicleDto): Promise<{
+    getMyCars(req: any): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        limitKmPerDay: number | null;
         plateNumber: string;
         brand: string;
         model: string;
@@ -136,11 +172,18 @@ export declare class VehiclesController {
         images: string[];
         videoUrl: string | null;
         status: import("@prisma/client").$Enums.VehicleStatus;
-    }>;
-    update(id: string, dto: Partial<CreateVehicleDto>): Promise<{
+        overLimitFee: number | null;
+        pickupLocation: string;
+        latitude: number | null;
+        longitude: number | null;
+        terms: string | null;
+        ownerId: string | null;
+    }[]>;
+    create(req: any, dto: CreateVehicleDto): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        limitKmPerDay: number | null;
         plateNumber: string;
         brand: string;
         model: string;
@@ -156,11 +199,18 @@ export declare class VehiclesController {
         images: string[];
         videoUrl: string | null;
         status: import("@prisma/client").$Enums.VehicleStatus;
+        overLimitFee: number | null;
+        pickupLocation: string;
+        latitude: number | null;
+        longitude: number | null;
+        terms: string | null;
+        ownerId: string | null;
     }>;
-    updateStatus(id: string, status: VehicleStatus): Promise<{
+    update(req: any, id: string, dto: Partial<CreateVehicleDto>): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        limitKmPerDay: number | null;
         plateNumber: string;
         brand: string;
         model: string;
@@ -176,6 +226,39 @@ export declare class VehiclesController {
         images: string[];
         videoUrl: string | null;
         status: import("@prisma/client").$Enums.VehicleStatus;
+        overLimitFee: number | null;
+        pickupLocation: string;
+        latitude: number | null;
+        longitude: number | null;
+        terms: string | null;
+        ownerId: string | null;
     }>;
-    delete(id: string): Promise<void>;
+    updateStatus(req: any, id: string, status: VehicleStatus): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        limitKmPerDay: number | null;
+        plateNumber: string;
+        brand: string;
+        model: string;
+        year: number;
+        seats: number;
+        transmission: string;
+        fuel: string;
+        color: string;
+        dailyPrice: number;
+        weekendPrice: number;
+        holidayPrice: number;
+        penaltyRate: number;
+        images: string[];
+        videoUrl: string | null;
+        status: import("@prisma/client").$Enums.VehicleStatus;
+        overLimitFee: number | null;
+        pickupLocation: string;
+        latitude: number | null;
+        longitude: number | null;
+        terms: string | null;
+        ownerId: string | null;
+    }>;
+    delete(req: any, id: string): Promise<void>;
 }
