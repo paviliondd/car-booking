@@ -24,7 +24,7 @@ COPY prisma ./prisma/
 RUN npm ci --only=production
 
 COPY --from=builder /usr/src/app/dist ./dist
-COPY --from=builder /usr/src/app/dist/prisma.config.js ./prisma.config.js
+COPY prisma.config.ts ./
 
 # Generate prisma client for production
 RUN npx prisma generate
