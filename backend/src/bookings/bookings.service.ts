@@ -214,9 +214,9 @@ export class BookingsService {
         <p>Tổng tiền thanh toán: ${totalPrice.toLocaleString()} VND</p>
         <p>Vui lòng click vào link sau để tiến hành đặt cọc/thanh toán: <a href="${payGateway.paymentUrl}">Thanh toán ngay</a></p>
       `;
-      await this.notificationService.sendEmail(dto.email, `[DATXE] Xác nhận đặt xe ${bookingNumber}`, emailContent);
+      await this.notificationService.sendEmail(dto.email, `[datxe] Xác nhận đặt xe ${bookingNumber}`, emailContent);
 
-      const smsContent = `DATXE: Dat xe ${bookingNumber} thanh cong cho xe ${vehicle.brand}. Vui long thanh toan: ${payGateway.paymentUrl}`;
+      const smsContent = `datxe: Dat xe ${bookingNumber} thanh cong cho xe ${vehicle.brand}. Vui long thanh toan: ${payGateway.paymentUrl}`;
       await this.notificationService.sendSMS(dto.phone, smsContent);
 
       return {
@@ -358,7 +358,7 @@ export class BookingsService {
     const customerEmail = currentBooking.customer.user?.email || '';
 
     if (status === BookingStatus.CONFIRMED) {
-      await this.notificationService.sendSMS(customerPhone, `DATXE: Don hang ${currentBooking.bookingNumber} da duoc XAC NHAN. Hen gap ban luc nhan xe.`);
+      await this.notificationService.sendSMS(customerPhone, `datxe: Don hang ${currentBooking.bookingNumber} da duoc XAC NHAN. Hen gap ban luc nhan xe.`);
     }
 
     return updated;

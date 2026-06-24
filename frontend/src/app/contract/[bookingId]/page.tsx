@@ -127,7 +127,7 @@ export default function ContractPage() {
       doc.text(`HOP DONG THUE XE DIEN TU: HD-${bookingData.bookingNumber}`, 15, 42);
       
       doc.setFontSize(11);
-      doc.text(`BÊN CHO THUÊ (BÊN A): ${bookingData.vehicle.owner?.name || 'Hệ thống DATXE'}`, 15, 54);
+      doc.text(`BÊN CHO THUÊ (BÊN A): ${bookingData.vehicle.owner?.name || 'Hệ thống datxe'}`, 15, 54);
       doc.text(`BÊN THUÊ (BÊN B): ${bookingData.customer.fullName}`, 15, 62);
       doc.text(`ĐỊA CHỈ: ${bookingData.pickupLocation}`, 15, 70);
       
@@ -145,7 +145,7 @@ export default function ContractPage() {
       doc.addImage(signatureBase64, 'PNG', 15, 150, 60, 30);
 
       // 4. Download file PDF về máy Client
-      doc.save(`HopDong_DATXE_${bookingData.bookingNumber}.pdf`);
+      doc.save(`HopDong_datxe_${bookingData.bookingNumber}.pdf`);
 
       router.push(`/track?phone=${bookingData.customer.phone}`);
     } catch (err: any) {
@@ -158,7 +158,7 @@ export default function ContractPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#080b11] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 text-purple-500 animate-spin" />
+        <Loader2 className="h-8 w-8 text-emerald-500 animate-spin" />
       </div>
     );
   }
@@ -166,7 +166,7 @@ export default function ContractPage() {
   return (
     <div className="min-h-screen bg-[#080b11] py-12 px-6 md:px-12 max-w-4xl mx-auto flex flex-col gap-8 relative overflow-hidden">
       {/* Background decorations */}
-      <div className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] rounded-full bg-purple-500/5 blur-[150px]"></div>
+      <div className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] rounded-full bg-emerald-500/5 blur-[150px]"></div>
 
       <div className="flex justify-between items-center border-b border-white/5 pb-6 relative z-10">
         <button 
@@ -178,7 +178,7 @@ export default function ContractPage() {
         </button>
 
         <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-          <FileText className="h-6 w-6 text-purple-500" />
+          <FileText className="h-6 w-6 text-emerald-500" />
           <span>Ký Hợp Đồng Điện Tử</span>
         </h1>
       </div>
@@ -203,7 +203,7 @@ export default function ContractPage() {
 
           {/* Cột phải: Khung vẽ ký tên (Signature Pad Canvas) */}
           <div className="md:col-span-1 flex flex-col gap-6">
-            <div className="glass-panel p-6 rounded-xl border border-purple-500/20 flex flex-col gap-4">
+            <div className="glass-panel p-6 rounded-xl border border-emerald-500/20 flex flex-col gap-4">
               <h3 className="font-bold text-white text-base">Khung Ký Số</h3>
               <p className="text-xs text-gray-400">Vẽ chữ ký của bạn trực tiếp bằng chuột hoặc ngón tay lên khung bên dưới:</p>
               

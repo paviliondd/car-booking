@@ -48,7 +48,7 @@ export default function RevenueChart({ data, selectedMonth, onMonthChange }: Rev
       <div className="flex justify-between items-start">
         <div className="flex flex-col gap-1.5">
           <h3 className="text-base font-bold text-gray-950 dark:text-white">Doanh thu tháng này</h3>
-          <span className="text-2xl font-black text-[#00B14F]">
+          <span className="text-2xl font-black text-[#008F5A]">
             {formatMoney(totalRevenue)}
           </span>
         </div>
@@ -76,8 +76,8 @@ export default function RevenueChart({ data, selectedMonth, onMonthChange }: Rev
             <AreaChart data={formattedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#00B14F" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#00B14F" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#008F5A" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#008F5A" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" className="dark:opacity-5" />
@@ -101,7 +101,7 @@ export default function RevenueChart({ data, selectedMonth, onMonthChange }: Rev
               <Area 
                 type="monotone" 
                 dataKey="revenue" 
-                stroke="#00B14F" 
+                stroke="#008F5A" 
                 strokeWidth={3}
                 fillOpacity={1} 
                 fill="url(#colorRevenue)" 

@@ -14,7 +14,7 @@ const mockBirthdayTimeline = [
     day: 'Hôm nay (24/06)',
     list: [
       { name: 'Nguyễn Văn Khách', role: 'Khách hàng', type: 'regular', color: 'bg-emerald-500' },
-      { name: 'Trần Văn C', role: 'Chủ xe/Đối tác', type: 'partner', color: 'bg-blue-500' },
+      { name: 'Trần Văn C', role: 'Chủ xe/Đối tác', type: 'partner', color: 'bg-emerald-500' },
     ]
   },
   {
@@ -27,7 +27,7 @@ const mockBirthdayTimeline = [
     day: 'Ngày kia (26/06)',
     list: [
       { name: 'Phạm Văn Hùng', role: 'Khách hàng', type: 'regular', color: 'bg-emerald-500' },
-      { name: 'Nguyễn Thị Lan', role: 'Chủ xe/Đối tác', type: 'partner', color: 'bg-blue-500' },
+      { name: 'Nguyễn Thị Lan', role: 'Chủ xe/Đối tác', type: 'partner', color: 'bg-emerald-500' },
     ]
   }
 ];
@@ -66,7 +66,7 @@ export default function BirthdayDrawer({ isOpen, onClose }: BirthdayDrawerProps)
           <div className="flex-grow overflow-y-auto p-6 flex flex-col gap-6">
             {mockBirthdayTimeline.map((group, groupIdx) => (
               <div key={groupIdx} className="flex flex-col gap-3">
-                <span className="text-xs font-bold text-[#00B14F] border-b border-gray-100 dark:border-white/5 pb-1">
+                <span className="text-xs font-bold text-[#008F5A] border-b border-gray-100 dark:border-white/5 pb-1">
                   {group.day}
                 </span>
 
@@ -86,7 +86,7 @@ export default function BirthdayDrawer({ isOpen, onClose }: BirthdayDrawerProps)
 
                       <button
                         onClick={() => toast.success(`Mở xem thông tin: ${item.name}`)}
-                        className="text-[10px] text-[#3699FF] font-bold border border-[#3699FF]/20 px-2.5 py-1 rounded hover:bg-blue-500/10 cursor-pointer"
+                        className="text-[10px] text-[#3699FF] font-bold border border-[#3699FF]/20 px-2.5 py-1 rounded hover:bg-emerald-500/10 cursor-pointer"
                       >
                         Chi tiết
                       </button>
@@ -101,7 +101,7 @@ export default function BirthdayDrawer({ isOpen, onClose }: BirthdayDrawerProps)
           <div className="p-4 border-t border-gray-100 dark:border-white/5 flex justify-end">
             <button 
               onClick={() => toast.success('Xem toàn bộ lịch sinh nhật tháng')}
-              className="bg-[#00B14F] hover:bg-[#009b45] text-white px-5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 cursor-pointer"
+              className="bg-[#008F5A] hover:bg-[#007A4D] text-white px-5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 cursor-pointer"
             >
               <span>Xem lịch tháng</span>
               <ArrowRight className="h-3.5 w-3.5" />

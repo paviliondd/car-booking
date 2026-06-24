@@ -30,7 +30,7 @@ Mã hợp đồng: HD-${bookingNumber}
 
 BÊN CHO THUÊ (BÊN A):
 - Đại diện: ${ownerName}
-- Vai trò: Chủ sở hữu phương tiện / Đại diện hệ thống DATXE
+- Vai trò: Chủ sở hữu phương tiện / Đại diện hệ thống datxe
 
 BÊN THUÊ (BÊN B):
 - Họ và tên: ${renterName}
@@ -69,7 +69,7 @@ Bên A đồng ý cho Bên B thuê xe tự lái với các thông tin sau:
             where: { bookingId },
         });
         if (!contract) {
-            const ownerName = booking.vehicle.owner?.name || 'Hệ thống DATXE';
+            const ownerName = booking.vehicle.owner?.name || 'Hệ thống datxe';
             const terms = this.getContractTemplate(booking.bookingNumber, booking.customer.fullName, ownerName, `${booking.vehicle.brand} ${booking.vehicle.model}`, booking.vehicle.plateNumber, booking.totalPrice);
             contract = await this.prisma.contract.create({
                 data: {
@@ -107,13 +107,13 @@ Bên A đồng ý cho Bên B thuê xe tự lái với các thông tin sau:
         const emailBody = `
       <h3>Hợp đồng thuê xe điện tử số ${booking.bookingNumber}</h3>
       <p>Chào bạn ${booking.customer.fullName},</p>
-      <p>Cảm ơn bạn đã tin dùng dịch vụ thuê xe tự lái tại DATXE.</p>
+      <p>Cảm ơn bạn đã tin dùng dịch vụ thuê xe tự lái tại datxe.</p>
       <p>Hợp đồng thuê xe điện tử của bạn đã được ký kết thành công. Bản sao hợp đồng PDF được đính kèm trong email này để lưu trữ.</p>
       <br/>
-      <p>Trân trọng,<br/>Đội ngũ DATXE</p>
+      <p>Trân trọng,<br/>Đội ngũ datxe</p>
     `;
         const mockPdfBase64 = 'JVBERi0xLjQKJdPr6eEKMSAwIG9iago8PAovVGl0bGUgKEhvcCBkb25nIERBVFhFKQovQXV0aG9yIChEQVRYRSkKPj4KZW5kb2JqCnhyZWYKMCAxCjAwMDAwMDAwMDAgNjU1MzUgZiAKdHJhaWxlcgo8PAovU2l6ZSAyCj4+CnN0YXJ0eHJlZgoxMTYKJSVFT0Y=';
-        await this.notificationService.sendEmailWithAttachment(targetEmail, `[DATXE] Hợp đồng điện tử ${booking.bookingNumber} đã ký kết`, emailBody, mockPdfBase64, `HopDong_DATXE_${booking.bookingNumber}.pdf`);
+        await this.notificationService.sendEmailWithAttachment(targetEmail, `[datxe] Hợp đồng điện tử ${booking.bookingNumber} đã ký kết`, emailBody, mockPdfBase64, `HopDong_datxe_${booking.bookingNumber}.pdf`);
         return updatedContract;
     }
 };

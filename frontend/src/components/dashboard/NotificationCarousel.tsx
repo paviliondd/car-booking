@@ -45,7 +45,7 @@ export default function NotificationCarousel({ notices }: NotificationCarouselPr
       {/* Header and Dots indicators */}
       <div className="flex justify-between items-center z-10">
         <div className="flex items-center gap-2">
-          <BellRing className="h-4.5 w-4.5 text-[#00B14F] animate-bounce" />
+          <BellRing className="h-4.5 w-4.5 text-[#008F5A] animate-bounce" />
           <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Thông báo mới</span>
         </div>
         
@@ -56,7 +56,7 @@ export default function NotificationCarousel({ notices }: NotificationCarouselPr
               key={i}
               onClick={() => setActiveIndex(i)}
               className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                i === activeIndex ? 'w-4 bg-[#00B14F]' : 'w-1.5 bg-gray-600'
+                i === activeIndex ? 'w-4 bg-[#008F5A]' : 'w-1.5 bg-gray-600'
               }`}
             />
           ))}
@@ -74,7 +74,7 @@ export default function NotificationCarousel({ notices }: NotificationCarouselPr
           <span className="text-[10px] text-gray-500 font-bold">{current.date}</span>
           <button
             onClick={() => toast.success(`Mở xem chi tiết: ${current.title}`)}
-            className="text-xs text-[#00B14F] font-bold flex items-center gap-1 hover:underline cursor-pointer"
+            className="text-xs text-[#008F5A] font-bold flex items-center gap-1 hover:underline cursor-pointer"
           >
             <span>Chi tiết</span>
             <ArrowRight className="h-3 w-3" />

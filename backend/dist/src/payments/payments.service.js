@@ -76,7 +76,7 @@ let PaymentsService = PaymentsService_1 = class PaymentsService {
             const mockBankBin = '970415';
             const mockAccountNo = '101234567890';
             const mockAccountName = 'CONG TY CHO THUE XE AN TIEP';
-            const vietQrUrl = `https://img.vietqr.io/image/${mockBankBin}-${mockAccountNo}-compact2.png?amount=${amount}&addInfo=DATXE_${bookingId.slice(0, 8)}&accountName=${encodeURIComponent(mockAccountName)}`;
+            const vietQrUrl = `https://img.vietqr.io/image/${mockBankBin}-${mockAccountNo}-compact2.png?amount=${amount}&addInfo=datxe_${bookingId.slice(0, 8)}&accountName=${encodeURIComponent(mockAccountName)}`;
             const paymentUrl = `https://datxe.linuxunity.com/vietqr-payment-mock?qrUrl=${encodeURIComponent(vietQrUrl)}&bookingId=${bookingId}&amount=${amount}&transactionId=${transactionId}`;
             return { paymentUrl, transactionId };
         }

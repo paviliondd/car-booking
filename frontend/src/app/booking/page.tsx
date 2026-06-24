@@ -252,7 +252,7 @@ export default function BookingPage() {
         </button>
 
         <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-          <Car className="h-6 w-6 text-purple-500" />
+          <Car className="h-6 w-6 text-emerald-500" />
           <span>Đặt Xe Tự Lái</span>
         </h1>
       </div>
@@ -269,7 +269,7 @@ export default function BookingPage() {
           {/* Cột Trái: Bộ tìm kiếm */}
           <div className="lg:col-span-1 glass-panel p-6 rounded-xl border border-white/5 h-fit flex flex-col gap-6">
             <h2 className="text-lg font-bold text-white flex items-center gap-2 border-b border-white/5 pb-3">
-              <Calendar className="h-5 w-5 text-purple-400" />
+              <Calendar className="h-5 w-5 text-emerald-400" />
               <span>Thời Gian & Địa Điểm</span>
             </h2>
 
@@ -282,7 +282,7 @@ export default function BookingPage() {
                     value={startDate} 
                     onChange={(e) => setStartDate(e.target.value)}
                     required
-                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-purple-500" 
+                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-emerald-500" 
                   />
                 </div>
                 <div>
@@ -292,7 +292,7 @@ export default function BookingPage() {
                     value={startTime} 
                     onChange={(e) => setStartTime(e.target.value)}
                     required
-                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-purple-500" 
+                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-emerald-500" 
                   />
                 </div>
               </div>
@@ -305,7 +305,7 @@ export default function BookingPage() {
                     value={endDate} 
                     onChange={(e) => setEndDate(e.target.value)}
                     required
-                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-purple-500" 
+                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-emerald-500" 
                   />
                 </div>
                 <div>
@@ -315,7 +315,7 @@ export default function BookingPage() {
                     value={endTime} 
                     onChange={(e) => setEndTime(e.target.value)}
                     required
-                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-purple-500" 
+                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-emerald-500" 
                   />
                 </div>
               </div>
@@ -330,7 +330,7 @@ export default function BookingPage() {
                     onChange={(e) => { setPickupLoc(e.target.value); setDropoffLoc(e.target.value); }}
                     placeholder="Điểm nhận xe" 
                     required
-                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-purple-500" 
+                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-emerald-500" 
                   />
                 </div>
               </div>
@@ -350,7 +350,7 @@ export default function BookingPage() {
           <div className="lg:col-span-2 flex flex-col gap-6">
             {!searched && (
               <div className="glass-panel p-12 text-center rounded-xl border border-white/5 flex flex-col items-center gap-4 text-gray-400">
-                <Car className="h-12 w-12 text-purple-500/50 animate-bounce" />
+                <Car className="h-12 w-12 text-emerald-500/50 animate-bounce" />
                 <p className="text-lg font-bold text-white">Vui lòng chọn lịch trình để quét tìm xe trống</p>
                 <p className="text-sm">Hệ thống sẽ lọc thời gian và loại bỏ ngay lập tức các xe trùng lịch đã được xác nhận cọc.</p>
               </div>
@@ -373,12 +373,12 @@ export default function BookingPage() {
                       <div className="p-5 flex flex-col flex-grow gap-3">
                         <div className="flex justify-between items-start">
                           <h3 className="font-bold text-white text-lg">{car.brand} {car.model}</h3>
-                          <span className="text-purple-400 font-bold">{(car.dailyPrice).toLocaleString()}đ/ngày</span>
+                          <span className="text-emerald-400 font-bold">{(car.dailyPrice).toLocaleString()}đ/ngày</span>
                         </div>
                         <p className="text-xs text-gray-400">Năm sản xuất: {car.year} | Ghế: {car.seats} | {car.transmission === 'AUTO' ? 'Tự động' : 'Số sàn'}</p>
                         <button 
                           onClick={() => setSelectedVehicle(car)}
-                          className="w-full bg-purple-500/20 hover:bg-purple-500 text-purple-400 hover:text-white py-2 rounded-lg text-xs font-bold transition mt-2 cursor-pointer"
+                          className="w-full bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-white py-2 rounded-lg text-xs font-bold transition mt-2 cursor-pointer"
                         >
                           Chọn xe gợi ý này
                         </button>
@@ -392,7 +392,7 @@ export default function BookingPage() {
             {searched && vehicles.length > 0 && (
               <div className="grid md:grid-cols-2 gap-6">
                 {vehicles.map((car) => (
-                  <div key={car.id} className="glass-panel rounded-xl overflow-hidden border border-white/5 flex flex-col group hover:border-purple-500/20 transition-all duration-300">
+                  <div key={car.id} className="glass-panel rounded-xl overflow-hidden border border-white/5 flex flex-col group hover:border-emerald-500/20 transition-all duration-300">
                     <div className="relative h-[180px]">
                       <img src={car.images[0]} alt={car.model} className="object-cover w-full h-full" />
                       <span className="absolute bottom-3 left-3 bg-[#080b11]/80 text-[#f3f4f6] text-xs font-semibold px-2 py-1 rounded-md border border-white/10">
@@ -407,7 +407,7 @@ export default function BookingPage() {
                         </div>
                         <div className="text-right">
                           <span className="text-xs text-gray-500 block">Giá chuẩn</span>
-                          <span className="text-base font-bold text-purple-400">{(car.dailyPrice).toLocaleString()}đ/ngày</span>
+                          <span className="text-base font-bold text-emerald-400">{(car.dailyPrice).toLocaleString()}đ/ngày</span>
                         </div>
                       </div>
 
@@ -492,7 +492,7 @@ export default function BookingPage() {
                 </div>
                 <div className="flex justify-between text-gray-500 font-bold border-t border-white/5 pt-2">
                   <span>Tổng tiền thanh toán:</span>
-                  <span className="text-purple-400">{(getTotalPrice()).toLocaleString()}đ</span>
+                  <span className="text-emerald-400">{(getTotalPrice()).toLocaleString()}đ</span>
                 </div>
                 <div className="flex justify-between text-green-400 font-black text-base">
                   <span>Tiền đặt cọc ({depositPercent}%):</span>
@@ -503,7 +503,7 @@ export default function BookingPage() {
               {currentUser && selectedVehicle.ownerId && (
                 <button
                   onClick={() => setShowChatModal(true)}
-                  className="w-full bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white py-2.5 rounded-lg text-sm font-semibold transition mt-2 flex items-center justify-center gap-2 cursor-pointer border border-blue-500/20"
+                  className="w-full bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white py-2.5 rounded-lg text-sm font-semibold transition mt-2 flex items-center justify-center gap-2 cursor-pointer border border-emerald-500/20"
                 >
                   <MessageSquare className="h-4 w-4" />
                   <span>Chat trực tiếp với chủ xe</span>
@@ -514,7 +514,7 @@ export default function BookingPage() {
             {/* 2. Bản đồ tọa độ (Map widget) */}
             <div className="glass-panel p-6 rounded-xl border border-white/5 flex flex-col gap-4">
               <h3 className="font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
-                <Map className="h-4.5 w-4.5 text-purple-400" />
+                <Map className="h-4.5 w-4.5 text-emerald-400" />
                 <span>Vị Trí Nhận Xe</span>
               </h3>
               <p className="text-xs text-gray-400">Xe đặt tại tọa độ: Lat {selectedVehicle.latitude || '20.999'}, Lng {selectedVehicle.longitude || '105.798'}</p>
@@ -579,7 +579,7 @@ export default function BookingPage() {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Nguyễn Văn A"
-                      className="w-full bg-gray-950 border border-white/10 rounded-lg py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:border-purple-500" 
+                      className="w-full bg-gray-950 border border-white/10 rounded-lg py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:border-emerald-500" 
                     />
                   </div>
                 </div>
@@ -594,7 +594,7 @@ export default function BookingPage() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="0987654321"
-                      className="w-full bg-gray-950 border border-white/10 rounded-lg py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:border-purple-500" 
+                      className="w-full bg-gray-950 border border-white/10 rounded-lg py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:border-emerald-500" 
                     />
                   </div>
                 </div>
@@ -609,7 +609,7 @@ export default function BookingPage() {
                     value={idCardNo}
                     onChange={(e) => setIdCardNo(e.target.value)}
                     placeholder="037200123456"
-                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-purple-500" 
+                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-emerald-500" 
                   />
                 </div>
 
@@ -621,7 +621,7 @@ export default function BookingPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="nguyenvana@gmail.com"
-                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-purple-500" 
+                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-emerald-500" 
                   />
                 </div>
               </div>
@@ -629,13 +629,13 @@ export default function BookingPage() {
               {/* 1. Chọn gói Bảo Hiểm */}
               <div>
                 <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-1.5">
-                  <Shield className="h-4.5 w-4.5 text-purple-400" />
+                  <Shield className="h-4.5 w-4.5 text-emerald-400" />
                   <span>Bảo Hiểm Thân Vỏ Tự Nguyện</span>
                 </h3>
                 <div className="grid md:grid-cols-3 gap-3">
                   
                   {/* None */}
-                  <label className={`border rounded-lg p-4 flex flex-col gap-1 cursor-pointer transition ${insuranceType === 'NONE' ? 'border-purple-500 bg-purple-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
+                  <label className={`border rounded-lg p-4 flex flex-col gap-1 cursor-pointer transition ${insuranceType === 'NONE' ? 'border-emerald-500 bg-emerald-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
                     <div className="flex justify-between items-center w-full">
                       <span className="text-xs font-semibold text-white">Gói Tiêu chuẩn</span>
                       <input 
@@ -643,15 +643,15 @@ export default function BookingPage() {
                         name="insurance" 
                         checked={insuranceType === 'NONE'}
                         onChange={() => setInsuranceType('NONE')}
-                        className="accent-purple-500"
+                        className="accent-emerald-500"
                       />
                     </div>
                     <span className="text-[10px] text-gray-500">Khách tự chịu trách nhiệm va chạm</span>
-                    <strong className="text-xs text-purple-400 mt-2">0đ / ngày</strong>
+                    <strong className="text-xs text-emerald-400 mt-2">0đ / ngày</strong>
                   </label>
 
                   {/* Basic */}
-                  <label className={`border rounded-lg p-4 flex flex-col gap-1 cursor-pointer transition ${insuranceType === 'BASIC' ? 'border-purple-500 bg-purple-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
+                  <label className={`border rounded-lg p-4 flex flex-col gap-1 cursor-pointer transition ${insuranceType === 'BASIC' ? 'border-emerald-500 bg-emerald-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
                     <div className="flex justify-between items-center w-full">
                       <span className="text-xs font-semibold text-white">Gói Cơ Bản</span>
                       <input 
@@ -659,15 +659,15 @@ export default function BookingPage() {
                         name="insurance" 
                         checked={insuranceType === 'BASIC'}
                         onChange={() => setInsuranceType('BASIC')}
-                        className="accent-purple-500"
+                        className="accent-emerald-500"
                       />
                     </div>
                     <span className="text-[10px] text-gray-500">Bồi thường va chạm đến 80%</span>
-                    <strong className="text-xs text-purple-400 mt-2">100,000đ / ngày</strong>
+                    <strong className="text-xs text-emerald-400 mt-2">100,000đ / ngày</strong>
                   </label>
 
                   {/* Premium */}
-                  <label className={`border rounded-lg p-4 flex flex-col gap-1 cursor-pointer transition ${insuranceType === 'PREMIUM' ? 'border-purple-500 bg-purple-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
+                  <label className={`border rounded-lg p-4 flex flex-col gap-1 cursor-pointer transition ${insuranceType === 'PREMIUM' ? 'border-emerald-500 bg-emerald-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
                     <div className="flex justify-between items-center w-full">
                       <span className="text-xs font-semibold text-white">Gói VIP Cao Cấp</span>
                       <input 
@@ -675,11 +675,11 @@ export default function BookingPage() {
                         name="insurance" 
                         checked={insuranceType === 'PREMIUM'}
                         onChange={() => setInsuranceType('PREMIUM')}
-                        className="accent-purple-500"
+                        className="accent-emerald-500"
                       />
                     </div>
                     <span className="text-[10px] text-gray-500">Bảo hiểm 100% không khấu hao</span>
-                    <strong className="text-xs text-purple-400 mt-2">250,000đ / ngày</strong>
+                    <strong className="text-xs text-emerald-400 mt-2">250,000đ / ngày</strong>
                   </label>
                 </div>
               </div>
@@ -687,7 +687,7 @@ export default function BookingPage() {
               {/* 2. Chọn Tỷ Lệ Cọc */}
               <div>
                 <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-1.5">
-                  <CreditCard className="h-4.5 w-4.5 text-purple-400" />
+                  <CreditCard className="h-4.5 w-4.5 text-emerald-400" />
                   <span>Chọn Tỷ Lệ Đặt Cọc</span>
                 </h3>
                 <div className="flex gap-4">
@@ -695,7 +695,7 @@ export default function BookingPage() {
                     type="button"
                     onClick={() => setDepositPercent(30)}
                     className={`flex-1 text-center py-2.5 rounded-lg text-sm font-semibold transition border cursor-pointer ${
-                      depositPercent === 30 ? 'border-purple-500 bg-purple-500/10 text-white' : 'border-white/10 text-gray-400 bg-gray-950 hover:border-white/20'
+                      depositPercent === 30 ? 'border-emerald-500 bg-emerald-500/10 text-white' : 'border-white/10 text-gray-400 bg-gray-950 hover:border-white/20'
                     }`}
                   >
                     Cọc trước 30%
@@ -704,7 +704,7 @@ export default function BookingPage() {
                     type="button"
                     onClick={() => setDepositPercent(50)}
                     className={`flex-1 text-center py-2.5 rounded-lg text-sm font-semibold transition border cursor-pointer ${
-                      depositPercent === 50 ? 'border-purple-500 bg-purple-500/10 text-white' : 'border-white/10 text-gray-400 bg-gray-950 hover:border-white/20'
+                      depositPercent === 50 ? 'border-emerald-500 bg-emerald-500/10 text-white' : 'border-white/10 text-gray-400 bg-gray-950 hover:border-white/20'
                     }`}
                   >
                     Cọc trước 50%
@@ -716,7 +716,7 @@ export default function BookingPage() {
               <div>
                 <h3 className="text-sm font-bold text-white mb-3">Tài Liệu Hồ Sơ Xác Thực (Bắt buộc)</h3>
                 <div className="grid md:grid-cols-3 gap-4">
-                  <div className="border border-dashed border-white/10 rounded-lg p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-purple-500/50 transition relative">
+                  <div className="border border-dashed border-white/10 rounded-lg p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-emerald-500/50 transition relative">
                     {idCardFront ? (
                       <div className="w-full h-24 relative rounded overflow-hidden">
                         <img src={idCardFront} alt="CCCD Front" className="w-full h-full object-cover" />
@@ -736,7 +736,7 @@ export default function BookingPage() {
                     />
                   </div>
 
-                  <div className="border border-dashed border-white/10 rounded-lg p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-purple-500/50 transition relative">
+                  <div className="border border-dashed border-white/10 rounded-lg p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-emerald-500/50 transition relative">
                     {idCardBack ? (
                       <div className="w-full h-24 relative rounded overflow-hidden">
                         <img src={idCardBack} alt="CCCD Back" className="w-full h-full object-cover" />
@@ -756,7 +756,7 @@ export default function BookingPage() {
                     />
                   </div>
 
-                  <div className="border border-dashed border-white/10 rounded-lg p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-purple-500/50 transition relative">
+                  <div className="border border-dashed border-white/10 rounded-lg p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-emerald-500/50 transition relative">
                     {driverLicense ? (
                       <div className="w-full h-24 relative rounded overflow-hidden">
                         <img src={driverLicense} alt="GPLX" className="w-full h-full object-cover" />
@@ -789,7 +789,7 @@ export default function BookingPage() {
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
                       placeholder="GIAM50K, CHAOHE2026..."
-                      className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-purple-500" 
+                      className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-emerald-500" 
                     />
                   </div>
                 </div>
@@ -803,7 +803,7 @@ export default function BookingPage() {
                       value={affiliateCode}
                       onChange={(e) => setAffiliateCode(e.target.value)}
                       placeholder="CTV999..."
-                      className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-purple-500" 
+                      className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-emerald-500" 
                     />
                   </div>
                 </div>
@@ -816,7 +816,7 @@ export default function BookingPage() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Yêu cầu giao xe tại cơ quan, vệ sinh sạch sẽ trước khi giao..."
-                  className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-purple-500" 
+                  className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-emerald-500" 
                 />
               </div>
 
@@ -824,9 +824,9 @@ export default function BookingPage() {
               <div>
                 <h3 className="text-sm font-bold text-white mb-3">Hình Thức Đặt Cọc</h3>
                 <div className="grid md:grid-cols-3 gap-3">
-                  <label className={`border rounded-lg p-4 flex items-center justify-between cursor-pointer transition ${paymentMethod === 'BANK_TRANSFER' ? 'border-purple-500 bg-purple-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
+                  <label className={`border rounded-lg p-4 flex items-center justify-between cursor-pointer transition ${paymentMethod === 'BANK_TRANSFER' ? 'border-emerald-500 bg-emerald-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
                     <div className="flex items-center gap-3">
-                      <CreditCard className="h-5 w-5 text-purple-400" />
+                      <CreditCard className="h-5 w-5 text-emerald-400" />
                       <span className="text-sm font-semibold text-white">VietQR / Ngân Hàng</span>
                     </div>
                     <input 
@@ -835,11 +835,11 @@ export default function BookingPage() {
                       value="BANK_TRANSFER"
                       checked={paymentMethod === 'BANK_TRANSFER'}
                       onChange={() => setPaymentMethod('BANK_TRANSFER')}
-                      className="accent-purple-500" 
+                      className="accent-emerald-500" 
                     />
                   </label>
 
-                  <label className={`border rounded-lg p-4 flex items-center justify-between cursor-pointer transition ${paymentMethod === 'MOMO' ? 'border-purple-500 bg-purple-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
+                  <label className={`border rounded-lg p-4 flex items-center justify-between cursor-pointer transition ${paymentMethod === 'MOMO' ? 'border-emerald-500 bg-emerald-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
                     <div className="flex items-center gap-3">
                       <div className="h-5 w-5 rounded bg-pink-600 text-white font-bold text-[10px] flex items-center justify-center">M</div>
                       <span className="text-sm font-semibold text-white">Ví MoMo</span>
@@ -850,11 +850,11 @@ export default function BookingPage() {
                       value="MOMO"
                       checked={paymentMethod === 'MOMO'}
                       onChange={() => setPaymentMethod('MOMO')}
-                      className="accent-purple-500" 
+                      className="accent-emerald-500" 
                     />
                   </label>
 
-                  <label className={`border rounded-lg p-4 flex items-center justify-between cursor-pointer transition ${paymentMethod === 'CASH' ? 'border-purple-500 bg-purple-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
+                  <label className={`border rounded-lg p-4 flex items-center justify-between cursor-pointer transition ${paymentMethod === 'CASH' ? 'border-emerald-500 bg-emerald-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
                     <div className="flex items-center gap-3">
                       <User className="h-5 w-5 text-green-400" />
                       <span className="text-sm font-semibold text-white">Tiền mặt tại showroom</span>
@@ -865,7 +865,7 @@ export default function BookingPage() {
                       value="CASH"
                       checked={paymentMethod === 'CASH'}
                       onChange={() => setPaymentMethod('CASH')}
-                      className="accent-purple-500" 
+                      className="accent-emerald-500" 
                     />
                   </label>
                 </div>
@@ -909,7 +909,7 @@ export default function BookingPage() {
                     key={idx} 
                     className={`max-w-[75%] p-3 rounded-xl text-sm ${
                       chat.senderId === currentUser?.id 
-                        ? 'bg-purple-600 text-white self-end rounded-br-none' 
+                        ? 'bg-emerald-600 text-white self-end rounded-br-none' 
                         : 'bg-white/5 text-gray-300 self-start rounded-bl-none border border-white/5'
                     }`}
                   >
@@ -929,11 +929,11 @@ export default function BookingPage() {
                 value={newChatMessage}
                 onChange={(e) => setNewChatMessage(e.target.value)}
                 placeholder="Nhập tin nhắn..."
-                className="flex-grow bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-purple-500 text-white" 
+                className="flex-grow bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-emerald-500 text-white" 
               />
               <button 
                 type="submit"
-                className="bg-purple-600 hover:bg-purple-500 text-white p-2 rounded-lg transition cursor-pointer"
+                className="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-lg transition cursor-pointer"
               >
                 <Send className="h-4 w-4" />
               </button>

@@ -56,7 +56,7 @@ export default function HomePage() {
     },
     {
       q: 'Xe đã có bảo hiểm chưa và khi xảy ra va chạm xử lý thế nào?',
-      a: 'Tất cả xe của DATXE đều được mua bảo hiểm thân vỏ tự nguyện đầy đủ. Khi có va chạm, quý khách vui lòng giữ nguyên hiện trường và liên hệ ngay hotline 1900 8888 để được cứu hộ và bảo hiểm hỗ trợ xử lý.'
+      a: 'Tất cả xe của datxe đều được mua bảo hiểm thân vỏ tự nguyện đầy đủ. Khi có va chạm, quý khách vui lòng giữ nguyên hiện trường và liên hệ ngay hotline 1900 8888 để được cứu hộ và bảo hiểm hỗ trợ xử lý.'
     },
     {
       q: 'Tôi có thể thay đổi thời gian nhận/trả xe sau khi đã cọc không?',
@@ -73,19 +73,19 @@ export default function HomePage() {
       <section className="relative pt-24 pb-12 px-6 md:px-12 max-w-7xl mx-auto flex flex-col gap-12">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="flex flex-col gap-6">
-            <div className="inline-flex items-center gap-2 bg-[#E0F5E9] dark:bg-purple-500/10 border border-[#00B14F]/20 dark:border-purple-500/20 px-3 py-1 rounded-full text-xs font-semibold text-[#00B14F] dark:text-purple-400 w-fit">
+            <div className="inline-flex items-center gap-2 bg-[#E6F7EF] dark:bg-emerald-500/10 border border-[#008F5A]/20 dark:border-emerald-500/20 px-3 py-1 rounded-full text-xs font-semibold text-[#008F5A] dark:text-emerald-400 w-fit">
               <Award className="h-4.5 w-4.5" />
               <span>Thương Hiệu Cho Thuê Xe Uy Tín Hàng Đầu</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight text-gray-950 dark:text-white">
               Trải Nghiệm Hành Trình <br />
-              <span className="text-[#00B14F] dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-blue-400 dark:to-purple-400">Tự Do & Trọn Vẹn</span>
+              <span className="text-[#008F5A] dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-emerald-400 dark:to-emerald-400">Tự Do & Trọn Vẹn</span>
             </h1>
             <p className="text-gray-600 dark:text-gray-400 text-base md:text-lg leading-relaxed">
               Hệ thống đặt xe tự lái tự động 100%. Chọn ngày, quét mã QR nhận xe lập tức. Đội ngũ xe đời mới, bảo hiểm toàn diện và dịch vụ hỗ trợ cứu hộ 24/7 chuyên nghiệp.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mt-4">
-              <Link href="/booking" className="bg-[#00B14F] hover:bg-[#009b45] text-white text-center font-medium py-3 px-8 rounded-lg text-lg flex items-center justify-center gap-2 transition hover:scale-[1.02] duration-200">
+              <Link href="/booking" className="bg-[#008F5A] hover:bg-[#007A4D] text-white text-center font-medium py-3 px-8 rounded-lg text-lg flex items-center justify-center gap-2 transition hover:scale-[1.02] duration-200">
                 <span>Bắt đầu chuyến đi</span>
                 <ChevronRight className="h-5 w-5" />
               </Link>
@@ -126,7 +126,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold mb-6 flex items-center gap-2 text-gray-950 dark:text-white">
-              <MapPin className="text-[#00B14F] h-7 w-7" />
+              <MapPin className="text-[#008F5A] h-7 w-7" />
               <span>Showroom của chúng tôi</span>
             </h2>
             <div className="space-y-6 text-gray-600 dark:text-gray-400">
@@ -158,14 +158,14 @@ export default function HomePage() {
 
         <div className="grid md:grid-cols-3 gap-8">
           {featuredCars.map((car) => (
-            <div key={car.id} className="bg-white dark:bg-gray-950/20 rounded-xl overflow-hidden border border-gray-100 dark:border-white/5 flex flex-col group hover:border-[#00B14F]/20 dark:hover:border-purple-500/20 transition-all duration-300 shadow-sm">
+            <div key={car.id} className="bg-white dark:bg-gray-950/20 rounded-xl overflow-hidden border border-gray-100 dark:border-white/5 flex flex-col group hover:border-[#008F5A]/20 dark:hover:border-emerald-500/20 transition-all duration-300 shadow-sm">
               <div className="relative h-[200px] overflow-hidden">
                 <img 
                   src={car.img} 
                   alt={car.name} 
                   className="object-cover w-full h-full group-hover:scale-105 transition duration-500" 
                 />
-                <span className="absolute top-4 right-4 bg-[#00B14F]/90 dark:bg-purple-500/90 text-white text-xs font-semibold px-2.5 py-1 rounded-md">
+                <span className="absolute top-4 right-4 bg-[#008F5A]/90 dark:bg-emerald-500/90 text-white text-xs font-semibold px-2.5 py-1 rounded-md">
                   {car.type}
                 </span>
               </div>
@@ -177,7 +177,7 @@ export default function HomePage() {
                   </div>
                   <div className="text-right">
                     <span className="text-xs text-gray-400 block">Giá thuê chỉ từ</span>
-                    <span className="text-lg font-bold text-[#00B14F] dark:text-purple-400">{car.price}/ngày</span>
+                    <span className="text-lg font-bold text-[#008F5A] dark:text-emerald-400">{car.price}/ngày</span>
                   </div>
                 </div>
                 
@@ -196,7 +196,7 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <Link href="/booking" className="bg-[#00B14F] hover:bg-[#009b45] text-center text-white py-2.5 rounded-lg text-sm font-semibold mt-auto block transition duration-200">
+                <Link href="/booking" className="bg-[#008F5A] hover:bg-[#007A4D] text-center text-white py-2.5 rounded-lg text-sm font-semibold mt-auto block transition duration-200">
                   Đăng ký đặt xe
                 </Link>
               </div>
@@ -210,7 +210,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl font-bold mb-4 flex items-center justify-center gap-2 text-gray-950 dark:text-white">
-              <ShieldCheck className="text-[#00B14F]" />
+              <ShieldCheck className="text-[#008F5A]" />
               <span>Chính Sách & Quy Trình Thuê Xe</span>
             </h2>
             <p className="text-gray-600 dark:text-gray-400">Đơn giản, minh bạch và bảo vệ tối đa quyền lợi cho khách hàng.</p>
@@ -218,22 +218,22 @@ export default function HomePage() {
 
           <div className="grid md:grid-cols-4 gap-8">
             <div className="bg-white dark:bg-gray-950/10 p-6 rounded-xl border border-gray-150 dark:border-white/5 text-center flex flex-col items-center gap-4 shadow-xs">
-              <div className="h-12 w-12 rounded-full bg-[#E0F5E9] dark:bg-purple-500/10 border border-[#00B14F]/20 dark:border-purple-500/20 flex items-center justify-center text-[#00B14F] dark:text-purple-400 font-bold text-lg">1</div>
+              <div className="h-12 w-12 rounded-full bg-[#E6F7EF] dark:bg-emerald-500/10 border border-[#008F5A]/20 dark:border-emerald-500/20 flex items-center justify-center text-[#008F5A] dark:text-emerald-400 font-bold text-lg">1</div>
               <h3 className="font-bold text-gray-900 dark:text-white">1. Chọn Lịch Trình</h3>
               <p className="text-xs text-gray-500 dark:text-gray-400">Chọn thời gian nhận/trả xe và lọc dòng xe yêu thích còn trống lịch trực tuyến.</p>
             </div>
             <div className="bg-white dark:bg-gray-950/10 p-6 rounded-xl border border-gray-150 dark:border-white/5 text-center flex flex-col items-center gap-4 shadow-xs">
-              <div className="h-12 w-12 rounded-full bg-[#E0F5E9] dark:bg-purple-500/10 border border-[#00B14F]/20 dark:border-purple-500/20 flex items-center justify-center text-[#00B14F] dark:text-purple-400 font-bold text-lg">2</div>
+              <div className="h-12 w-12 rounded-full bg-[#E6F7EF] dark:bg-emerald-500/10 border border-[#008F5A]/20 dark:border-emerald-500/20 flex items-center justify-center text-[#008F5A] dark:text-emerald-400 font-bold text-lg">2</div>
               <h3 className="font-bold text-gray-900 dark:text-white">2. Điền Form & Cọc</h3>
               <p className="text-xs text-gray-500 dark:text-gray-400">Upload ảnh CCCD và GPLX lên hệ thống. Đặt cọc giữ xe qua MoMo hoặc chuyển khoản VietQR.</p>
             </div>
             <div className="bg-white dark:bg-gray-950/10 p-6 rounded-xl border border-gray-150 dark:border-white/5 text-center flex flex-col items-center gap-4 shadow-xs">
-              <div className="h-12 w-12 rounded-full bg-[#E0F5E9] dark:bg-purple-500/10 border border-[#00B14F]/20 dark:border-purple-500/20 flex items-center justify-center text-[#00B14F] dark:text-purple-400 font-bold text-lg">3</div>
+              <div className="h-12 w-12 rounded-full bg-[#E6F7EF] dark:bg-emerald-500/10 border border-[#008F5A]/20 dark:border-emerald-500/20 flex items-center justify-center text-[#008F5A] dark:text-emerald-400 font-bold text-lg">3</div>
               <h3 className="font-bold text-gray-900 dark:text-white">3. Bàn Giao Xe</h3>
               <p className="text-xs text-gray-500 dark:text-gray-400">Nhân viên liên hệ bàn giao xe trực tiếp tại showroom, ký hợp đồng điện tử siêu tốc.</p>
             </div>
             <div className="bg-white dark:bg-gray-950/10 p-6 rounded-xl border border-gray-150 dark:border-white/5 text-center flex flex-col items-center gap-4 shadow-xs">
-              <div className="h-12 w-12 rounded-full bg-[#E0F5E9] dark:bg-purple-500/10 border border-[#00B14F]/20 dark:border-purple-500/20 flex items-center justify-center text-[#00B14F] dark:text-purple-400 font-bold text-lg">4</div>
+              <div className="h-12 w-12 rounded-full bg-[#E6F7EF] dark:bg-emerald-500/10 border border-[#008F5A]/20 dark:border-emerald-500/20 flex items-center justify-center text-[#008F5A] dark:text-emerald-400 font-bold text-lg">4</div>
               <h3 className="font-bold text-gray-900 dark:text-white">4. Trả Xe Hoàn Cọc</h3>
               <p className="text-xs text-gray-500 dark:text-gray-400">Bàn giao xe sạch sẽ, nhận lại tài sản thế chấp sau khi nhân viên thẩm định tình trạng xe.</p>
             </div>
@@ -245,7 +245,7 @@ export default function HomePage() {
       <section id="faq" className="py-20 px-6 md:px-12 max-w-4xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold mb-4 flex items-center justify-center gap-2 text-gray-950 dark:text-white">
-            <HelpCircle className="text-[#00B14F]" />
+            <HelpCircle className="text-[#008F5A]" />
             <span>Câu Hỏi Thường Gặp (FAQs)</span>
           </h2>
           <p className="text-gray-600 dark:text-gray-400">Tổng hợp các thông tin chi tiết giải đáp thắc mắc của bạn.</p>
@@ -257,10 +257,10 @@ export default function HomePage() {
               <button 
                 type="button"
                 onClick={() => setFaqOpen(faqOpen === i ? null : i)}
-                className="w-full text-left p-6 font-semibold flex justify-between items-center text-gray-800 dark:text-white hover:text-[#00B14F] dark:hover:text-purple-400 transition"
+                className="w-full text-left p-6 font-semibold flex justify-between items-center text-gray-800 dark:text-white hover:text-[#008F5A] dark:hover:text-emerald-400 transition"
               >
                 <span>{faq.q}</span>
-                <span className="text-[#00B14F] dark:text-purple-500 font-bold text-lg">{faqOpen === i ? '-' : '+'}</span>
+                <span className="text-[#008F5A] dark:text-emerald-500 font-bold text-lg">{faqOpen === i ? '-' : '+'}</span>
               </button>
               {faqOpen === i && (
                 <div className="p-6 pt-0 text-sm text-gray-600 dark:text-gray-400 border-t border-gray-100 dark:border-white/5 leading-relaxed">

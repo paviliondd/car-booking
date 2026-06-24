@@ -209,7 +209,7 @@ export default function OwnerDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#080b11] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+        <Loader2 className="h-8 w-8 text-emerald-500 animate-spin" />
       </div>
     );
   }
@@ -223,14 +223,14 @@ export default function OwnerDashboard() {
   if (user?.role === 'CUSTOMER' || !user?.isVerifiedOwner) {
     return (
       <div className="min-h-screen bg-[#080b11] py-12 px-6 flex items-center justify-center relative overflow-hidden">
-        <div className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] rounded-full bg-blue-500/5 blur-[150px]"></div>
+        <div className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] rounded-full bg-emerald-500/5 blur-[150px]"></div>
         <div className="max-w-xl w-full glass-panel border border-white/5 rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative z-10">
           <div className="text-center">
             <div className="inline-flex items-center justify-center p-3 rounded-full bg-green-500/10 border border-green-500/20 mb-4">
               <Car className="h-8 w-8 text-green-400" />
             </div>
             <h1 className="text-2xl font-extrabold text-white">Đăng ký trở thành Chủ xe</h1>
-            <p className="text-xs text-gray-400 mt-2">Nâng cấp tài khoản để bắt đầu chia sẻ xe và kiếm thu nhập thụ động cùng DATXE</p>
+            <p className="text-xs text-gray-400 mt-2">Nâng cấp tài khoản để bắt đầu chia sẻ xe và kiếm thu nhập thụ động cùng datxe</p>
           </div>
 
           {upgradeSuccess ? (
@@ -308,7 +308,7 @@ export default function OwnerDashboard() {
           )}
 
           <div className="text-center text-xs text-gray-500 border-t border-white/5 pt-4">
-            Đăng nhập tài khoản Admin khác? <button onClick={handleLogout} className="text-blue-400 hover:underline">Đăng xuất</button>
+            Đăng nhập tài khoản Admin khác? <button onClick={handleLogout} className="text-emerald-400 hover:underline">Đăng xuất</button>
           </div>
         </div>
       </div>
@@ -557,8 +557,8 @@ export default function OwnerDashboard() {
                       <td className="px-6 py-4 font-semibold text-green-400">{(b.totalPrice).toLocaleString()}đ</td>
                       <td className="px-6 py-4">
                         {b.status === 'PENDING' && <span className="text-amber-400 bg-amber-500/10 text-xs px-2 py-0.5 rounded border border-amber-500/20">Chờ duyệt</span>}
-                        {b.status === 'CONFIRMED' && <span className="text-blue-400 bg-blue-500/10 text-xs px-2 py-0.5 rounded border border-blue-500/20">Đã cọc</span>}
-                        {b.status === 'RENTING' && <span className="text-purple-400 bg-purple-500/10 text-xs px-2 py-0.5 rounded border border-purple-500/20">Đang đi</span>}
+                        {b.status === 'CONFIRMED' && <span className="text-emerald-400 bg-emerald-500/10 text-xs px-2 py-0.5 rounded border border-emerald-500/20">Đã cọc</span>}
+                        {b.status === 'RENTING' && <span className="text-emerald-400 bg-emerald-500/10 text-xs px-2 py-0.5 rounded border border-emerald-500/20">Đang đi</span>}
                         {b.status === 'COMPLETED' && <span className="text-green-400 bg-green-500/10 text-xs px-2 py-0.5 rounded border border-green-500/20">Hoàn thành</span>}
                         {b.status === 'CANCELLED' && <span className="text-red-400 bg-red-500/10 text-xs px-2 py-0.5 rounded border border-red-500/20">Đã hủy</span>}
                       </td>
@@ -582,7 +582,7 @@ export default function OwnerDashboard() {
                         {b.status === 'CONFIRMED' && (
                           <button 
                             onClick={() => handleRequestStatus(b.id, 'RENTING')}
-                            className="bg-purple-600 hover:bg-purple-500 text-white px-2 py-1 rounded text-xs font-semibold cursor-pointer"
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded text-xs font-semibold cursor-pointer"
                           >
                             Giao xe
                           </button>

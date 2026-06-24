@@ -1,0 +1,582 @@
+
+> backend@0.0.1 start:prod
+> node dist/src/main
+
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +85ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +5ms[39m
+[33m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [33m   WARN[39m [38;5;3m[NotificationService] [39m[33mAWS Credentials missing. Notification Service will run in MOCK mode (logging to console).[39m
+[33m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [33m   WARN[39m [38;5;3m[PaymentsService] [39m[33mPayOS config missing or mock. VietQR payment will run in MOCK mode.[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRedisModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mNotificationModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPaymentsModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDashboardModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mVehiclesModule dependencies initialized[39m[38;5;3m +3ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAnalyticsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMaintenanceModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCustomersModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuditModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mReviewsModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTicketsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mChatModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mContractsModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mBookingsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[WebSocketsController] [39m[32mChatGateway subscribed to the "sendMessage" message[39m[38;5;3m +34ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPaymentsController {/api/payments}:[39m[38;5;3m +3ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/payments/momo-webhook, POST} route[39m[38;5;3m +8ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/payments/payos-webhook, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/payments/simulate-success, GET} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/auth}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/register, POST} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/login, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/me, GET} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/google, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/facebook, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/upgrade-owner, POST} route[39m[38;5;3m +3ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/owner-requests, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/verify-owner/:userId, POST} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mVehiclesController {/api/vehicles}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/vehicles/search, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/vehicles/suggestions, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/vehicles/:id/calendar, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/vehicles/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/vehicles, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/vehicles/owner/my-cars, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/vehicles, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/vehicles/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/vehicles/:id/status, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/vehicles/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBookingsController {/api/bookings}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bookings, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bookings/track, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bookings, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bookings/owner/my-requests, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bookings/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/bookings/:id/status, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAnalyticsController {/api/analytics}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/analytics/dashboard, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/analytics/financial, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/analytics/top-vehicles, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMaintenanceController {/api/maintenance}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/maintenance, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/maintenance/:id/complete, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/maintenance/alerts, GET} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/maintenance, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCustomersController {/api/customers}:[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/customers, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/customers/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/customers/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuditController {/api/audit-logs}:[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/audit-logs, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mContractsController {/api/contracts}:[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contracts/:bookingId, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contracts/:bookingId/sign, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mReviewsController {/api/reviews}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/reviews, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/reviews/:vehicleId, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTicketsController {/api/tickets}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/tickets, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/tickets, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/tickets/:id/reply, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mChatController {/api/chat}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/chat/partners, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/chat/history/:partnerId, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDashboardController {/api/dashboard}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dashboard/overview, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dashboard/car-status-summary, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dashboard/revenue-chart, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dashboard/top-services, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dashboard/top-cars, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mNotificationsController {/api/notifications}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCarsController {/api/cars}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/cars/notify-list, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/cars/violate-list, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/cars/available, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mFeedbackController {/api/feedback}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/feedback, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mRatingController {/api/rating}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/rating, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDashboardBookingController {/api/booking}:[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/booking/long-term, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDashboardAuthController {/api/auth}:[39m[38;5;3m +1ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/logout, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/forgot-password, POST} route[39m[38;5;3m +1ms[39m
+[33m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [33m   WARN[39m [38;5;3m[RedisService] [39m[33mRedis unavailable: [39m
+[33m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [33m   WARN[39m [38;5;3m[RedisService] [39m[33m. Continuing without Redis.[39m
+[32m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +5ms[39m
+Application is running on: http://localhost:5000/api
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\auth.service.js:167:49
+
+  164 }
+  165 async login(dto) {
+  166     try {
+→ 167         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+
+[33m[Nest] 26312  - [39m06/24/2026, 10:39:02 PM [33m   WARN[39m [38;5;3m[DashboardService] [39m[33mUsing demo dashboard overview because database is unavailable: 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+[39m
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\auth.service.js:187:47
+
+  184 }
+  185 async oauthLogin(email, name) {
+  186     try {
+→ 187         let user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\auth.service.js:167:49
+
+  164 }
+  165 async login(dto) {
+  166     try {
+→ 167         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+
+[33m[Nest] 26312  - [39m06/24/2026, 10:42:15 PM [33m   WARN[39m [38;5;3m[DashboardService] [39m[33mUsing demo dashboard overview because database is unavailable: 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+[39m
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+
+[33m[Nest] 26312  - [39m06/24/2026, 10:42:15 PM [33m   WARN[39m [38;5;3m[DashboardService] [39m[33mUsing demo dashboard overview because database is unavailable: 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+[39m
+prisma:error 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+
+[33m[Nest] 26312  - [39m06/24/2026, 10:42:15 PM [33m   WARN[39m [38;5;3m[DashboardService] [39m[33mUsing demo dashboard overview because database is unavailable: 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+[39m
+prisma:error 
+Invalid `this.prisma.vehicle.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:170:56
+
+  167 }
+  168 async getTopServices() {
+  169     try {
+→ 170         const vehicles = await this.prisma.vehicle.findMany(
+
+prisma:error 
+Invalid `this.prisma.vehicle.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:192:56
+
+  189 }
+  190 async getTopCars(limit) {
+  191     try {
+→ 192         const vehicles = await this.prisma.vehicle.findMany(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.booking.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:112:37
+
+  109 async getCarStatusSummary() {
+  110     try {
+  111         const [waitConfirm, confirmed, received, returned, accident, pledged] = await Promise.all([
+→ 112             this.prisma.booking.count(
+
+prisma:error 
+Invalid `this.prisma.booking.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:113:37
+
+  110 try {
+  111     const [waitConfirm, confirmed, received, returned, accident, pledged] = await Promise.all([
+  112         this.prisma.booking.count({ where: { status: client_1.BookingStatus.PENDING } }),
+→ 113         this.prisma.booking.count(
+
+prisma:error 
+Invalid `this.prisma.booking.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:114:37
+
+  111 const [waitConfirm, confirmed, received, returned, accident, pledged] = await Promise.all([
+  112     this.prisma.booking.count({ where: { status: client_1.BookingStatus.PENDING } }),
+  113     this.prisma.booking.count({ where: { status: client_1.BookingStatus.CONFIRMED } }),
+→ 114     this.prisma.booking.count(
+
+prisma:error 
+Invalid `this.prisma.booking.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:115:37
+
+  112 this.prisma.booking.count({ where: { status: client_1.BookingStatus.PENDING } }),
+  113 this.prisma.booking.count({ where: { status: client_1.BookingStatus.CONFIRMED } }),
+  114 this.prisma.booking.count({ where: { status: client_1.BookingStatus.RENTING } }),
+→ 115 this.prisma.booking.count(
+
+prisma:error 
+Invalid `this.prisma.vehicle.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:116:37
+
+  113 this.prisma.booking.count({ where: { status: client_1.BookingStatus.CONFIRMED } }),
+  114 this.prisma.booking.count({ where: { status: client_1.BookingStatus.RENTING } }),
+  115 this.prisma.booking.count({ where: { status: client_1.BookingStatus.COMPLETED } }),
+→ 116 this.prisma.vehicle.count(
+
+prisma:error 
+Invalid `this.prisma.vehicle.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:117:37
+
+  114 this.prisma.booking.count({ where: { status: client_1.BookingStatus.RENTING } }),
+  115 this.prisma.booking.count({ where: { status: client_1.BookingStatus.COMPLETED } }),
+  116 this.prisma.vehicle.count({ where: { status: client_1.VehicleStatus.MAINTENANCE } }),
+→ 117 this.prisma.vehicle.count(
+
+prisma:error 
+Invalid `this.prisma.revenue.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:139:56
+
+  136 const monthIndex = parseInt(monthStr, 10) - 1;
+  137 const startDate = new Date(year, monthIndex, 1);
+  138 const endDate = new Date(year, monthIndex + 1, 0, 23, 59, 59, 999);
+→ 139 const revenues = await this.prisma.revenue.findMany(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+
+[33m[Nest] 26312  - [39m06/24/2026, 10:42:16 PM [33m   WARN[39m [38;5;3m[DashboardService] [39m[33mUsing demo dashboard overview because database is unavailable: 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+[39m
+prisma:error 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+
+[33m[Nest] 26312  - [39m06/24/2026, 10:42:16 PM [33m   WARN[39m [38;5;3m[DashboardService] [39m[33mUsing demo dashboard overview because database is unavailable: 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+[39m
+prisma:error 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+
+[33m[Nest] 26312  - [39m06/24/2026, 10:42:16 PM [33m   WARN[39m [38;5;3m[DashboardService] [39m[33mUsing demo dashboard overview because database is unavailable: 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+[39m
+prisma:error 
+Invalid `this.prisma.vehicle.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:170:56
+
+  167 }
+  168 async getTopServices() {
+  169     try {
+→ 170         const vehicles = await this.prisma.vehicle.findMany(
+
+prisma:error 
+Invalid `this.prisma.vehicle.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:192:56
+
+  189 }
+  190 async getTopCars(limit) {
+  191     try {
+→ 192         const vehicles = await this.prisma.vehicle.findMany(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.booking.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:112:37
+
+  109 async getCarStatusSummary() {
+  110     try {
+  111         const [waitConfirm, confirmed, received, returned, accident, pledged] = await Promise.all([
+→ 112             this.prisma.booking.count(
+
+prisma:error 
+Invalid `this.prisma.booking.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:113:37
+
+  110 try {
+  111     const [waitConfirm, confirmed, received, returned, accident, pledged] = await Promise.all([
+  112         this.prisma.booking.count({ where: { status: client_1.BookingStatus.PENDING } }),
+→ 113         this.prisma.booking.count(
+
+prisma:error 
+Invalid `this.prisma.booking.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:114:37
+
+  111 const [waitConfirm, confirmed, received, returned, accident, pledged] = await Promise.all([
+  112     this.prisma.booking.count({ where: { status: client_1.BookingStatus.PENDING } }),
+  113     this.prisma.booking.count({ where: { status: client_1.BookingStatus.CONFIRMED } }),
+→ 114     this.prisma.booking.count(
+
+prisma:error 
+Invalid `this.prisma.booking.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:115:37
+
+  112 this.prisma.booking.count({ where: { status: client_1.BookingStatus.PENDING } }),
+  113 this.prisma.booking.count({ where: { status: client_1.BookingStatus.CONFIRMED } }),
+  114 this.prisma.booking.count({ where: { status: client_1.BookingStatus.RENTING } }),
+→ 115 this.prisma.booking.count(
+
+prisma:error 
+Invalid `this.prisma.vehicle.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:116:37
+
+  113 this.prisma.booking.count({ where: { status: client_1.BookingStatus.CONFIRMED } }),
+  114 this.prisma.booking.count({ where: { status: client_1.BookingStatus.RENTING } }),
+  115 this.prisma.booking.count({ where: { status: client_1.BookingStatus.COMPLETED } }),
+→ 116 this.prisma.vehicle.count(
+
+prisma:error 
+Invalid `this.prisma.vehicle.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:117:37
+
+  114 this.prisma.booking.count({ where: { status: client_1.BookingStatus.RENTING } }),
+  115 this.prisma.booking.count({ where: { status: client_1.BookingStatus.COMPLETED } }),
+  116 this.prisma.vehicle.count({ where: { status: client_1.VehicleStatus.MAINTENANCE } }),
+→ 117 this.prisma.vehicle.count(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.revenue.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:139:56
+
+  136 const monthIndex = parseInt(monthStr, 10) - 1;
+  137 const startDate = new Date(year, monthIndex, 1);
+  138 const endDate = new Date(year, monthIndex + 1, 0, 23, 59, 59, 999);
+→ 139 const revenues = await this.prisma.revenue.findMany(
+

@@ -77,14 +77,14 @@ function PaymentContent() {
       ) : (
         <>
           <div className="flex flex-col gap-2">
-            <span className="text-xs text-purple-400 uppercase tracking-widest font-bold">Cổng Thanh Toán Hợp Lệ</span>
+            <span className="text-xs text-emerald-400 uppercase tracking-widest font-bold">Cổng Thanh Toán Hợp Lệ</span>
             <h1 className="text-xl font-bold text-white">Thanh Toán Tiền Cọc</h1>
             <p className="text-xs text-gray-400">Đơn hàng: {bookingId.slice(0, 8)}... | Hình thức: {getPaymentName()}</p>
           </div>
 
           <div className="bg-gray-950 p-4 rounded-xl border border-white/10 flex flex-col gap-2">
             <span className="text-xs text-gray-500">Số tiền đặt cọc</span>
-            <span className="text-2xl font-black text-purple-400">
+            <span className="text-2xl font-black text-emerald-400">
               {parseInt(amountStr, 10).toLocaleString()} VND
             </span>
           </div>
@@ -93,7 +93,7 @@ function PaymentContent() {
             <div className="flex flex-col items-center gap-4">
               <div className="bg-white p-3 rounded-xl inline-block">
                 <img
-                  src={paymentUrl || `https://img.vietqr.io/image/970415-101234567890-compact2.png?amount=${amountStr}&addInfo=DATXE_${bookingId.slice(0, 8)}`}
+                  src={paymentUrl || `https://img.vietqr.io/image/970415-101234567890-compact2.png?amount=${amountStr}&addInfo=datxe_${bookingId.slice(0, 8)}`}
                   alt="VietQR Payment Code"
                   className="w-48 h-48 object-contain"
                 />
@@ -150,7 +150,7 @@ export default function PaymentPage() {
     <div className="min-h-screen bg-[#080b11] py-16 px-6 flex items-center justify-center">
       <Suspense fallback={
         <div className="glass-panel border border-white/5 rounded-2xl p-12 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 text-purple-400 animate-spin" />
+          <Loader2 className="h-8 w-8 text-emerald-400 animate-spin" />
         </div>
       }>
         <PaymentContent />

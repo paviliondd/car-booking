@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DATXE - Hệ Thống Cho Thuê & Quản Lý Xe Tự Lái Thông Minh",
-  description: "Dịch vụ thuê xe tự lái nhanh chóng qua mã QR. Đặt xe trực tuyến, quản lý lịch trình tự động chống trùng lặp, thanh toán tiện lợi qua MoMo/VietQR.",
-  keywords: "thuê xe tự lái, đặt xe online, quản lý xe tự lái, xe tự lái Hà Nội, xe tự lái HCM",
+  title: "datxe - Hệ thống thuê xe tự lái thông minh",
+  description: "Dịch vụ thuê xe tự lái nhanh chóng. Đặt xe trực tuyến, quản lý lịch trình, hợp đồng và thanh toán tiện lợi qua MoMo/VietQR.",
+  keywords: "thuê xe tự lái, đặt xe online, quản lý xe tự lái, xe tự lái Hà Nội, xe tự lái HCM, datxe",
 };
 
 export default function RootLayout({

@@ -119,7 +119,7 @@ export default function LongTermForm({ onSubmit }: LongTermFormProps) {
       if (isPast) {
         btnClass = 'text-gray-300 dark:text-gray-600 cursor-not-allowed';
       } else if (isSelected) {
-        btnClass = 'bg-[#00B14F] text-white font-bold rounded-full';
+        btnClass = 'bg-[#008F5A] text-white font-bold rounded-full';
       }
 
       cells.push(
@@ -158,7 +158,7 @@ export default function LongTermForm({ onSubmit }: LongTermFormProps) {
           onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
           className="flex items-center gap-3 w-full"
         >
-          <CalendarIcon className="h-5 w-5 text-[#00B14F] flex-shrink-0" />
+          <CalendarIcon className="h-5 w-5 text-[#008F5A] flex-shrink-0" />
           <div className="flex-grow">
             <span className="text-[10px] text-gray-400 block font-semibold uppercase tracking-wider">Ngày bắt đầu</span>
             <div className="flex items-center gap-1 mt-0.5">
@@ -212,7 +212,7 @@ export default function LongTermForm({ onSubmit }: LongTermFormProps) {
           onClick={() => setIsDurationOpen(!isDurationOpen)}
           className="flex items-center gap-3 w-full"
         >
-          <Clock className="h-5 w-5 text-[#00B14F] flex-shrink-0" />
+          <Clock className="h-5 w-5 text-[#008F5A] flex-shrink-0" />
           <div className="flex-grow">
             <span className="text-[10px] text-gray-400 block font-semibold uppercase tracking-wider">Thời hạn</span>
             <div className="flex items-center gap-1 mt-0.5">
@@ -234,8 +234,8 @@ export default function LongTermForm({ onSubmit }: LongTermFormProps) {
                   setDuration(opt.value);
                   setIsDurationOpen(false);
                 }}
-                className={`w-full text-left px-5 py-2.5 text-sm transition cursor-pointer hover:bg-gray-50 hover:text-[#00B14F] ${
-                  duration === opt.value ? 'text-[#00B14F] font-bold bg-[#E0F5E9]/20' : 'text-gray-700'
+                className={`w-full text-left px-5 py-2.5 text-sm transition cursor-pointer hover:bg-gray-50 hover:text-[#008F5A] ${
+                  duration === opt.value ? 'text-[#008F5A] font-bold bg-[#E6F7EF]/20' : 'text-gray-700'
                 }`}
               >
                 {opt.label}
@@ -249,13 +249,13 @@ export default function LongTermForm({ onSubmit }: LongTermFormProps) {
       <div className="px-4 flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
         {expectedEndDate && (
           <div className="text-xs text-gray-500 font-semibold text-center md:text-left whitespace-nowrap self-center">
-            Dự kiến đến: <span className="text-[#00B14F] font-bold">{format(expectedEndDate, 'dd/MM/yyyy')}</span>
+            Dự kiến đến: <span className="text-[#008F5A] font-bold">{format(expectedEndDate, 'dd/MM/yyyy')}</span>
           </div>
         )}
         <button
           type="submit"
           disabled={loading}
-          className="bg-[#00B14F] hover:bg-[#009b45] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition shadow-sm hover:scale-[1.02] active:scale-[0.98] duration-200 disabled:opacity-50"
+          className="bg-[#008F5A] hover:bg-[#007A4D] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition shadow-sm hover:scale-[1.02] active:scale-[0.98] duration-200 disabled:opacity-50"
         >
           {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
           <span>Tìm Xe</span>

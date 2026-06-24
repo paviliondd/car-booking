@@ -1,7 +1,10 @@
 import { PrismaService } from '../prisma/prisma.service';
 export declare class DashboardService {
     private readonly prisma;
+    private readonly logger;
     constructor(prisma: PrismaService);
+    private demoOverview;
+    private demoRevenueChart;
     getOverview(period: string): Promise<{
         totalContract: number;
         totalMoneyContract: number;

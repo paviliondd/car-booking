@@ -36,7 +36,7 @@ export default function LocationDropdown({ value, onChange }: LocationDropdownPr
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-3 w-full"
       >
-        <MapPin className="h-5 w-5 text-[#00B14F] flex-shrink-0" />
+        <MapPin className="h-5 w-5 text-[#008F5A] flex-shrink-0" />
         <div className="flex-grow">
           <span className="text-[10px] text-gray-400 block font-semibold uppercase tracking-wider">Địa điểm</span>
           <div className="flex items-center gap-1 mt-0.5">
@@ -57,8 +57,8 @@ export default function LocationDropdown({ value, onChange }: LocationDropdownPr
                 onChange(loc);
                 setIsOpen(false);
               }}
-              className={`w-full text-left px-5 py-2.5 text-sm transition cursor-pointer hover:bg-gray-50 hover:text-[#00B14F] ${
-                value === loc ? 'text-[#00B14F] font-bold bg-[#E0F5E9]/20' : 'text-gray-700'
+              className={`w-full text-left px-5 py-2.5 text-sm transition cursor-pointer hover:bg-gray-50 hover:text-[#008F5A] ${
+                value === loc ? 'text-[#008F5A] font-bold bg-[#E6F7EF]/20' : 'text-gray-700'
               }`}
             >
               {loc}

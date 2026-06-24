@@ -37,7 +37,7 @@ export default function ActivityDrawer({ isOpen, onClose }: ActivityDrawerProps)
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-100 dark:border-white/5 flex justify-between items-center bg-[#1e1e2d] text-white">
             <h3 className="text-base font-extrabold flex items-center gap-2">
-              <Clock className="h-5 w-5 text-[#00B14F]" />
+              <Clock className="h-5 w-5 text-[#008F5A]" />
               <span>Lịch sử thao tác hệ thống</span>
             </h3>
             <button 
@@ -54,7 +54,7 @@ export default function ActivityDrawer({ isOpen, onClose }: ActivityDrawerProps)
               {mockTimeline.map((item) => (
                 <div key={item.id} className="relative">
                   {/* Timeline circle node */}
-                  <span className="absolute -left-[31px] top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-gray-950 bg-[#00B14F]" />
+                  <span className="absolute -left-[31px] top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-gray-950 bg-[#008F5A]" />
                   
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center gap-3">
@@ -79,7 +79,7 @@ export default function ActivityDrawer({ isOpen, onClose }: ActivityDrawerProps)
           <div className="p-4 border-t border-gray-150 dark:border-white/5 flex justify-end">
             <button 
               onClick={() => toast.success('Xem tất cả thao tác')}
-              className="bg-[#00B14F] hover:bg-[#009b45] text-white px-5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 cursor-pointer"
+              className="bg-[#008F5A] hover:bg-[#007A4D] text-white px-5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 cursor-pointer"
             >
               <span>Xem tất cả</span>
               <ArrowRight className="h-3.5 w-3.5" />

@@ -48,12 +48,12 @@ export default function TopCarsTable({ cars }: TopCarsTableProps) {
                   <tr key={i} className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/1 flex-grow">
                     <td className="py-3 px-2 text-gray-900 dark:text-white font-bold">{car.name}</td>
                     <td className="py-3 px-2 text-center text-gray-700 dark:text-gray-300 font-bold">{car.bookingsCount}</td>
-                    <td className="py-3 px-2 text-right text-[#00B14F] font-extrabold">{formatMoney(car.revenue)}</td>
+                    <td className="py-3 px-2 text-right text-[#008F5A] font-extrabold">{formatMoney(car.revenue)}</td>
                     <td className="py-3 px-4">
                       {/* Proportional progress bar */}
                       <div className="w-full bg-gray-100 dark:bg-white/5 h-2 rounded-full overflow-hidden">
                         <div 
-                          className="bg-[#00B14F] h-full rounded-full transition-all duration-500" 
+                          className="bg-[#008F5A] h-full rounded-full transition-all duration-500" 
                           style={{ width: `${ratio}%` }}
                         />
                       </div>

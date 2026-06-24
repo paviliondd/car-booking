@@ -56,7 +56,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
         </button>
 
         <h3 className="text-base font-extrabold text-gray-950 dark:text-white mb-4 flex items-center gap-2">
-          <MessageSquarePlus className="h-5 w-5 text-[#00B14F]" />
+          <MessageSquarePlus className="h-5 w-5 text-[#008F5A]" />
           <span>Gửi Góp Ý & Đề Xuất</span>
         </h3>
 
@@ -69,7 +69,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-xl p-3 text-xs text-gray-800 dark:text-white focus:outline-none focus:border-[#00B14F] font-bold"
+              className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-xl p-3 text-xs text-gray-800 dark:text-white focus:outline-none focus:border-[#008F5A] font-bold"
             >
               <option value="Góp ý">Góp ý dịch vụ</option>
               <option value="Đề xuất tính năng">Đề xuất tính năng mới</option>
@@ -85,10 +85,10 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Bạn mong muốn G-Car cải thiện gì, hoặc thêm tính năng hỗ trợ nào khác? Vui lòng điền chi tiết tại đây..."
+              placeholder="Bạn mong muốn datxe cải thiện gì, hoặc thêm tính năng hỗ trợ nào khác? Vui lòng điền chi tiết tại đây..."
               rows={5}
               required
-              className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-xl p-3 text-xs text-gray-800 dark:text-white focus:outline-none focus:border-[#00B14F] resize-none font-semibold leading-relaxed"
+              className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-xl p-3 text-xs text-gray-800 dark:text-white focus:outline-none focus:border-[#008F5A] resize-none font-semibold leading-relaxed"
             />
           </div>
 
@@ -104,7 +104,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             <button
               type="submit"
               disabled={loading}
-              className="bg-[#00B14F] hover:bg-[#009b45] text-white px-6 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="bg-[#008F5A] hover:bg-[#007A4D] text-white px-6 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               <span>Gửi đề xuất</span>

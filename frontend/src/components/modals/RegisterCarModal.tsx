@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/set-state-in-effect */
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -61,11 +62,19 @@ export default function RegisterCarModal({ isOpen, onClose }: RegisterCarModalPr
     if (!validate()) return;
 
     setLoading(true);
-    // Simulated API call
     await new Promise((resolve) => setTimeout(resolve, 1500));
+    const lead = {
+      region,
+      ownerName: ownerName.trim(),
+      phone: phone.trim(),
+      carName: carName.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    const storedLeads = JSON.parse(localStorage.getItem('ownerLeads') || '[]');
+    localStorage.setItem('ownerLeads', JSON.stringify([lead, ...storedLeads]));
     setLoading(false);
 
-    toast.success('Đăng ký xe cho thuê thành công! MIOTO sẽ liên hệ với bạn sớm.');
+    toast.success('Đăng ký xe cho thuê thành công! datxe sẽ liên hệ với bạn sớm.');
     onClose();
   };
 
@@ -88,11 +97,11 @@ export default function RegisterCarModal({ isOpen, onClose }: RegisterCarModalPr
         </button>
 
         {/* Title */}
-        <h2 className="text-xl font-bold text-center text-[#00B14F] mb-1">
+        <h2 className="text-xl font-bold text-center text-[#008F5A] mb-1">
           Đăng ký xe cho thuê
         </h2>
         <p className="text-xs text-gray-500 text-center mb-6 max-w-sm mx-auto leading-relaxed">
-          Bạn vui lòng điền đầy đủ thông tin, MIOTO sẽ liên hệ với bạn trong vòng một ngày làm việc.
+          Bạn vui lòng điền đầy đủ thông tin, datxe sẽ liên hệ với bạn trong vòng một ngày làm việc.
         </p>
 
         {/* Form */}
@@ -107,7 +116,7 @@ export default function RegisterCarModal({ isOpen, onClose }: RegisterCarModalPr
                 value={region}
                 onChange={(e) => setRegion(e.target.value)}
                 disabled={loading}
-                className={`w-full bg-gray-50 border ${errors.region ? 'border-red-500' : 'border-gray-200'} rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-900 focus:outline-none focus:border-[#00B14F] appearance-none`}
+                className={`w-full bg-gray-50 border ${errors.region ? 'border-red-500' : 'border-gray-200'} rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-900 focus:outline-none focus:border-[#008F5A] appearance-none`}
               >
                 <option value="">Chọn khu vực</option>
                 <option value="HCM">TP. Hồ Chí Minh</option>
@@ -131,7 +140,7 @@ export default function RegisterCarModal({ isOpen, onClose }: RegisterCarModalPr
                 onChange={(e) => setOwnerName(e.target.value)}
                 placeholder="Tên của bạn"
                 disabled={loading}
-                className={`w-full bg-gray-50 border ${errors.ownerName ? 'border-red-500' : 'border-gray-200'} rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-900 focus:outline-none focus:border-[#00B14F]`} 
+                className={`w-full bg-gray-50 border ${errors.ownerName ? 'border-red-500' : 'border-gray-200'} rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-900 focus:outline-none focus:border-[#008F5A]`} 
               />
             </div>
             {errors.ownerName && <p className="text-red-500 text-xs mt-1 font-medium">{errors.ownerName}</p>}
@@ -148,7 +157,7 @@ export default function RegisterCarModal({ isOpen, onClose }: RegisterCarModalPr
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Số của bạn"
                 disabled={loading}
-                className={`w-full bg-gray-50 border ${errors.phone ? 'border-red-500' : 'border-gray-200'} rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-900 focus:outline-none focus:border-[#00B14F]`} 
+                className={`w-full bg-gray-50 border ${errors.phone ? 'border-red-500' : 'border-gray-200'} rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-900 focus:outline-none focus:border-[#008F5A]`} 
               />
             </div>
             {errors.phone && <p className="text-red-500 text-xs mt-1 font-medium">{errors.phone}</p>}
@@ -165,7 +174,7 @@ export default function RegisterCarModal({ isOpen, onClose }: RegisterCarModalPr
                 onChange={(e) => setCarName(e.target.value)}
                 placeholder="Loại xe của bạn"
                 disabled={loading}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-900 focus:outline-none focus:border-[#00B14F]" 
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-900 focus:outline-none focus:border-[#008F5A]" 
               />
             </div>
           </div>
@@ -174,10 +183,10 @@ export default function RegisterCarModal({ isOpen, onClose }: RegisterCarModalPr
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-[#00B14F] hover:bg-[#009b45] text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition disabled:opacity-50 mt-4 shadow-sm"
+            className="w-full bg-[#008F5A] hover:bg-[#007A4D] text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition disabled:opacity-50 mt-4 shadow-sm"
           >
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-            <span>Gửi thông tin đến MIOTO</span>
+            <span>Gửi thông tin đến datxe</span>
           </button>
         </form>
       </div>

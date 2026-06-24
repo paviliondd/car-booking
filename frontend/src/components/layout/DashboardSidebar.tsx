@@ -42,8 +42,8 @@ export default function DashboardSidebar() {
       <div className="flex items-center justify-between px-4 h-[65px] border-b border-[#2b2b40]">
         {!isMinimized && (
           <div className="flex items-center gap-2">
-            <div className="bg-[#00B14F] text-white p-1.5 rounded-lg font-black text-sm tracking-widest">
-              G-CAR
+            <div className="bg-[#008F5A] text-white p-1.5 rounded-lg font-black text-sm tracking-widest">
+              datxe
             </div>
             <span className="text-white font-extrabold text-xs tracking-wider">DASHBOARD</span>
           </div>
@@ -67,7 +67,7 @@ export default function DashboardSidebar() {
           )}
 
           <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-[#2b2b40] hover:text-white transition">
-            <FileText className="h-4.5 w-4.5 text-[#00B14F]" />
+            <FileText className="h-4.5 w-4.5 text-[#008F5A]" />
             {!isMinimized && <span>Hợp đồng ngày</span>}
           </Link>
 
@@ -223,7 +223,7 @@ export default function DashboardSidebar() {
       <div className="p-3 border-t border-[#2b2b40] bg-[#1a1a27] flex flex-col gap-2">
         <a 
           href="tel:0977847776" 
-          className="flex items-center gap-2.5 text-xs text-[#00B14F] font-bold hover:underline py-1.5 px-2 hover:bg-[#2b2b40] rounded-lg transition"
+          className="flex items-center gap-2.5 text-xs text-[#008F5A] font-bold hover:underline py-1.5 px-2 hover:bg-[#2b2b40] rounded-lg transition"
         >
           <Phone className="h-4 w-4" />
           {!isMinimized && <span>Hotline: 0977847776</span>}
@@ -232,9 +232,9 @@ export default function DashboardSidebar() {
           href="https://zalo.me/0977847776" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="flex items-center gap-2.5 text-xs text-blue-400 font-bold hover:underline py-1.5 px-2 hover:bg-[#2b2b40] rounded-lg transition"
+          className="flex items-center gap-2.5 text-xs text-emerald-400 font-bold hover:underline py-1.5 px-2 hover:bg-[#2b2b40] rounded-lg transition"
         >
-          <span className="h-4 w-4 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-[8px]">Z</span>
+          <span className="h-4 w-4 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-[8px]">Z</span>
           {!isMinimized && <span>Zalo Hỗ trợ</span>}
         </a>
       </div>

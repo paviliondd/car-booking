@@ -205,13 +205,13 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
       if (isPast) {
         btnClass = 'text-gray-300 dark:text-gray-600 cursor-not-allowed';
       } else if (isStart && isEnd) {
-        btnClass = 'bg-[#00B14F] text-white font-extrabold rounded-full';
+        btnClass = 'bg-[#008F5A] text-white font-extrabold rounded-full';
       } else if (isStart) {
-        btnClass = 'bg-[#00B14F] text-white font-extrabold rounded-l-full rounded-r-none';
+        btnClass = 'bg-[#008F5A] text-white font-extrabold rounded-l-full rounded-r-none';
       } else if (isEnd) {
-        btnClass = 'bg-[#00B14F] text-white font-extrabold rounded-r-full rounded-l-none';
+        btnClass = 'bg-[#008F5A] text-white font-extrabold rounded-r-full rounded-l-none';
       } else if (isInRange) {
-        btnClass = 'bg-[#E8F5E9] text-[#00B14F] font-semibold rounded-none';
+        btnClass = 'bg-[#E8F5E9] text-[#008F5A] font-semibold rounded-none';
       }
 
       cells.push(
@@ -238,7 +238,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-3 w-full"
       >
-        <CalendarIcon className="h-5 w-5 text-[#00B14F] flex-shrink-0" />
+        <CalendarIcon className="h-5 w-5 text-[#008F5A] flex-shrink-0" />
         <div className="flex-grow">
           <span className="text-[10px] text-gray-400 block font-semibold uppercase tracking-wider">Thời gian thuê</span>
           <div className="flex items-center gap-1 mt-0.5">
@@ -255,7 +255,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
           {/* Header Picker Modal */}
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-base font-bold text-gray-950 flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5 text-[#00B14F]" />
+              <CalendarIcon className="h-5 w-5 text-[#008F5A]" />
               <span>Chọn ngày giờ nhận/trả xe</span>
             </h3>
             <button 
@@ -326,7 +326,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
               <select 
                 value={tempStartTime}
                 onChange={(e) => handleTimeChange('start', e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:outline-none focus:border-[#00B14F]"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:outline-none focus:border-[#008F5A]"
               >
                 {timeOptions.map((t) => <option key={`start-${t}`} value={t}>{t}</option>)}
               </select>
@@ -337,7 +337,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
               <select 
                 value={tempEndTime}
                 onChange={(e) => handleTimeChange('end', e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:outline-none focus:border-[#00B14F]"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:outline-none focus:border-[#008F5A]"
               >
                 {timeOptions.map((t) => <option key={`end-${t}`} value={t}>{t}</option>)}
               </select>
@@ -356,7 +356,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
             <button 
               type="button" 
               onClick={handleConfirm}
-              className="bg-[#00B14F] hover:bg-[#009b45] text-white px-8 py-2.5 rounded-lg text-sm font-semibold transition cursor-pointer shadow-sm"
+              className="bg-[#008F5A] hover:bg-[#007A4D] text-white px-8 py-2.5 rounded-lg text-sm font-semibold transition cursor-pointer shadow-sm"
             >
               Xác nhận
             </button>

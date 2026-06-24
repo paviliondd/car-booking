@@ -61,6 +61,13 @@ export declare class AuthController {
         ownerRequestAt: Date | null;
         createdAt: Date;
         updatedAt: Date;
+    } | {
+        ownerRequestAt: Date;
+        isVerifiedOwner: boolean;
+        phone: string;
+        idCardNo: string;
+        address: string;
+        id: string;
     }>;
     getOwnerRequests(): Promise<{
         id: string;

@@ -1,0 +1,33 @@
+[31m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [31m  ERROR[39m [38;5;3m[PrismaService] [39m[31mFailed to establish database connection during initialization:[39m
+[31m[Nest] 26312  - [39m06/24/2026, 10:38:30 PM [31m  ERROR[39m [38;5;3m[PrismaService] [39mAggregateError [ECONNREFUSED]: 
+    at [90mC:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\[39mnode_modules\[4mpg-pool[24m\index.js:45:11
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)[39m
+    at async Proxy.onModuleInit [90m(C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\[39mdist\src\prisma\prisma.service.js:67:28[90m)[39m
+    at async Promise.all (index 0)
+    at async callModuleInitHook [90m(C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\[39mnode_modules\[4m@nestjs\core[24m\hooks\on-module-init.hook.js:43:5[90m)[39m
+    at async NestApplication.callInitHook [90m(C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\[39mnode_modules\[4m@nestjs\core[24m\nest-application-context.js:252:13[90m)[39m
+    at async NestApplication.init [90m(C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\[39mnode_modules\[4m@nestjs\core[24m\nest-application.js:105:9[90m)[39m
+    at async NestApplication.listen [90m(C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\[39mnode_modules\[4m@nestjs\core[24m\nest-application.js:177:13[90m)[39m
+    at async bootstrap [90m(C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\[39mdist\src\main.js:22:5[90m)[39m {
+  code: [32m'ECONNREFUSED'[39m,
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:51213
+    [90m    at createConnectionError (node:net:1686:14)[39m
+    [90m    at afterConnectMultiple (node:net:1716:16)[39m {
+      errno: [33m-4078[39m,
+      code: [32m'ECONNREFUSED'[39m,
+      syscall: [32m'connect'[39m,
+      address: [32m'::1'[39m,
+      port: [33m51213[39m
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:51213
+    [90m    at createConnectionError (node:net:1686:14)[39m
+    [90m    at afterConnectMultiple (node:net:1716:16)[39m {
+      errno: [33m-4078[39m,
+      code: [32m'ECONNREFUSED'[39m,
+      syscall: [32m'connect'[39m,
+      address: [32m'127.0.0.1'[39m,
+      port: [33m51213[39m
+    }
+  ]
+}

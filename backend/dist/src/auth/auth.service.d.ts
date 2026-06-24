@@ -1,10 +1,14 @@
-import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import { RegisterDto, LoginDto } from './dto/auth.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { LoginDto, RegisterDto } from './dto/auth.dto';
 export declare class AuthService {
     private prisma;
     private jwtService;
+    private readonly logger;
     constructor(prisma: PrismaService, jwtService: JwtService);
+    private signUser;
+    private fallbackRegister;
+    private fallbackLogin;
     register(dto: RegisterDto): Promise<{
         id: string;
         email: string;
@@ -47,6 +51,13 @@ export declare class AuthService {
         ownerRequestAt: Date | null;
         createdAt: Date;
         updatedAt: Date;
+    } | {
+        ownerRequestAt: Date;
+        isVerifiedOwner: boolean;
+        phone: string;
+        idCardNo: string;
+        address: string;
+        id: string;
     }>;
     getOwnerRequests(): Promise<{
         id: string;

@@ -46,7 +46,7 @@ export default function StatusCards({ counts }: StatusCardsProps) {
       key: 'returned', 
       label: 'Đã trả xe', 
       count: counts?.returned ?? 0, 
-      icon: <Flag className="h-6 w-6 text-[#00B14F]" />,
+      icon: <Flag className="h-6 w-6 text-[#008F5A]" />,
       colorClass: 'border-emerald-150 hover:bg-emerald-50/10'
     },
     { 
@@ -60,7 +60,7 @@ export default function StatusCards({ counts }: StatusCardsProps) {
       key: 'pledged', 
       label: 'Xe cầm cố', 
       count: counts?.pledged ?? 0, 
-      icon: <Lock className="h-6 w-6 text-purple-500" />,
+      icon: <Lock className="h-6 w-6 text-emerald-500" />,
       colorClass: 'border-purple-150 hover:bg-purple-50/10'
     },
   ];

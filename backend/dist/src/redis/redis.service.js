@@ -12,31 +12,62 @@ var RedisService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RedisService = void 0;
 const common_1 = require("@nestjs/common");
-const redis_1 = require("redis");
 const config_1 = require("@nestjs/config");
+const redis_1 = require("redis");
 let RedisService = RedisService_1 = class RedisService {
     configService;
-    client;
+    client = null;
+    isReady = false;
     logger = new common_1.Logger(RedisService_1.name);
     constructor(configService) {
         this.configService = configService;
     }
     async onModuleInit() {
         const url = this.configService.get('REDIS_URL') || 'redis://localhost:6379';
-        this.client = (0, redis_1.createClient)({ url });
-        this.client.on('error', (err) => this.logger.error('Redis Client Error', err));
-        await this.client.connect();
-        this.logger.log('Redis connected successfully.');
+        const client = (0, redis_1.createClient)({
+            url,
+            socket: {
+                connectTimeout: 1500,
+                reconnectStrategy: false,
+            },
+        });
+        client.on('error', (err) => {
+            this.isReady = false;
+            this.logger.warn(`Redis unavailable: ${err.message}`);
+        });
+        try {
+            await Promise.race([
+                client.connect(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Redis connection timeout')), 2000)),
+            ]);
+            this.client = client;
+            this.isReady = true;
+            this.logger.log('Redis connected successfully.');
+        }
+        catch (error) {
+            this.isReady = false;
+            this.client = null;
+            this.logger.warn(`${error instanceof Error ? error.message : 'Redis connection failed'}. Continuing without Redis.`);
+            try {
+                await client.disconnect();
+            }
+            catch {
+            }
+        }
     }
     async onModuleDestroy() {
-        if (this.client) {
+        if (this.client && this.isReady) {
             await this.client.quit();
         }
     }
     async get(key) {
+        if (!this.client || !this.isReady)
+            return null;
         return await this.client.get(key);
     }
     async set(key, value, ttlSeconds) {
+        if (!this.client || !this.isReady)
+            return;
         if (ttlSeconds) {
             await this.client.set(key, value, { EX: ttlSeconds });
         }
@@ -45,9 +76,15 @@ let RedisService = RedisService_1 = class RedisService {
         }
     }
     async del(key) {
+        if (!this.client || !this.isReady)
+            return;
         await this.client.del(key);
     }
     async acquireLock(key, ttlMs) {
+        if (!this.client || !this.isReady) {
+            this.logger.warn(`Redis lock skipped for ${key}; Redis is unavailable.`);
+            return true;
+        }
         try {
             const lockKey = `lock:${key}`;
             const result = await this.client.set(lockKey, 'locked', {
@@ -62,8 +99,9 @@ let RedisService = RedisService_1 = class RedisService {
         }
     }
     async releaseLock(key) {
-        const lockKey = `lock:${key}`;
-        await this.client.del(lockKey);
+        if (!this.client || !this.isReady)
+            return;
+        await this.client.del(`lock:${key}`);
     }
 };
 exports.RedisService = RedisService;

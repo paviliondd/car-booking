@@ -57,7 +57,7 @@ export default function RatingModal({ isOpen, onClose }: RatingModalProps) {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* Star selector */}
           <div className="flex flex-col gap-1.5 items-center py-4 border-b border-gray-100 dark:border-white/5">
-            <span className="text-xs text-gray-500 font-bold">Dịch vụ quản trị G-Car đạt mức độ:</span>
+            <span className="text-xs text-gray-500 font-bold">Dịch vụ quản trị datxe đạt mức độ:</span>
             <div className="flex gap-2 mt-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -89,7 +89,7 @@ export default function RatingModal({ isOpen, onClose }: RatingModalProps) {
               onChange={(e) => setComment(e.target.value)}
               placeholder="Nhập ý kiến đóng góp của bạn để chúng tôi nâng cấp dịch vụ..."
               rows={4}
-              className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-xl p-3 text-xs text-gray-800 dark:text-white focus:outline-none focus:border-[#00B14F] resize-none font-semibold"
+              className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-xl p-3 text-xs text-gray-800 dark:text-white focus:outline-none focus:border-[#008F5A] resize-none font-semibold"
             />
           </div>
 
@@ -105,7 +105,7 @@ export default function RatingModal({ isOpen, onClose }: RatingModalProps) {
             <button
               type="submit"
               disabled={loading}
-              className="bg-[#00B14F] hover:bg-[#009b45] text-white px-6 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="bg-[#008F5A] hover:bg-[#007A4D] text-white px-6 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               <span>Gửi đánh giá</span>

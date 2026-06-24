@@ -33,9 +33,9 @@ export default function TrackPage() {
       case 'PENDING':
         return <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 px-2.5 py-1 rounded text-xs font-semibold">Chờ xác nhận</span>;
       case 'CONFIRMED':
-        return <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 px-2.5 py-1 rounded text-xs font-semibold">Đã xác nhận</span>;
+        return <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded text-xs font-semibold">Đã xác nhận</span>;
       case 'RENTING':
-        return <span className="bg-purple-500/10 border border-purple-500/20 text-purple-400 px-2.5 py-1 rounded text-xs font-semibold">Đang thuê</span>;
+        return <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded text-xs font-semibold">Đang thuê</span>;
       case 'COMPLETED':
         return <span className="bg-green-500/10 border border-green-500/20 text-green-400 px-2.5 py-1 rounded text-xs font-semibold">Hoàn thành</span>;
       case 'CANCELLED':
@@ -50,7 +50,7 @@ export default function TrackPage() {
       case 'UNPAID':
         return <span className="bg-red-500/15 text-red-400 border border-red-500/10 px-2 py-0.5 rounded text-[10px]">Chưa thanh toán</span>;
       case 'DEPOSITED':
-        return <span className="bg-blue-500/15 text-blue-400 border border-blue-500/10 px-2 py-0.5 rounded text-[10px]">Đã đặt cọc</span>;
+        return <span className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/10 px-2 py-0.5 rounded text-[10px]">Đã đặt cọc</span>;
       case 'PAID':
         return <span className="bg-green-500/15 text-green-400 border border-green-500/10 px-2 py-0.5 rounded text-[10px]">Đã thanh toán</span>;
       default:
@@ -82,7 +82,7 @@ export default function TrackPage() {
             placeholder="Ví dụ: 0987654321" 
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="flex-grow bg-gray-950 border border-white/10 rounded-lg py-2.5 px-4 text-sm focus:outline-none focus:border-purple-500"
+            className="flex-grow bg-gray-950 border border-white/10 rounded-lg py-2.5 px-4 text-sm focus:outline-none focus:border-emerald-500"
           />
           <button 
             type="submit" 
@@ -122,7 +122,7 @@ export default function TrackPage() {
                 <div>
                   <span className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">{b.vehicle.brand}</span>
                   <h3 className="text-lg font-bold text-white mt-0.5">{b.vehicle.model} <span className="text-xs text-gray-500 font-normal">({b.vehicle.plateNumber})</span></h3>
-                  <span className="text-[11px] text-gray-400 block mt-1">Mã đơn: <strong className="text-purple-400">{b.bookingNumber}</strong></span>
+                  <span className="text-[11px] text-gray-400 block mt-1">Mã đơn: <strong className="text-emerald-400">{b.bookingNumber}</strong></span>
                 </div>
                 <div className="flex flex-col items-end gap-1.5">
                   {getStatusBadge(b.status)}
@@ -132,14 +132,14 @@ export default function TrackPage() {
 
               <div className="grid grid-cols-2 gap-4 text-xs text-gray-400 py-3 border-y border-white/5">
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-purple-400 flex-shrink-0" />
+                  <Calendar className="h-4 w-4 text-emerald-400 flex-shrink-0" />
                   <div>
                     <span className="block text-[10px] text-gray-500">Nhận xe</span>
                     <strong>{new Date(b.startDate).toLocaleString('vi-VN')}</strong>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-purple-400 flex-shrink-0" />
+                  <Calendar className="h-4 w-4 text-emerald-400 flex-shrink-0" />
                   <div>
                     <span className="block text-[10px] text-gray-500">Trả xe</span>
                     <strong>{new Date(b.endDate).toLocaleString('vi-VN')}</strong>
@@ -154,7 +154,7 @@ export default function TrackPage() {
                 </div>
                 <div className="text-right">
                   <span className="text-gray-500 block text-[10px]">Tổng thanh toán</span>
-                  <span className="text-base font-bold text-purple-400">{(b.totalPrice).toLocaleString()}đ</span>
+                  <span className="text-base font-bold text-emerald-400">{(b.totalPrice).toLocaleString()}đ</span>
                 </div>
               </div>
             </div>

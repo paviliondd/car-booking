@@ -12,7 +12,7 @@ interface TopServicesChartProps {
   data: ServiceItem[] | null;
 }
 
-const COLORS = ['#00B14F', '#3699FF', '#F64E60', '#1BC5BD', '#8950FC'];
+const COLORS = ['#008F5A', '#3699FF', '#F64E60', '#1BC5BD', '#8950FC'];
 
 export default function TopServicesChart({ data }: TopServicesChartProps) {
   const list = data || [];

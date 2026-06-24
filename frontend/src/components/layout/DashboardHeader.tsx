@@ -80,7 +80,7 @@ export default function DashboardHeader({
         >
           <Menu className="h-5 w-5" />
         </button>
-        <span className="font-black text-[#00B14F] text-lg tracking-wider">G-CAR</span>
+        <span className="font-black text-[#008F5A] text-lg tracking-wider">datxe</span>
       </div>
 
       {/* Center: Branch Picker ("Hội sở" Dropdown) */}
@@ -89,7 +89,7 @@ export default function DashboardHeader({
           onClick={() => setIsBranchOpen(!isBranchOpen)}
           className="flex items-center gap-2 px-4 py-2 hover:bg-[#2b2b40] rounded-lg transition cursor-pointer text-sm font-semibold border border-[#2b2b40]"
         >
-          <Landmark className="h-4.5 w-4.5 text-[#00B14F]" />
+          <Landmark className="h-4.5 w-4.5 text-[#008F5A]" />
           <span>{selectedBranch.name}</span>
           <ChevronDown className="h-4 w-4 text-gray-500" />
         </button>
@@ -106,7 +106,7 @@ export default function DashboardHeader({
                 }}
                 className={`w-full text-left p-3 rounded-lg text-xs transition cursor-pointer flex flex-col gap-1 ${
                   selectedBranch.id === b.id 
-                    ? 'border border-[#00B14F] bg-[#E0F5E9]/10 text-[#00B14F]' 
+                    ? 'border border-[#008F5A] bg-[#E6F7EF]/10 text-[#008F5A]' 
                     : 'border border-transparent hover:bg-[#2b2b40] text-gray-400'
                 }`}
               >
@@ -203,7 +203,7 @@ export default function DashboardHeader({
             onClick={() => setIsProfileOpen(!isProfileOpen)}
             className="flex items-center gap-2 hover:bg-[#2b2b40] px-3 py-1.5 rounded-lg transition cursor-pointer"
           >
-            <div className="h-8 w-8 rounded-full bg-[#00B14F]/10 border border-[#00B14F]/30 flex items-center justify-center text-[#00B14F] font-bold">
+            <div className="h-8 w-8 rounded-full bg-[#008F5A]/10 border border-[#008F5A]/30 flex items-center justify-center text-[#008F5A] font-bold">
               O
             </div>
             <span className="hidden lg:block text-xs font-bold text-gray-300">Chủ xe</span>
