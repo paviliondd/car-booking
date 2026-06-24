@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /usr/src/app
 
@@ -13,7 +13,7 @@ ENV NEXT_PUBLIC_API_URL=https://datxe.linuxunity.com/api
 RUN npm run build
 
 # Stage 2: Run
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /usr/src/app
 
