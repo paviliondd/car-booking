@@ -7,11 +7,22 @@ import {
   Clock, Award, Calendar, ChevronRight, Menu, X, Sun, Moon 
 } from 'lucide-react';
 import { useTheme } from '@/providers/ThemeProvider';
+import SearchBar from '@/components/search/SearchBar';
+import AuthModal from '@/components/modals/AuthModal';
 
 export default function HomePage() {
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
+  
+  // Auth Modal States
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+
+  const openAuth = (mode: 'login' | 'register') => {
+    setAuthMode(mode);
+    setIsAuthOpen(true);
+  };
 
   const featuredCars = [
     {
@@ -95,6 +106,18 @@ export default function HomePage() {
             <Phone className="h-4 w-4" />
             <span>1900 8888</span>
           </a>
+          <button 
+            onClick={() => openAuth('login')}
+            className="text-sm font-semibold text-gray-300 hover:text-white transition cursor-pointer"
+          >
+            Đăng nhập
+          </button>
+          <button 
+            onClick={() => openAuth('register')}
+            className="text-sm font-semibold text-gray-300 hover:text-white transition border-l border-white/10 pl-4 cursor-pointer"
+          >
+            Đăng ký
+          </button>
           <Link href="/owner" className="text-sm font-medium bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition border border-white/10">
             Chủ Xe
           </Link>
@@ -127,48 +150,55 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Hero Section */}
-      <section className="relative py-24 px-6 md:px-12 max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-        <div className="flex flex-col gap-6">
-          <div className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full text-xs font-semibold text-purple-400 w-fit">
-            <Award className="h-4.5 w-4.5" />
-            <span>Thương Hiệu Cho Thuê Xe Uy Tín Hàng Đầu</span>
+      {/* Hero Section with SearchBar embedded */}
+      <section className="relative pt-24 pb-12 px-6 md:px-12 max-w-7xl mx-auto flex flex-col gap-12">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="flex flex-col gap-6">
+            <div className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full text-xs font-semibold text-purple-400 w-fit">
+              <Award className="h-4.5 w-4.5" />
+              <span>Thương Hiệu Cho Thuê Xe Uy Tín Hàng Đầu</span>
+            </div>
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
+              Trải Nghiệm Hành Trình <br />
+              <span className="gradient-text">Tự Do & Trọn Vẹn</span>
+            </h1>
+            <p className="text-gray-400 text-base md:text-lg leading-relaxed">
+              Hệ thống đặt xe tự lái tự động 100%. Chọn ngày, quét mã QR nhận xe lập tức. Đội ngũ xe đời mới, bảo hiểm toàn diện và dịch vụ hỗ trợ cứu hộ 24/7 chuyên nghiệp.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 mt-4">
+              <Link href="/booking" className="gradient-btn text-center text-white font-medium py-3 px-8 rounded-lg text-lg flex items-center justify-center gap-2">
+                <span>Bắt đầu chuyến đi</span>
+                <ChevronRight className="h-5 w-5" />
+              </Link>
+              <a href="#featured" className="bg-gray-900/50 hover:bg-gray-800 text-center text-gray-300 font-medium py-3 px-8 rounded-lg text-lg border border-white/5 transition flex items-center justify-center gap-2">
+                Xem bảng giá
+              </a>
+            </div>
           </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
-            Trải Nghiệm Hành Trình <br />
-            <span className="gradient-text">Tự Do & Trọn Vẹn</span>
-          </h1>
-          <p className="text-gray-400 text-base md:text-lg leading-relaxed">
-            Hệ thống đặt xe tự lái tự động 100%. Chọn ngày, quét mã QR nhận xe lập tức. Đội ngũ xe đời mới, bảo hiểm toàn diện và dịch vụ hỗ trợ cứu hộ 24/7 chuyên nghiệp.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 mt-4">
-            <Link href="/booking" className="gradient-btn text-center text-white font-medium py-3 px-8 rounded-lg text-lg flex items-center justify-center gap-2">
-              <span>Bắt đầu chuyến đi</span>
-              <ChevronRight className="h-5 w-5" />
-            </Link>
-            <a href="#featured" className="bg-gray-900/50 hover:bg-gray-800 text-center text-gray-300 font-medium py-3 px-8 rounded-lg text-lg border border-white/5 transition flex items-center justify-center gap-2">
-              Xem bảng giá
-            </a>
+
+          <div className="relative h-[300px] md:h-[420px] rounded-2xl overflow-hidden border border-white/10">
+            <img 
+              src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80" 
+              alt="Showroom Car" 
+              className="object-cover w-full h-full hover:scale-105 transition duration-700" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#080b11] via-transparent to-transparent"></div>
+            <div className="absolute bottom-6 left-6 flex gap-4">
+              <div className="glass-panel px-4 py-2 rounded-lg border border-white/10">
+                <span className="text-xs text-gray-400 block">Dòng xe đời mới</span>
+                <span className="text-sm font-bold text-white">100+ Xe có sẵn</span>
+              </div>
+              <div className="glass-panel px-4 py-2 rounded-lg border border-white/10">
+                <span className="text-xs text-gray-400 block">Đã hoàn thành</span>
+                <span className="text-sm font-bold text-white">5,000+ Chuyến đi</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="relative h-[300px] md:h-[420px] rounded-2xl overflow-hidden border border-white/10">
-          <img 
-            src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80" 
-            alt="Showroom Car" 
-            className="object-cover w-full h-full hover:scale-105 transition duration-700" 
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#080b11] via-transparent to-transparent"></div>
-          <div className="absolute bottom-6 left-6 flex gap-4">
-            <div className="glass-panel px-4 py-2 rounded-lg border border-white/10">
-              <span className="text-xs text-gray-400 block">Dòng xe đời mới</span>
-              <span className="text-sm font-bold text-white">100+ Xe có sẵn</span>
-            </div>
-            <div className="glass-panel px-4 py-2 rounded-lg border border-white/10">
-              <span className="text-xs text-gray-400 block">Đã hoàn thành</span>
-              <span className="text-sm font-bold text-white">5,000+ Chuyến đi</span>
-            </div>
-          </div>
+        {/* SearchBar floating at the bottom of the Hero Section */}
+        <div className="w-full mt-4">
+          <SearchBar />
         </div>
       </section>
 
@@ -337,6 +367,12 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+      {/* Auth Modal Overlay Portal */}
+      <AuthModal 
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        initialMode={authMode}
+      />
     </div>
   );
 }
