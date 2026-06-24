@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Key, Car, CalendarClock, Search, Loader2 } from 'lucide-react';
 import LocationDropdown from './LocationDropdown';
 import DateTimePicker from './DateTimePicker';
+import LongTermForm from './LongTermForm';
 import { useToast } from '@/providers/ToastProvider';
 
 export default function SearchBar() {
@@ -14,7 +15,7 @@ export default function SearchBar() {
   const [activeTab, setActiveTab] = useState<'self-drive' | 'with-driver' | 'long-term'>('self-drive');
   const [location, setLocation] = useState('TP. Hồ Chí Minh');
   
-  // Default values: 21:00 T5, 25/06 - 20:00 T6, 26/06 (simulated from 2026-06-25 21:00 to 2026-06-26 20:00)
+  // Default values: 21:00 T5, 25/06 - 20:00 T6, 26/06
   const [startDate, setStartDate] = useState<Date>(() => {
     const d = new Date();
     d.setDate(d.getDate() + 1); // tomorrow
@@ -45,28 +46,33 @@ export default function SearchBar() {
     }
 
     setLoading(true);
-    // Simulate loading query
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setLoading(false);
 
     toast.success(`Tìm xe tại ${location} thành công!`);
 
-    // Redirect to booking detail search page with parameters
     const startStr = startDate.toISOString();
     const endStr = endDate.toISOString();
     router.push(`/booking?location=${encodeURIComponent(location)}&startDate=${startStr}&endDate=${endStr}`);
   };
 
+  const handleLongTermSubmit = (data: { location: string; startDate: Date; duration: string; endDate: Date | null }) => {
+    const startStr = data.startDate.toISOString();
+    const endStr = data.endDate ? data.endDate.toISOString() : '';
+    router.push(`/booking?location=${encodeURIComponent(data.location)}&startDate=${startStr}&endDate=${endStr}&duration=${data.duration}`);
+  };
+
   return (
-    <div className="w-full max-w-5xl mx-auto flex flex-col gap-0 select-none relative z-20">
+    <div className="w-full max-w-5xl mx-auto flex flex-col gap-0 select-none relative z-25">
       {/* Tabs Header */}
       <div className="flex gap-1 mb-[-1px]">
         {/* Tab 1: Xe tự lái */}
         <button
+          type="button"
           onClick={() => setActiveTab('self-drive')}
           className={`flex items-center gap-2 px-6 py-3 text-xs md:text-sm font-bold rounded-t-xl transition cursor-pointer ${
             activeTab === 'self-drive'
-              ? 'bg-white dark:bg-[#0b0f19] text-[#00B14F] border-t border-x border-gray-100 dark:border-white/5 shadow-xs'
+              ? 'bg-white dark:bg-[#0b0f19] text-[#00B14F] border-t border-x border-gray-100 dark:border-white/5 shadow-xs border-b-2 border-b-[#00B14F]'
               : 'bg-gray-100/50 dark:bg-gray-900/40 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-white/5 border-t border-x border-transparent'
           }`}
         >
@@ -76,13 +82,14 @@ export default function SearchBar() {
 
         {/* Tab 2: Xe có tài xế */}
         <button
+          type="button"
           onClick={() => {
             setActiveTab('with-driver');
             toast.warning('Dịch vụ xe có tài xế đang được hoàn thiện!');
           }}
           className={`flex items-center gap-2 px-6 py-3 text-xs md:text-sm font-bold rounded-t-xl transition cursor-pointer ${
             activeTab === 'with-driver'
-              ? 'bg-white dark:bg-[#0b0f19] text-[#00B14F] border-t border-x border-gray-100 dark:border-white/5 shadow-xs'
+              ? 'bg-white dark:bg-[#0b0f19] text-[#00B14F] border-t border-x border-gray-100 dark:border-white/5 shadow-xs border-b-2 border-b-[#00B14F]'
               : 'bg-gray-100/50 dark:bg-gray-900/40 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-white/5 border-t border-x border-transparent'
           }`}
         >
@@ -92,13 +99,11 @@ export default function SearchBar() {
 
         {/* Tab 3: Thuê dài hạn */}
         <button
-          onClick={() => {
-            setActiveTab('long-term');
-            toast.warning('Dịch vụ thuê xe dài hạn đang được hoàn thiện!');
-          }}
+          type="button"
+          onClick={() => setActiveTab('long-term')}
           className={`flex items-center gap-2 px-6 py-3 text-xs md:text-sm font-bold rounded-t-xl transition cursor-pointer ${
             activeTab === 'long-term'
-              ? 'bg-white dark:bg-[#0b0f19] text-[#00B14F] border-t border-x border-gray-100 dark:border-white/5 shadow-xs'
+              ? 'bg-white dark:bg-[#0b0f19] text-[#00B14F] border-t border-x border-gray-100 dark:border-white/5 shadow-xs border-b-2 border-b-[#00B14F]'
               : 'bg-gray-100/50 dark:bg-gray-900/40 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-white/5 border-t border-x border-transparent'
           }`}
         >
@@ -107,37 +112,41 @@ export default function SearchBar() {
         </button>
       </div>
 
-      {/* Main Search Panel Bar Container */}
-      <form 
-        onSubmit={handleSearchSubmit}
-        className="bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-white/5 rounded-b-2xl rounded-tr-2xl shadow-xl p-3 flex flex-col md:flex-row gap-3 items-stretch md:items-center relative"
-      >
-        <LocationDropdown 
-          value={location} 
-          onChange={setLocation} 
-        />
-        
-        <DateTimePicker 
-          startDate={startDate} 
-          endDate={endDate} 
-          onChange={(s, e) => {
-            setStartDate(s);
-            setEndDate(e);
-          }} 
-        />
+      {/* Conditional Form Render */}
+      {activeTab === 'long-term' ? (
+        <LongTermForm onSubmit={handleLongTermSubmit} />
+      ) : (
+        <form 
+          onSubmit={handleSearchSubmit}
+          className="bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-white/5 rounded-b-2xl rounded-tr-2xl shadow-xl p-3 flex flex-col md:flex-row gap-3 items-stretch md:items-center relative"
+        >
+          <LocationDropdown 
+            value={location} 
+            onChange={setLocation} 
+          />
+          
+          <DateTimePicker 
+            startDate={startDate} 
+            endDate={endDate} 
+            onChange={(s, e) => {
+              setStartDate(s);
+              setEndDate(e);
+            }} 
+          />
 
-        {/* Submit Search Button */}
-        <div className="px-4 flex items-center">
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full md:w-auto bg-[#00B14F] hover:bg-[#009b45] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition shadow-sm hover:scale-[1.02] active:scale-[0.98] duration-200 disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
-            <span>Tìm Xe</span>
-          </button>
-        </div>
-      </form>
+          {/* Submit Search Button */}
+          <div className="px-4 flex items-center">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full md:w-auto bg-[#00B14F] hover:bg-[#009b45] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition shadow-sm hover:scale-[1.02] active:scale-[0.98] duration-200 disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
+              <span>Tìm Xe</span>
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

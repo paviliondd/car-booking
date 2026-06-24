@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, X, AlertCircle } from 'lucide-react';
+import { addMonths, subMonths, startOfDay, isBefore, isSameDay } from 'date-fns';
+import { formatDateLabel } from '@/lib/utils/date';
 
 interface DateTimePickerProps {
   startDate: Date;
@@ -9,6 +11,7 @@ interface DateTimePickerProps {
   onChange: (start: Date, end: Date) => void;
 }
 
+// Generate time options from 00:00 to 23:30 (step 30 mins)
 const timeOptions: string[] = [];
 for (let h = 0; h < 24; h++) {
   const hr = h.toString().padStart(2, '0');
@@ -17,59 +20,167 @@ for (let h = 0; h < 24; h++) {
 }
 
 const dayNames = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+const monthNames = [
+  'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+  'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+];
 
 export default function DateTimePicker({ startDate, endDate, onChange }: DateTimePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Temporary selection states until "Confirm" is clicked
-  const [tempStart, setTempStart] = useState<Date>(startDate);
-  const [tempEnd, setTempEnd] = useState<Date>(endDate);
+  // Temporary selection states
+  const [tempStart, setTempStart] = useState<Date | null>(startDate);
+  const [tempEnd, setTempEnd] = useState<Date | null>(endDate);
+  const [tempStartTime, setTempStartTime] = useState('08:30');
+  const [tempEndTime, setTempEndTime] = useState('19:30');
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Calendar states (current month index 0 to 11, year)
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  // Calendar states
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [selecting, setSelecting] = useState<'start' | 'end'>('start');
 
   // Click outside listener
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        handleCancel();
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [startDate, endDate]);
 
   // Update temp states when props change
   useEffect(() => {
-    setTempStart(startDate);
-    setTempEnd(endDate);
+    if (startDate) {
+      setTempStart(startDate);
+      const sh = startDate.getHours().toString().padStart(2, '0');
+      const sm = startDate.getMinutes().toString().padStart(2, '0');
+      setTempStartTime(`${sh}:${sm}`);
+    }
+    if (endDate) {
+      setTempEnd(endDate);
+      const eh = endDate.getHours().toString().padStart(2, '0');
+      const em = endDate.getMinutes().toString().padStart(2, '0');
+      setTempEndTime(`${eh}:${em}`);
+    }
   }, [startDate, endDate]);
 
-  const getDayOfWeekName = (date: Date) => {
-    const dayIndex = date.getDay();
-    return dayNames[dayIndex];
+  // Set default hours on load
+  useEffect(() => {
+    // Default Giờ nhận = giờ hiện tại làm tròn lên 30p
+    const now = new Date();
+    const mins = now.getMinutes();
+    const hrs = now.getHours();
+    let roundedMins = 0;
+    let roundedHrs = hrs;
+    if (mins > 30) {
+      roundedMins = 0;
+      roundedHrs = (hrs + 1) % 24;
+    } else if (mins > 0) {
+      roundedMins = 30;
+    }
+    const startStr = `${roundedHrs.toString().padStart(2, '0')}:${roundedMins.toString().padStart(2, '0')}`;
+    
+    // Giờ trả = giờ nhận + 1 tiếng
+    const endH = (roundedHrs + 1) % 24;
+    const endStr = `${endH.toString().padStart(2, '0')}:${roundedMins.toString().padStart(2, '0')}`;
+    
+    setTempStartTime(startStr);
+    setTempEndTime(endStr);
+  }, []);
+
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    return new Date(year, month + 1, 0).getDate();
   };
 
-  const formatDateLabel = (date: Date) => {
-    const hh = date.getHours().toString().padStart(2, '0');
-    const mm = date.getMinutes().toString().padStart(2, '0');
-    const dayName = getDayOfWeekName(date);
-    const dd = date.getDate().toString().padStart(2, '0');
-    const mo = (date.getMonth() + 1).toString().padStart(2, '0');
-    return `${hh}:${mm} ${dayName}, ${dd}/${mo}`;
+  const getFirstDayOfMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    return new Date(year, month, 1).getDay();
   };
 
-  // Helper date generators
-  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
-  const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
+  const handleDayClick = (date: Date) => {
+    setErrorMsg('');
+    const clickedDate = startOfDay(date);
 
-  // Calendar Month Render
-  const renderMonthCalendar = (year: number, month: number) => {
-    const daysInMonth = getDaysInMonth(year, month);
-    const firstDay = getFirstDayOfMonth(year, month);
+    if (selecting === 'start' || !tempStart) {
+      setTempStart(clickedDate);
+      setTempEnd(null);
+      setSelecting('end');
+    } else {
+      if (isBefore(clickedDate, startOfDay(tempStart))) {
+        setTempStart(clickedDate);
+        setTempEnd(null);
+        setSelecting('end');
+      } else {
+        setTempEnd(clickedDate);
+        setSelecting('start');
+      }
+    }
+  };
+
+  const handleTimeChange = (type: 'start' | 'end', timeStr: string) => {
+    setErrorMsg('');
+    if (type === 'start') {
+      setTempStartTime(timeStr);
+    } else {
+      setTempEndTime(timeStr);
+    }
+  };
+
+  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
+  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+
+  const handleConfirm = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!tempStart || !tempEnd) {
+      setErrorMsg('Vui lòng chọn cả ngày bắt đầu và kết thúc');
+      return;
+    }
+
+    const finalStart = new Date(tempStart);
+    const [sh, sm] = tempStartTime.split(':').map(Number);
+    finalStart.setHours(sh, sm, 0, 0);
+
+    const finalEnd = new Date(tempEnd);
+    const [eh, em] = tempEndTime.split(':').map(Number);
+    finalEnd.setHours(eh, em, 0, 0);
+
+    if (finalEnd <= finalStart) {
+      setErrorMsg('Thời gian trả xe phải sau thời gian nhận xe');
+      return;
+    }
+
+    setErrorMsg('');
+    onChange(finalStart, finalEnd);
+    setIsOpen(false);
+  };
+
+  const handleCancel = () => {
+    // Reset to props
+    setTempStart(startDate);
+    setTempEnd(endDate);
+    if (startDate) {
+      const sh = startDate.getHours().toString().padStart(2, '0');
+      const sm = startDate.getMinutes().toString().padStart(2, '0');
+      setTempStartTime(`${sh}:${sm}`);
+    }
+    if (endDate) {
+      const eh = endDate.getHours().toString().padStart(2, '0');
+      const em = endDate.getMinutes().toString().padStart(2, '0');
+      setTempEndTime(`${eh}:${em}`);
+    }
+    setErrorMsg('');
+    setIsOpen(false);
+  };
+
+  const renderMonthCalendar = (monthDate: Date) => {
+    const daysInMonth = getDaysInMonth(monthDate);
+    const firstDay = getFirstDayOfMonth(monthDate);
     const cells: React.ReactNode[] = [];
 
     // Empty spaces before first day
@@ -77,24 +188,30 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
       cells.push(<div key={`empty-${i}`} className="h-9" />);
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = startOfDay(new Date());
+    const year = monthDate.getFullYear();
+    const month = monthDate.getMonth();
 
     for (let day = 1; day <= daysInMonth; day++) {
       const cellDate = new Date(year, month, day);
-      const isPast = cellDate < today;
+      const isPast = isBefore(cellDate, today);
       
-      const isStart = tempStart && cellDate.toDateString() === tempStart.toDateString();
-      const isEnd = tempEnd && cellDate.toDateString() === tempEnd.toDateString();
+      const isStart = tempStart && isSameDay(cellDate, tempStart);
+      const isEnd = tempEnd && isSameDay(cellDate, tempEnd);
       const isInRange = tempStart && tempEnd && cellDate > tempStart && cellDate < tempEnd;
 
-      let btnClass = 'text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5';
+      let btnClass = 'text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 rounded-md';
+      
       if (isPast) {
         btnClass = 'text-gray-300 dark:text-gray-600 cursor-not-allowed';
-      } else if (isStart || isEnd) {
-        btnClass = 'bg-[#00B14F] text-white font-extrabold rounded-lg';
+      } else if (isStart && isEnd) {
+        btnClass = 'bg-[#00B14F] text-white font-extrabold rounded-full';
+      } else if (isStart) {
+        btnClass = 'bg-[#00B14F] text-white font-extrabold rounded-l-full rounded-r-none';
+      } else if (isEnd) {
+        btnClass = 'bg-[#00B14F] text-white font-extrabold rounded-r-full rounded-l-none';
       } else if (isInRange) {
-        btnClass = 'bg-[#E0F5E9]/50 dark:bg-[#00B14F]/10 text-[#00B14F] font-semibold';
+        btnClass = 'bg-[#E8F5E9] text-[#00B14F] font-semibold rounded-none';
       }
 
       cells.push(
@@ -113,95 +230,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
     return cells;
   };
 
-  const handleDayClick = (date: Date) => {
-    setErrorMsg('');
-    // Keep time parts
-    const startHour = tempStart.getHours();
-    const startMin = tempStart.getMinutes();
-    const endHour = tempEnd.getHours();
-    const endMin = tempEnd.getMinutes();
-
-    // 1. If start is not selected, or both selected, reset selection
-    if (!tempStart || (tempStart && tempEnd)) {
-      const newStart = new Date(date);
-      newStart.setHours(startHour, startMin, 0, 0);
-      setTempStart(newStart);
-      setTempEnd(null as any);
-    } 
-    // 2. If start is selected but end is not
-    else {
-      if (date < tempStart) {
-        const newStart = new Date(date);
-        newStart.setHours(startHour, startMin, 0, 0);
-        setTempStart(newStart);
-      } else {
-        const newEnd = new Date(date);
-        newEnd.setHours(endHour, endMin, 0, 0);
-        setTempEnd(newEnd);
-      }
-    }
-  };
-
-  const handleTimeChange = (type: 'start' | 'end', timeStr: string) => {
-    setErrorMsg('');
-    const [h, m] = timeStr.split(':').map(Number);
-    if (type === 'start') {
-      const newStart = new Date(tempStart);
-      newStart.setHours(h, m, 0, 0);
-      setTempStart(newStart);
-    } else {
-      const newEnd = new Date(tempEnd || tempStart);
-      newEnd.setHours(h, m, 0, 0);
-      setTempEnd(newEnd);
-    }
-  };
-
-  const nextMonths = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear(currentYear + 1);
-    } else {
-      setCurrentMonth(currentMonth + 1);
-    }
-  };
-
-  const prevMonths = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear(currentYear - 1);
-    } else {
-      setCurrentMonth(currentMonth - 1);
-    }
-  };
-
-  const getNextMonthAndYear = () => {
-    if (currentMonth === 11) {
-      return { month: 0, year: currentYear + 1 };
-    }
-    return { month: currentMonth + 1, year: currentYear };
-  };
-
-  const monthNames = [
-    'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-    'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
-  ];
-
-  const nextMonthInfo = getNextMonthAndYear();
-
-  const handleConfirm = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!tempStart || !tempEnd) {
-      setErrorMsg('Vui lòng chọn cả ngày bắt đầu và kết thúc');
-      return;
-    }
-    if (tempEnd <= tempStart) {
-      setErrorMsg('Thời gian trả xe phải sau thời gian nhận xe');
-      return;
-    }
-    setErrorMsg('');
-    onChange(tempStart, tempEnd);
-    setIsOpen(false);
-  };
+  const nextMonthDate = addMonths(currentMonth, 1);
 
   return (
     <div ref={containerRef} className="relative flex-1 md:flex-[1.5] flex items-center gap-3 px-6 py-3 cursor-pointer select-none border-t md:border-t-0 md:border-l border-gray-100 dark:border-white/5">
@@ -214,7 +243,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
           <span className="text-[10px] text-gray-400 block font-semibold uppercase tracking-wider">Thời gian thuê</span>
           <div className="flex items-center gap-1 mt-0.5">
             <span className="text-sm font-bold text-gray-900 dark:text-white truncate">
-              {tempStart && tempEnd ? `${formatDateLabel(tempStart)} - ${formatDateLabel(tempEnd)}` : 'Chọn thời gian'}
+              {startDate && endDate ? `${formatDateLabel(startDate)} - ${formatDateLabel(endDate)}` : 'Chọn thời gian'}
             </span>
             <ChevronDown className="h-4 w-4 text-gray-400 flex-shrink-0" />
           </div>
@@ -222,7 +251,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
       </div>
 
       {isOpen && (
-        <div className="absolute right-0 top-[102%] w-[90vw] md:w-[680px] bg-white text-gray-900 border border-gray-100 rounded-2xl shadow-2xl z-30 p-6 animate-slide-up-custom max-h-[85vh] overflow-y-auto">
+        <div className="absolute right-0 top-[102%] w-[90vw] md:w-[680px] bg-white text-gray-900 border border-gray-100 rounded-2xl shadow-2xl z-35 p-6 animate-slide-up-custom max-h-[85vh] overflow-y-auto">
           {/* Header Picker Modal */}
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-base font-bold text-gray-950 flex items-center gap-2">
@@ -230,10 +259,11 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
               <span>Chọn ngày giờ nhận/trả xe</span>
             </h3>
             <button 
-              onClick={() => setIsOpen(false)}
+              type="button"
+              onClick={handleCancel}
               className="p-1 rounded-full hover:bg-gray-100 transition cursor-pointer text-gray-400 hover:text-gray-600"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </button>
           </div>
 
@@ -249,21 +279,21 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
             {/* 1st Month */}
             <div className="flex flex-col gap-3">
               <div className="flex justify-between items-center">
-                <button type="button" onClick={prevMonths} className="p-1 text-gray-400 hover:text-gray-600 cursor-pointer">
+                <button type="button" onClick={prevMonth} className="p-1 text-gray-400 hover:text-gray-600 cursor-pointer">
                   <ChevronLeft className="h-5 w-5" />
                 </button>
-                <span className="text-sm font-bold text-gray-900">{monthNames[currentMonth]} {currentYear}</span>
-                <div className="w-5" /> {/* empty placeholder spacer */}
+                <span className="text-sm font-bold text-gray-900">
+                  {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                </span>
+                <div className="w-5" />
               </div>
 
-              {/* Day Headers */}
               <div className="grid grid-cols-7 text-center text-[10px] font-bold text-gray-400 py-1">
                 {dayNames.map((d) => <div key={d}>{d}</div>)}
               </div>
 
-              {/* Calendar Grid */}
               <div className="grid grid-cols-7 gap-y-1">
-                {renderMonthCalendar(currentYear, currentMonth)}
+                {renderMonthCalendar(currentMonth)}
               </div>
             </div>
 
@@ -271,20 +301,20 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
             <div className="flex flex-col gap-3">
               <div className="flex justify-between items-center">
                 <div className="w-5" />
-                <span className="text-sm font-bold text-gray-900">{monthNames[nextMonthInfo.month]} {nextMonthInfo.year}</span>
-                <button type="button" onClick={nextMonths} className="p-1 text-gray-400 hover:text-gray-600 cursor-pointer">
+                <span className="text-sm font-bold text-gray-900">
+                  {monthNames[nextMonthDate.getMonth()]} {nextMonthDate.getFullYear()}
+                </span>
+                <button type="button" onClick={nextMonth} className="p-1 text-gray-400 hover:text-gray-600 cursor-pointer">
                   <ChevronRight className="h-5 w-5" />
                 </button>
               </div>
 
-              {/* Day Headers */}
               <div className="grid grid-cols-7 text-center text-[10px] font-bold text-gray-400 py-1">
                 {dayNames.map((d) => <div key={d}>{d}</div>)}
               </div>
 
-              {/* Calendar Grid */}
               <div className="grid grid-cols-7 gap-y-1">
-                {renderMonthCalendar(nextMonthInfo.year, nextMonthInfo.month)}
+                {renderMonthCalendar(nextMonthDate)}
               </div>
             </div>
           </div>
@@ -294,7 +324,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
             <div>
               <label className="text-xs font-semibold text-gray-500 block mb-2">Giờ Nhận Xe</label>
               <select 
-                value={`${tempStart.getHours().toString().padStart(2, '0')}:${tempStart.getMinutes().toString().padStart(2, '0')}`}
+                value={tempStartTime}
                 onChange={(e) => handleTimeChange('start', e.target.value)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:outline-none focus:border-[#00B14F]"
               >
@@ -305,7 +335,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
             <div>
               <label className="text-xs font-semibold text-gray-500 block mb-2">Giờ Trả Xe</label>
               <select 
-                value={tempEnd ? `${tempEnd.getHours().toString().padStart(2, '0')}:${tempEnd.getMinutes().toString().padStart(2, '0')}` : '20:00'}
+                value={tempEndTime}
                 onChange={(e) => handleTimeChange('end', e.target.value)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:outline-none focus:border-[#00B14F]"
               >
@@ -318,7 +348,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
           <div className="flex gap-4 items-center justify-end">
             <button 
               type="button" 
-              onClick={() => setIsOpen(false)}
+              onClick={handleCancel}
               className="px-6 py-2.5 rounded-lg border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition cursor-pointer"
             >
               Hủy

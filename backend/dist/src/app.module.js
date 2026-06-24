@@ -24,6 +24,7 @@ const contracts_module_1 = require("./contracts/contracts.module");
 const reviews_module_1 = require("./reviews/reviews.module");
 const tickets_module_1 = require("./tickets/tickets.module");
 const chat_module_1 = require("./chat/chat.module");
+const dashboard_module_1 = require("./dashboard/dashboard.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -48,6 +49,7 @@ exports.AppModule = AppModule = __decorate([
             reviews_module_1.ReviewsModule,
             tickets_module_1.TicketsModule,
             chat_module_1.ChatModule,
+            dashboard_module_1.DashboardModule,
         ],
     })
 ], AppModule);

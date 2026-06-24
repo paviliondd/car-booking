@@ -3,26 +3,14 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
-  Car, ShieldCheck, HelpCircle, Phone, MapPin, 
-  Clock, Award, Calendar, ChevronRight, Menu, X, Sun, Moon 
+  ShieldCheck, HelpCircle, MapPin, Award, ChevronRight 
 } from 'lucide-react';
-import { useTheme } from '@/providers/ThemeProvider';
 import SearchBar from '@/components/search/SearchBar';
-import AuthModal from '@/components/modals/AuthModal';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 
 export default function HomePage() {
-  const { theme, toggleTheme } = useTheme();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
-  
-  // Auth Modal States
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
-
-  const openAuth = (mode: 'login' | 'register') => {
-    setAuthMode(mode);
-    setIsAuthOpen(true);
-  };
 
   const featuredCars = [
     {
@@ -77,120 +65,51 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#080b11]">
-      {/* Header */}
-      <header className="sticky top-0 z-50 glass-panel border-b border-white/5 py-4 px-6 md:px-12 flex justify-between items-center">
-        <Link href="/" className="flex items-center gap-2 text-2xl font-bold tracking-wider text-purple-400">
-          <Car className="h-8 w-8 text-purple-500 animate-pulse" />
-          <span>DAT<span className="text-white">XE</span></span>
-        </Link>
-
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
-          <Link href="#showroom" className="hover:text-purple-400 transition">Showroom</Link>
-          <Link href="#featured" className="hover:text-purple-400 transition">Danh Sách Xe</Link>
-          <Link href="#policy" className="hover:text-purple-400 transition">Chính Sách</Link>
-          <Link href="#faq" className="hover:text-purple-400 transition">Hỏi Đáp</Link>
-          <Link href="/track" className="hover:text-purple-400 transition">Tra Cứu Đơn</Link>
-        </nav>
-
-        <div className="hidden md:flex items-center gap-4">
-          <button 
-            onClick={toggleTheme} 
-            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition border border-white/5 cursor-pointer"
-            title="Chuyển đổi giao diện"
-          >
-            {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-purple-400" />}
-          </button>
-          <a href="tel:19008888" className="flex items-center gap-2 text-sm text-purple-400 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20">
-            <Phone className="h-4 w-4" />
-            <span>1900 8888</span>
-          </a>
-          <button 
-            onClick={() => openAuth('login')}
-            className="text-sm font-semibold text-gray-300 hover:text-white transition cursor-pointer"
-          >
-            Đăng nhập
-          </button>
-          <button 
-            onClick={() => openAuth('register')}
-            className="text-sm font-semibold text-gray-300 hover:text-white transition border-l border-white/10 pl-4 cursor-pointer"
-          >
-            Đăng ký
-          </button>
-          <Link href="/owner" className="text-sm font-medium bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition border border-white/10">
-            Chủ Xe
-          </Link>
-          <Link href="/booking" className="text-sm font-medium gradient-btn text-white px-5 py-2 rounded-lg transition">
-            Đặt Xe Ngay
-          </Link>
-        </div>
-
-        {/* Mobile menu trigger */}
-        <button className="md:hidden text-gray-400 hover:text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-      </header>
-
-      {/* Mobile nav drawer */}
-      {mobileMenuOpen && (
-        <div className="md:hidden fixed top-[69px] inset-0 z-40 bg-[#080b11] border-t border-white/5 p-6 flex flex-col gap-6">
-          <Link href="#showroom" onClick={() => setMobileMenuOpen(false)} className="text-lg text-gray-300 hover:text-white">Showroom</Link>
-          <Link href="#featured" onClick={() => setMobileMenuOpen(false)} className="text-lg text-gray-300 hover:text-white">Danh Sách Xe</Link>
-          <Link href="#policy" onClick={() => setMobileMenuOpen(false)} className="text-lg text-gray-300 hover:text-white">Chính Sách</Link>
-          <Link href="#faq" onClick={() => setMobileMenuOpen(false)} className="text-lg text-gray-300 hover:text-white">Hỏi Đáp</Link>
-          <Link href="/track" onClick={() => setMobileMenuOpen(false)} className="text-lg text-gray-300 hover:text-white">Tra Cứu Đơn</Link>
-          <hr className="border-white/10" />
-          <Link href="/booking" onClick={() => setMobileMenuOpen(false)} className="gradient-btn text-center text-white py-3 rounded-lg">
-            Đặt Xe Ngay
-          </Link>
-          <Link href="/owner" onClick={() => setMobileMenuOpen(false)} className="bg-gray-800 text-center text-white py-3 rounded-lg border border-white/10">
-            Trang Chủ Xe / Quản Trị
-          </Link>
-        </div>
-      )}
+    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-[#080b11] text-gray-900 dark:text-gray-100 transition-colors duration-300">
+      {/* Header Layout */}
+      <Header />
 
       {/* Hero Section with SearchBar embedded */}
       <section className="relative pt-24 pb-12 px-6 md:px-12 max-w-7xl mx-auto flex flex-col gap-12">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="flex flex-col gap-6">
-            <div className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full text-xs font-semibold text-purple-400 w-fit">
+            <div className="inline-flex items-center gap-2 bg-[#E0F5E9] dark:bg-purple-500/10 border border-[#00B14F]/20 dark:border-purple-500/20 px-3 py-1 rounded-full text-xs font-semibold text-[#00B14F] dark:text-purple-400 w-fit">
               <Award className="h-4.5 w-4.5" />
               <span>Thương Hiệu Cho Thuê Xe Uy Tín Hàng Đầu</span>
             </div>
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight text-gray-950 dark:text-white">
               Trải Nghiệm Hành Trình <br />
-              <span className="gradient-text">Tự Do & Trọn Vẹn</span>
+              <span className="text-[#00B14F] dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-blue-400 dark:to-purple-400">Tự Do & Trọn Vẹn</span>
             </h1>
-            <p className="text-gray-400 text-base md:text-lg leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-400 text-base md:text-lg leading-relaxed">
               Hệ thống đặt xe tự lái tự động 100%. Chọn ngày, quét mã QR nhận xe lập tức. Đội ngũ xe đời mới, bảo hiểm toàn diện và dịch vụ hỗ trợ cứu hộ 24/7 chuyên nghiệp.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mt-4">
-              <Link href="/booking" className="gradient-btn text-center text-white font-medium py-3 px-8 rounded-lg text-lg flex items-center justify-center gap-2">
+              <Link href="/booking" className="bg-[#00B14F] hover:bg-[#009b45] text-white text-center font-medium py-3 px-8 rounded-lg text-lg flex items-center justify-center gap-2 transition hover:scale-[1.02] duration-200">
                 <span>Bắt đầu chuyến đi</span>
                 <ChevronRight className="h-5 w-5" />
               </Link>
-              <a href="#featured" className="bg-gray-900/50 hover:bg-gray-800 text-center text-gray-300 font-medium py-3 px-8 rounded-lg text-lg border border-white/5 transition flex items-center justify-center gap-2">
+              <a href="#featured" className="bg-white dark:bg-gray-900/50 hover:bg-gray-50 dark:hover:bg-gray-800 text-center text-gray-700 dark:text-gray-300 font-medium py-3 px-8 rounded-lg text-lg border border-gray-200 dark:border-white/5 transition flex items-center justify-center gap-2">
                 Xem bảng giá
               </a>
             </div>
           </div>
 
-          <div className="relative h-[300px] md:h-[420px] rounded-2xl overflow-hidden border border-white/10">
+          <div className="relative h-[300px] md:h-[420px] rounded-2xl overflow-hidden border border-gray-100 dark:border-white/10">
             <img 
               src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80" 
               alt="Showroom Car" 
               className="object-cover w-full h-full hover:scale-105 transition duration-700" 
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#080b11] via-transparent to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#080b11] via-transparent to-transparent"></div>
             <div className="absolute bottom-6 left-6 flex gap-4">
-              <div className="glass-panel px-4 py-2 rounded-lg border border-white/10">
-                <span className="text-xs text-gray-400 block">Dòng xe đời mới</span>
-                <span className="text-sm font-bold text-white">100+ Xe có sẵn</span>
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md px-4 py-2 rounded-lg border border-white/20">
+                <span className="text-xs text-gray-500 dark:text-gray-400 block">Dòng xe đời mới</span>
+                <span className="text-sm font-bold text-gray-950 dark:text-white">100+ Xe có sẵn</span>
               </div>
-              <div className="glass-panel px-4 py-2 rounded-lg border border-white/10">
-                <span className="text-xs text-gray-400 block">Đã hoàn thành</span>
-                <span className="text-sm font-bold text-white">5,000+ Chuyến đi</span>
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md px-4 py-2 rounded-lg border border-white/20">
+                <span className="text-xs text-gray-500 dark:text-gray-400 block">Đã hoàn thành</span>
+                <span className="text-sm font-bold text-gray-950 dark:text-white">5,000+ Chuyến đi</span>
               </div>
             </div>
           </div>
@@ -203,22 +122,21 @@ export default function HomePage() {
       </section>
 
       {/* Showroom & Location Info */}
-      <section id="showroom" className="bg-gray-950/30 border-y border-white/5 py-16 px-6 md:px-12">
+      <section id="showroom" className="bg-white dark:bg-gray-950/30 border-y border-gray-150 dark:border-white/5 py-16 px-6 md:px-12">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold mb-6 flex items-center gap-2">
-              <MapPin className="text-purple-500 h-7 w-7" />
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 flex items-center gap-2 text-gray-950 dark:text-white">
+              <MapPin className="text-[#00B14F] h-7 w-7" />
               <span>Showroom của chúng tôi</span>
             </h2>
-            <div className="space-y-6 text-gray-400">
+            <div className="space-y-6 text-gray-600 dark:text-gray-400">
               <p>📍 <strong>Địa chỉ chính thức:</strong> Số 12 Khuất Duy Tiến, Thanh Xuân, Hà Nội</p>
               <p>📞 <strong>Hotline đặt lịch khẩn cấp:</strong> 1900 8888 (Hỗ trợ 24/7)</p>
               <p>⏰ <strong>Giờ làm việc:</strong> 07:00 AM - 10:00 PM (Cả ngày lễ và Chủ nhật)</p>
               <p>Hệ thống bàn giao xe trực tiếp tại showroom hoặc hỗ trợ giao xe tận nhà trong bán kính 10km cực kỳ nhanh chóng.</p>
             </div>
           </div>
-          <div className="rounded-xl overflow-hidden border border-white/10 h-[300px]">
-            {/* Google Map Mock - Embeed map Iframe */}
+          <div className="rounded-xl overflow-hidden border border-gray-100 dark:border-white/10 h-[300px]">
             <iframe 
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.8105742211993!2d105.79815541540188!3d20.999625686016142!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135acbe0316d2f3%3A0x7d6f51be676a0c02!2zMTIgS2h14bq_dCBEdXkgVGnhur9uLCBUaGFuaCBYdcOibiwgSMOgIE7hu5lp!5e0!3m2!1svi!2s!4v1655000000000!5m2!1svi!2s" 
               width="100%" 
@@ -234,51 +152,51 @@ export default function HomePage() {
       {/* Featured Cars Section */}
       <section id="featured" className="py-20 px-6 md:px-12 max-w-7xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-3xl font-bold mb-4">Các Dòng Xe Nổi Bật</h2>
-          <p className="text-gray-400">Đa dạng lựa chọn từ Sedan đô thị tiết kiệm đến SUV 7 chỗ rộng rãi, sẵn sàng đáp ứng mọi cung đường của bạn.</p>
+          <h2 className="text-3xl font-bold mb-4 text-gray-950 dark:text-white">Các Dòng Xe Nổi Bật</h2>
+          <p className="text-gray-600 dark:text-gray-400">Đa dạng lựa chọn từ Sedan đô thị tiết kiệm đến SUV 7 chỗ rộng rãi, sẵn sàng đáp ứng mọi cung đường của bạn.</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
           {featuredCars.map((car) => (
-            <div key={car.id} className="glass-panel rounded-xl overflow-hidden border border-white/5 flex flex-col group hover:border-purple-500/20 transition-all duration-300">
+            <div key={car.id} className="bg-white dark:bg-gray-950/20 rounded-xl overflow-hidden border border-gray-100 dark:border-white/5 flex flex-col group hover:border-[#00B14F]/20 dark:hover:border-purple-500/20 transition-all duration-300 shadow-sm">
               <div className="relative h-[200px] overflow-hidden">
                 <img 
                   src={car.img} 
                   alt={car.name} 
                   className="object-cover w-full h-full group-hover:scale-105 transition duration-500" 
                 />
-                <span className="absolute top-4 right-4 bg-purple-500/90 text-white text-xs font-semibold px-2.5 py-1 rounded-md">
+                <span className="absolute top-4 right-4 bg-[#00B14F]/90 dark:bg-purple-500/90 text-white text-xs font-semibold px-2.5 py-1 rounded-md">
                   {car.type}
                 </span>
               </div>
               <div className="p-6 flex flex-col flex-grow gap-4">
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="text-xs text-gray-500 block uppercase tracking-wider">{car.brand}</span>
-                    <h3 className="text-xl font-bold text-white mt-1">{car.name}</h3>
+                    <span className="text-xs text-gray-400 block uppercase tracking-wider">{car.brand}</span>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-1">{car.name}</h3>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs text-gray-500 block">Giá thuê chỉ từ</span>
-                    <span className="text-lg font-bold text-purple-400">{car.price}/ngày</span>
+                    <span className="text-xs text-gray-400 block">Giá thuê chỉ từ</span>
+                    <span className="text-lg font-bold text-[#00B14F] dark:text-purple-400">{car.price}/ngày</span>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-3 gap-2 py-3 border-y border-white/5 text-xs text-gray-400 text-center">
+                <div className="grid grid-cols-3 gap-2 py-3 border-y border-gray-100 dark:border-white/5 text-xs text-gray-500 dark:text-gray-400 text-center">
                   <div>
-                    <span className="block text-gray-500 mb-0.5">Số ghế</span>
-                    <strong>{car.seats} Ghế</strong>
+                    <span className="block text-gray-400 mb-0.5">Số ghế</span>
+                    <strong className="text-gray-900 dark:text-white">{car.seats} Ghế</strong>
                   </div>
                   <div>
-                    <span className="block text-gray-500 mb-0.5">Hộp số</span>
-                    <strong>{car.gear}</strong>
+                    <span className="block text-gray-400 mb-0.5">Hộp số</span>
+                    <strong className="text-gray-900 dark:text-white">{car.gear}</strong>
                   </div>
                   <div>
-                    <span className="block text-gray-500 mb-0.5">Nhiên liệu</span>
-                    <strong>{car.type}</strong>
+                    <span className="block text-gray-400 mb-0.5">Nhiên liệu</span>
+                    <strong className="text-gray-900 dark:text-white">{car.type}</strong>
                   </div>
                 </div>
 
-                <Link href="/booking" className="gradient-btn text-center text-white py-2.5 rounded-lg text-sm font-semibold mt-auto block">
+                <Link href="/booking" className="bg-[#00B14F] hover:bg-[#009b45] text-center text-white py-2.5 rounded-lg text-sm font-semibold mt-auto block transition duration-200">
                   Đăng ký đặt xe
                 </Link>
               </div>
@@ -288,36 +206,36 @@ export default function HomePage() {
       </section>
 
       {/* Policy Section */}
-      <section id="policy" className="bg-gray-950/20 border-y border-white/5 py-20 px-6 md:px-12">
+      <section id="policy" className="bg-white dark:bg-gray-950/20 border-y border-gray-150 dark:border-white/5 py-20 px-6 md:px-12">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold mb-4 flex items-center justify-center gap-2">
-              <ShieldCheck className="text-purple-500" />
+            <h2 className="text-3xl font-bold mb-4 flex items-center justify-center gap-2 text-gray-950 dark:text-white">
+              <ShieldCheck className="text-[#00B14F]" />
               <span>Chính Sách & Quy Trình Thuê Xe</span>
             </h2>
-            <p className="text-gray-400">Đơn giản, minh bạch và bảo vệ tối đa quyền lợi cho khách hàng.</p>
+            <p className="text-gray-600 dark:text-gray-400">Đơn giản, minh bạch và bảo vệ tối đa quyền lợi cho khách hàng.</p>
           </div>
 
           <div className="grid md:grid-cols-4 gap-8">
-            <div className="glass-panel p-6 rounded-xl border border-white/5 text-center flex flex-col items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-lg">1</div>
-              <h3 className="font-bold text-white">1. Chọn Lịch Trình</h3>
-              <p className="text-xs text-gray-400">Chọn thời gian nhận/trả xe và lọc dòng xe yêu thích còn trống lịch trực tuyến.</p>
+            <div className="bg-white dark:bg-gray-950/10 p-6 rounded-xl border border-gray-150 dark:border-white/5 text-center flex flex-col items-center gap-4 shadow-xs">
+              <div className="h-12 w-12 rounded-full bg-[#E0F5E9] dark:bg-purple-500/10 border border-[#00B14F]/20 dark:border-purple-500/20 flex items-center justify-center text-[#00B14F] dark:text-purple-400 font-bold text-lg">1</div>
+              <h3 className="font-bold text-gray-900 dark:text-white">1. Chọn Lịch Trình</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Chọn thời gian nhận/trả xe và lọc dòng xe yêu thích còn trống lịch trực tuyến.</p>
             </div>
-            <div className="glass-panel p-6 rounded-xl border border-white/5 text-center flex flex-col items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-lg">2</div>
-              <h3 className="font-bold text-white">2. Điền Form & Cọc</h3>
-              <p className="text-xs text-gray-400">Upload ảnh CCCD và GPLX lên hệ thống. Đặt cọc giữ xe qua MoMo hoặc chuyển khoản VietQR.</p>
+            <div className="bg-white dark:bg-gray-950/10 p-6 rounded-xl border border-gray-150 dark:border-white/5 text-center flex flex-col items-center gap-4 shadow-xs">
+              <div className="h-12 w-12 rounded-full bg-[#E0F5E9] dark:bg-purple-500/10 border border-[#00B14F]/20 dark:border-purple-500/20 flex items-center justify-center text-[#00B14F] dark:text-purple-400 font-bold text-lg">2</div>
+              <h3 className="font-bold text-gray-900 dark:text-white">2. Điền Form & Cọc</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Upload ảnh CCCD và GPLX lên hệ thống. Đặt cọc giữ xe qua MoMo hoặc chuyển khoản VietQR.</p>
             </div>
-            <div className="glass-panel p-6 rounded-xl border border-white/5 text-center flex flex-col items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-lg">3</div>
-              <h3 className="font-bold text-white">3. Bàn Giao Xe</h3>
-              <p className="text-xs text-gray-400">Nhân viên liên hệ bàn giao xe trực tiếp tại showroom, ký hợp đồng điện tử siêu tốc.</p>
+            <div className="bg-white dark:bg-gray-950/10 p-6 rounded-xl border border-gray-150 dark:border-white/5 text-center flex flex-col items-center gap-4 shadow-xs">
+              <div className="h-12 w-12 rounded-full bg-[#E0F5E9] dark:bg-purple-500/10 border border-[#00B14F]/20 dark:border-purple-500/20 flex items-center justify-center text-[#00B14F] dark:text-purple-400 font-bold text-lg">3</div>
+              <h3 className="font-bold text-gray-900 dark:text-white">3. Bàn Giao Xe</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Nhân viên liên hệ bàn giao xe trực tiếp tại showroom, ký hợp đồng điện tử siêu tốc.</p>
             </div>
-            <div className="glass-panel p-6 rounded-xl border border-white/5 text-center flex flex-col items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-lg">4</div>
-              <h3 className="font-bold text-white">4. Trả Xe Hoàn Cọc</h3>
-              <p className="text-xs text-gray-400">Bàn giao xe sạch sẽ, nhận lại tài sản thế chấp sau khi nhân viên thẩm định tình trạng xe.</p>
+            <div className="bg-white dark:bg-gray-950/10 p-6 rounded-xl border border-gray-150 dark:border-white/5 text-center flex flex-col items-center gap-4 shadow-xs">
+              <div className="h-12 w-12 rounded-full bg-[#E0F5E9] dark:bg-purple-500/10 border border-[#00B14F]/20 dark:border-purple-500/20 flex items-center justify-center text-[#00B14F] dark:text-purple-400 font-bold text-lg">4</div>
+              <h3 className="font-bold text-gray-900 dark:text-white">4. Trả Xe Hoàn Cọc</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Bàn giao xe sạch sẽ, nhận lại tài sản thế chấp sau khi nhân viên thẩm định tình trạng xe.</p>
             </div>
           </div>
         </div>
@@ -326,25 +244,26 @@ export default function HomePage() {
       {/* FAQ Section */}
       <section id="faq" className="py-20 px-6 md:px-12 max-w-4xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold mb-4 flex items-center justify-center gap-2">
-            <HelpCircle className="text-purple-500" />
+          <h2 className="text-3xl font-bold mb-4 flex items-center justify-center gap-2 text-gray-950 dark:text-white">
+            <HelpCircle className="text-[#00B14F]" />
             <span>Câu Hỏi Thường Gặp (FAQs)</span>
           </h2>
-          <p className="text-gray-400">Tổng hợp các thông tin chi tiết giải đáp thắc mắc của bạn.</p>
+          <p className="text-gray-600 dark:text-gray-400">Tổng hợp các thông tin chi tiết giải đáp thắc mắc của bạn.</p>
         </div>
 
         <div className="space-y-4">
           {faqs.map((faq, i) => (
-            <div key={i} className="glass-panel rounded-xl border border-white/5 overflow-hidden transition-all duration-300">
+            <div key={i} className="bg-white dark:bg-gray-950/20 rounded-xl border border-gray-100 dark:border-white/5 overflow-hidden transition-all duration-300">
               <button 
+                type="button"
                 onClick={() => setFaqOpen(faqOpen === i ? null : i)}
-                className="w-full text-left p-6 font-semibold flex justify-between items-center hover:text-purple-400 transition"
+                className="w-full text-left p-6 font-semibold flex justify-between items-center text-gray-800 dark:text-white hover:text-[#00B14F] dark:hover:text-purple-400 transition"
               >
                 <span>{faq.q}</span>
-                <span className="text-purple-500 font-bold text-lg">{faqOpen === i ? '-' : '+'}</span>
+                <span className="text-[#00B14F] dark:text-purple-500 font-bold text-lg">{faqOpen === i ? '-' : '+'}</span>
               </button>
               {faqOpen === i && (
-                <div className="p-6 pt-0 text-sm text-gray-400 border-t border-white/5 leading-relaxed bg-white/1">
+                <div className="p-6 pt-0 text-sm text-gray-600 dark:text-gray-400 border-t border-gray-100 dark:border-white/5 leading-relaxed">
                   {faq.a}
                 </div>
               )}
@@ -353,26 +272,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="mt-auto border-t border-white/5 bg-[#05080c] py-12 px-6 md:px-12 text-center text-gray-500 text-sm">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2 text-xl font-bold tracking-wider text-purple-400">
-            <Car className="h-6 w-6 text-purple-500" />
-            <span>DAT<span className="text-white">XE</span></span>
-          </div>
-          <p>© 2026 DATXE Inc. Phát triển bởi Senior Fullstack Solution Architect.</p>
-          <div className="flex gap-6">
-            <Link href="/privacy" className="hover:text-gray-400">Chính sách bảo mật</Link>
-            <Link href="/terms" className="hover:text-gray-400">Điều khoản sử dụng</Link>
-          </div>
-        </div>
-      </footer>
-      {/* Auth Modal Overlay Portal */}
-      <AuthModal 
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        initialMode={authMode}
-      />
+      {/* Footer Layout */}
+      <Footer />
     </div>
   );
 }
