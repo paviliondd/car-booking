@@ -45,7 +45,7 @@ export default function RevenueChart({ data, selectedMonth, onMonthChange }: Rev
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-150 dark:border-white/5 rounded-2xl p-6 shadow-xs flex flex-col gap-4 select-none h-full">
       {/* Header with selector */}
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div className="flex flex-col gap-1.5">
           <h3 className="text-base font-bold text-gray-950 dark:text-white">Doanh thu tháng này</h3>
           <span className="text-2xl font-black text-[#008F5A]">
@@ -59,9 +59,12 @@ export default function RevenueChart({ data, selectedMonth, onMonthChange }: Rev
           onChange={(e) => onMonthChange(e.target.value)}
           className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 p-2 rounded-lg text-xs font-bold text-gray-700 dark:text-white focus:outline-none"
         >
-          <option value="2026-06">Tháng 6, 2026</option>
-          <option value="2026-05">Tháng 5, 2026</option>
-          <option value="2026-04">Tháng 4, 2026</option>
+          {[0, 1, 2].map((offset) => {
+            const date = new Date();
+            date.setMonth(date.getMonth() - offset);
+            const value = date.toISOString().slice(0, 7);
+            return <option key={value} value={value}>Tháng {date.getMonth() + 1}, {date.getFullYear()}</option>;
+          })}
         </select>
       </div>
 
@@ -96,7 +99,7 @@ export default function RevenueChart({ data, selectedMonth, onMonthChange }: Rev
               <Tooltip 
                 contentStyle={{ background: '#1F2937', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
                 labelFormatter={(label) => `Ngày ${label}`}
-                formatter={(value: any) => [formatMoney(value), 'Doanh thu']}
+                formatter={(value: unknown) => [formatMoney(Number(value || 0)), 'Doanh thu']}
               />
               <Area 
                 type="monotone" 

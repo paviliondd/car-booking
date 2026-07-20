@@ -580,3 +580,426 @@ C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\sr
   138 const endDate = new Date(year, monthIndex + 1, 0, 23, 59, 59, 999);
 → 139 const revenues = await this.prisma.revenue.findMany(
 
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\auth.service.js:167:49
+
+  164 }
+  165 async login(dto) {
+  166     try {
+→ 167         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+
+[33m[Nest] 26312  - [39m06/24/2026, 10:46:57 PM [33m   WARN[39m [38;5;3m[DashboardService] [39m[33mUsing demo dashboard overview because database is unavailable: 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+[39m
+prisma:error 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+
+[33m[Nest] 26312  - [39m06/24/2026, 10:46:57 PM [33m   WARN[39m [38;5;3m[DashboardService] [39m[33mUsing demo dashboard overview because database is unavailable: 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+[39m
+prisma:error 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+
+[33m[Nest] 26312  - [39m06/24/2026, 10:46:57 PM [33m   WARN[39m [38;5;3m[DashboardService] [39m[33mUsing demo dashboard overview because database is unavailable: 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+[39m
+prisma:error 
+Invalid `this.prisma.booking.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:112:37
+
+  109 async getCarStatusSummary() {
+  110     try {
+  111         const [waitConfirm, confirmed, received, returned, accident, pledged] = await Promise.all([
+→ 112             this.prisma.booking.count(
+
+prisma:error 
+Invalid `this.prisma.booking.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:113:37
+
+  110 try {
+  111     const [waitConfirm, confirmed, received, returned, accident, pledged] = await Promise.all([
+  112         this.prisma.booking.count({ where: { status: client_1.BookingStatus.PENDING } }),
+→ 113         this.prisma.booking.count(
+
+prisma:error 
+Invalid `this.prisma.booking.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:114:37
+
+  111 const [waitConfirm, confirmed, received, returned, accident, pledged] = await Promise.all([
+  112     this.prisma.booking.count({ where: { status: client_1.BookingStatus.PENDING } }),
+  113     this.prisma.booking.count({ where: { status: client_1.BookingStatus.CONFIRMED } }),
+→ 114     this.prisma.booking.count(
+
+prisma:error 
+Invalid `this.prisma.booking.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:115:37
+
+  112 this.prisma.booking.count({ where: { status: client_1.BookingStatus.PENDING } }),
+  113 this.prisma.booking.count({ where: { status: client_1.BookingStatus.CONFIRMED } }),
+  114 this.prisma.booking.count({ where: { status: client_1.BookingStatus.RENTING } }),
+→ 115 this.prisma.booking.count(
+
+prisma:error 
+Invalid `this.prisma.vehicle.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:116:37
+
+  113 this.prisma.booking.count({ where: { status: client_1.BookingStatus.CONFIRMED } }),
+  114 this.prisma.booking.count({ where: { status: client_1.BookingStatus.RENTING } }),
+  115 this.prisma.booking.count({ where: { status: client_1.BookingStatus.COMPLETED } }),
+→ 116 this.prisma.vehicle.count(
+
+prisma:error 
+Invalid `this.prisma.vehicle.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:117:37
+
+  114 this.prisma.booking.count({ where: { status: client_1.BookingStatus.RENTING } }),
+  115 this.prisma.booking.count({ where: { status: client_1.BookingStatus.COMPLETED } }),
+  116 this.prisma.vehicle.count({ where: { status: client_1.VehicleStatus.MAINTENANCE } }),
+→ 117 this.prisma.vehicle.count(
+
+prisma:error 
+Invalid `this.prisma.revenue.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:139:56
+
+  136 const monthIndex = parseInt(monthStr, 10) - 1;
+  137 const startDate = new Date(year, monthIndex, 1);
+  138 const endDate = new Date(year, monthIndex + 1, 0, 23, 59, 59, 999);
+→ 139 const revenues = await this.prisma.revenue.findMany(
+
+prisma:error 
+Invalid `this.prisma.vehicle.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:170:56
+
+  167 }
+  168 async getTopServices() {
+  169     try {
+→ 170         const vehicles = await this.prisma.vehicle.findMany(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.vehicle.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:192:56
+
+  189 }
+  190 async getTopCars(limit) {
+  191     try {
+→ 192         const vehicles = await this.prisma.vehicle.findMany(
+
+prisma:error 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+
+[33m[Nest] 26312  - [39m06/24/2026, 10:46:57 PM [33m   WARN[39m [38;5;3m[DashboardService] [39m[33mUsing demo dashboard overview because database is unavailable: 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+[39m
+prisma:error 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+
+[33m[Nest] 26312  - [39m06/24/2026, 10:46:57 PM [33m   WARN[39m [38;5;3m[DashboardService] [39m[33mUsing demo dashboard overview because database is unavailable: 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+[39m
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+
+[33m[Nest] 26312  - [39m06/24/2026, 10:46:58 PM [33m   WARN[39m [38;5;3m[DashboardService] [39m[33mUsing demo dashboard overview because database is unavailable: 
+Invalid `this.prisma.booking.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:65:56
+
+  62     startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  63     endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  64 }
+→ 65 const bookings = await this.prisma.booking.findMany(
+[39m
+prisma:error 
+Invalid `this.prisma.booking.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:112:37
+
+  109 async getCarStatusSummary() {
+  110     try {
+  111         const [waitConfirm, confirmed, received, returned, accident, pledged] = await Promise.all([
+→ 112             this.prisma.booking.count(
+
+prisma:error 
+Invalid `this.prisma.booking.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:113:37
+
+  110 try {
+  111     const [waitConfirm, confirmed, received, returned, accident, pledged] = await Promise.all([
+  112         this.prisma.booking.count({ where: { status: client_1.BookingStatus.PENDING } }),
+→ 113         this.prisma.booking.count(
+
+prisma:error 
+Invalid `this.prisma.booking.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:114:37
+
+  111 const [waitConfirm, confirmed, received, returned, accident, pledged] = await Promise.all([
+  112     this.prisma.booking.count({ where: { status: client_1.BookingStatus.PENDING } }),
+  113     this.prisma.booking.count({ where: { status: client_1.BookingStatus.CONFIRMED } }),
+→ 114     this.prisma.booking.count(
+
+prisma:error 
+Invalid `this.prisma.booking.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:115:37
+
+  112 this.prisma.booking.count({ where: { status: client_1.BookingStatus.PENDING } }),
+  113 this.prisma.booking.count({ where: { status: client_1.BookingStatus.CONFIRMED } }),
+  114 this.prisma.booking.count({ where: { status: client_1.BookingStatus.RENTING } }),
+→ 115 this.prisma.booking.count(
+
+prisma:error 
+Invalid `this.prisma.vehicle.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:116:37
+
+  113 this.prisma.booking.count({ where: { status: client_1.BookingStatus.CONFIRMED } }),
+  114 this.prisma.booking.count({ where: { status: client_1.BookingStatus.RENTING } }),
+  115 this.prisma.booking.count({ where: { status: client_1.BookingStatus.COMPLETED } }),
+→ 116 this.prisma.vehicle.count(
+
+prisma:error 
+Invalid `this.prisma.vehicle.count()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:117:37
+
+  114 this.prisma.booking.count({ where: { status: client_1.BookingStatus.RENTING } }),
+  115 this.prisma.booking.count({ where: { status: client_1.BookingStatus.COMPLETED } }),
+  116 this.prisma.vehicle.count({ where: { status: client_1.VehicleStatus.MAINTENANCE } }),
+→ 117 this.prisma.vehicle.count(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.user.findUnique()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\auth\strategies\jwt.strategy.js:32:49
+
+  29 }
+  30 async validate(payload) {
+  31     try {
+→ 32         const user = await this.prisma.user.findUnique(
+
+prisma:error 
+Invalid `this.prisma.revenue.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:139:56
+
+  136 const monthIndex = parseInt(monthStr, 10) - 1;
+  137 const startDate = new Date(year, monthIndex, 1);
+  138 const endDate = new Date(year, monthIndex + 1, 0, 23, 59, 59, 999);
+→ 139 const revenues = await this.prisma.revenue.findMany(
+
+prisma:error 
+Invalid `this.prisma.vehicle.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:170:56
+
+  167 }
+  168 async getTopServices() {
+  169     try {
+→ 170         const vehicles = await this.prisma.vehicle.findMany(
+
+prisma:error 
+Invalid `this.prisma.vehicle.findMany()` invocation in
+C:\Users\pavil\.gemini\antigravity-ide\scratch\car-rental-system\backend\dist\src\dashboard\dashboard.service.js:192:56
+
+  189 }
+  190 async getTopCars(limit) {
+  191     try {
+→ 192         const vehicles = await this.prisma.vehicle.findMany(
+

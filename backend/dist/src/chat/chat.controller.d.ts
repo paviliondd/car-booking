@@ -1,13 +1,43 @@
+import type { Request } from 'express';
 import { ChatService } from './chat.service';
+import { SendMessageDto } from './dto/chat.dto';
+type AuthenticatedRequest = Request & {
+    user: {
+        id: string;
+    };
+};
 export declare class ChatController {
     private readonly chatService;
     constructor(chatService: ChatService);
-    getPartners(req: any): Promise<any[]>;
-    getHistory(req: any, partnerId: string): Promise<{
+    getPartners(req: AuthenticatedRequest): Promise<{
+        id: string;
+        name: string;
+        email: string;
+    }[]>;
+    getHistory(req: AuthenticatedRequest, partnerId: string): Promise<{
         id: string;
         createdAt: Date;
         message: string;
         senderId: string;
         receiverId: string;
     }[]>;
+    sendMessage(req: AuthenticatedRequest, dto: SendMessageDto): Promise<{
+        sender: {
+            id: string;
+            email: string;
+            name: string;
+        };
+        receiver: {
+            id: string;
+            email: string;
+            name: string;
+        };
+    } & {
+        id: string;
+        createdAt: Date;
+        message: string;
+        senderId: string;
+        receiverId: string;
+    }>;
 }
+export {};

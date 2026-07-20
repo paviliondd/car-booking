@@ -1,9 +1,20 @@
-import { Controller, Get, Post, Body, Query, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
+import type { Request } from 'express';
+
+type DashboardRequest = Request & { user: { id: string; role: Role } };
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.OWNER, Role.ADMIN, Role.STAFF)
@@ -12,40 +23,54 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get('overview')
-  async getOverview(@Query('period') period: string) {
-    return await this.dashboardService.getOverview(period || 'today');
+  async getOverview(
+    @Req() req: DashboardRequest,
+    @Query('period') period: string,
+  ) {
+    return this.dashboardService.getOverview(period || 'today', req.user);
   }
 
   @Get('car-status-summary')
-  async getCarStatusSummary() {
-    return await this.dashboardService.getCarStatusSummary();
+  async getCarStatusSummary(@Req() req: DashboardRequest) {
+    return this.dashboardService.getCarStatusSummary(req.user);
   }
 
   @Get('revenue-chart')
-  async getRevenueChart(@Query('month') month: string) {
-    return await this.dashboardService.getRevenueChart(month || '2026-06');
+  async getRevenueChart(
+    @Req() req: DashboardRequest,
+    @Query('month') month: string,
+  ) {
+    return this.dashboardService.getRevenueChart(
+      month || new Date().toISOString().slice(0, 7),
+      req.user,
+    );
   }
 
   @Get('top-services')
-  async getTopServices() {
-    return await this.dashboardService.getTopServices();
+  async getTopServices(@Req() req: DashboardRequest) {
+    return this.dashboardService.getTopServices(req.user);
   }
 
   @Get('top-cars')
-  async getTopCars(@Query('limit') limit: string) {
+  async getTopCars(
+    @Req() req: DashboardRequest,
+    @Query('limit') limit: string,
+  ) {
     const lim = limit ? parseInt(limit, 10) : 10;
-    return await this.dashboardService.getTopCars(lim);
+    return this.dashboardService.getTopCars(lim, req.user);
   }
 }
 
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.OWNER, Role.ADMIN, Role.STAFF)
 @Controller('notifications')
 export class NotificationsController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get()
-  async getNotifications(@Query('limit') limit: string) {
+  getNotifications(@Query('limit') limit: string) {
     const lim = limit ? parseInt(limit, 10) : 5;
-    return await this.dashboardService.getNotifications(lim);
+    return this.dashboardService.getNotifications(lim);
   }
 }
 
@@ -63,17 +88,19 @@ export class CarsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.OWNER, Role.ADMIN, Role.STAFF)
   @Get('violate-list')
-  async getViolateList() {
-    return await this.dashboardService.getCarViolateList();
+  getViolateList() {
+    return this.dashboardService.getCarViolateList();
   }
 
   // Get available cars for long term rental (Public)
   @Get('available')
-  async getAvailable(
+  getAvailable(
     @Query('location') location: string,
     @Query('startDate') startDate: string,
     @Query('months') months: string,
   ) {
+    void startDate;
+    void months;
     // Return mock available cars list
     return [
       {
@@ -83,7 +110,9 @@ export class CarsController {
         plateNumber: '30A-111.11',
         dailyPrice: 1800000,
         monthlyPrice: 40000000, // Monthly special package
-        images: ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80'],
+        images: [
+          'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80',
+        ],
         location,
       },
       {
@@ -93,9 +122,11 @@ export class CarsController {
         plateNumber: '30A-999.99',
         dailyPrice: 1200000,
         monthlyPrice: 28000000,
-        images: ['https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=600&q=80'],
+        images: [
+          'https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=600&q=80',
+        ],
         location,
-      }
+      },
     ];
   }
 }
@@ -103,7 +134,7 @@ export class CarsController {
 @Controller('feedback')
 export class FeedbackController {
   @Post()
-  async createFeedback(@Body() body: { category: string; message: string }) {
+  createFeedback(@Body() body: { category: string; message: string }) {
     return {
       success: true,
       message: 'Góp ý của bạn đã được tiếp nhận. Cảm ơn ý kiến đóng góp!',
@@ -115,7 +146,7 @@ export class FeedbackController {
 @Controller('rating')
 export class RatingController {
   @Post()
-  async createRating(@Body() body: { stars: number; comment: string }) {
+  createRating(@Body() body: { stars: number; comment: string }) {
     return {
       success: true,
       message: 'Cảm ơn bạn đã đánh giá chất lượng dịch vụ!',
@@ -127,10 +158,11 @@ export class RatingController {
 @Controller('booking')
 export class DashboardBookingController {
   @Post('long-term')
-  async createLongTermBooking(@Body() body: any) {
+  createLongTermBooking(@Body() body: Record<string, unknown>) {
     return {
       success: true,
-      message: 'Đăng ký thuê xe dài hạn thành công! Nhân viên sẽ liên hệ tư vấn hợp đồng trong vòng 1 ngày làm việc.',
+      message:
+        'Đăng ký thuê xe dài hạn thành công! Nhân viên sẽ liên hệ tư vấn hợp đồng trong vòng 1 ngày làm việc.',
       bookingNumber: `BK-LT-${Math.floor(100000 + Math.random() * 900000)}`,
       data: body,
     };
@@ -141,12 +173,13 @@ export class DashboardBookingController {
 @Controller('auth')
 export class DashboardAuthController {
   @Post('logout')
-  async logout() {
+  logout() {
     return { success: true, message: 'Đăng xuất thành công!' };
   }
 
   @Post('forgot-password')
-  async forgotPassword(@Body('phone') phone: string) {
+  forgotPassword(@Body('phone') phone: string) {
+    void phone;
     return {
       success: true,
       message: 'Mã OTP đặt lại mật khẩu đã được gửi đến số điện thoại đăng ký.',

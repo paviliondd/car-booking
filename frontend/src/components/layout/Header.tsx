@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useSyncExternalStore, useState } from 'react';
 import Link from 'next/link';
 import { Car, LogOut, Menu, UserCircle, X } from 'lucide-react';
 import AuthModal from '../modals/AuthModal';
@@ -16,37 +16,44 @@ const navItems = [
   { href: '/become-owner', label: 'Trở thành chủ xe' },
 ];
 
-export default function Header() {
-  const readStoredUser = (): StoredUser | null => {
-    if (typeof window === 'undefined') return null;
-    const rawUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    if (!token || !rawUser) return null;
-    try {
-      return JSON.parse(rawUser);
-    } catch {
-      localStorage.removeItem('user');
-      return null;
-    }
-  };
+const getAuthSnapshot = () => {
+  const token = localStorage.getItem('token');
+  const rawUser = localStorage.getItem('user');
+  return token && rawUser ? `${token}:${rawUser}` : '';
+};
 
+const getServerAuthSnapshot = () => '';
+
+const subscribeToAuth = (onStoreChange: () => void) => {
+  window.addEventListener('storage', onStoreChange);
+  window.addEventListener('focus', onStoreChange);
+  window.addEventListener('datxe-auth', onStoreChange);
+  return () => {
+    window.removeEventListener('storage', onStoreChange);
+    window.removeEventListener('focus', onStoreChange);
+    window.removeEventListener('datxe-auth', onStoreChange);
+  };
+};
+
+const parseStoredUser = (snapshot: string): StoredUser | null => {
+  if (!snapshot) return null;
+  try {
+    return JSON.parse(snapshot.slice(snapshot.indexOf(':') + 1)) as StoredUser;
+  } catch {
+    return null;
+  }
+};
+
+export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
-  const [user, setUser] = useState<StoredUser | null>(readStoredUser);
-
-  const syncAuthState = () => {
-    setUser(readStoredUser());
-  };
-
-  useEffect(() => {
-    window.addEventListener('storage', syncAuthState);
-    window.addEventListener('focus', syncAuthState);
-    return () => {
-      window.removeEventListener('storage', syncAuthState);
-      window.removeEventListener('focus', syncAuthState);
-    };
-  }, []);
+  const authSnapshot = useSyncExternalStore(
+    subscribeToAuth,
+    getAuthSnapshot,
+    getServerAuthSnapshot,
+  );
+  const user = parseStoredUser(authSnapshot);
 
   const openAuth = (mode: 'login' | 'register') => {
     setAuthMode(mode);
@@ -57,11 +64,11 @@ export default function Header() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    setUser(null);
+    window.dispatchEvent(new Event('datxe-auth'));
     setMobileMenuOpen(false);
   };
 
-  const navLinkClass = 'hover:text-[#008F5A] transition font-medium';
+  const navLinkClass = 'inline-flex min-h-11 items-center hover:text-[#008F5A] transition font-medium';
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-emerald-100 py-4 px-6 md:px-12 flex justify-between items-center text-slate-800 shadow-sm">
@@ -99,14 +106,14 @@ export default function Header() {
             <button
               type="button"
               onClick={() => openAuth('register')}
-              className="hover:text-[#008F5A] transition font-semibold cursor-pointer"
+              className="min-h-11 px-2 hover:text-[#008F5A] transition font-semibold cursor-pointer"
             >
               Đăng ký
             </button>
             <button
               type="button"
               onClick={() => openAuth('login')}
-              className="border border-slate-800 hover:border-[#008F5A] hover:text-[#008F5A] hover:bg-emerald-50 transition px-4 py-2 rounded-lg font-semibold cursor-pointer"
+              className="min-h-11 border border-slate-800 hover:border-[#008F5A] hover:text-[#008F5A] hover:bg-emerald-50 transition px-4 py-2 rounded-lg font-semibold cursor-pointer"
             >
               Đăng nhập
             </button>
@@ -116,7 +123,7 @@ export default function Header() {
 
       <button
         type="button"
-        className="md:hidden text-slate-600 hover:text-slate-900"
+        className="md:hidden inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900"
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         aria-label={mobileMenuOpen ? 'Đóng menu' : 'Mở menu'}
       >
@@ -169,7 +176,7 @@ export default function Header() {
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
         initialMode={authMode}
-        onAuthenticated={syncAuthState}
+        onAuthenticated={() => window.dispatchEvent(new Event('datxe-auth'))}
       />
     </header>
   );

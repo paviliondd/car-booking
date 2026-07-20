@@ -7,6 +7,9 @@ export declare class PaymentsService {
     private payos;
     private readonly logger;
     constructor(configService: ConfigService, prisma: PrismaService);
+    private asString;
+    verifyMomoSignature(body: Record<string, unknown>): boolean;
+    handlePayosWebhook(body: Record<string, unknown>): Promise<void>;
     createPaymentUrl(bookingId: string, amount: number, method: PaymentMethod): Promise<{
         paymentUrl: string;
         transactionId: string;

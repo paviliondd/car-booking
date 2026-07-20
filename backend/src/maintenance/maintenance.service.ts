@@ -31,7 +31,9 @@ export class MaintenanceService {
   }
 
   async complete(id: string, cost: number): Promise<Maintenance> {
-    const maintenance = await this.prisma.maintenance.findUnique({ where: { id } });
+    const maintenance = await this.prisma.maintenance.findUnique({
+      where: { id },
+    });
     if (!maintenance) {
       throw new NotFoundException('Không tìm thấy lịch bảo dưỡng');
     }
@@ -94,7 +96,9 @@ export class MaintenanceService {
       type: m.type,
       scheduledDate: m.scheduledDate,
       description: m.description,
-      daysRemaining: Math.ceil((m.scheduledDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+      daysRemaining: Math.ceil(
+        (m.scheduledDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+      ),
     }));
   }
 }

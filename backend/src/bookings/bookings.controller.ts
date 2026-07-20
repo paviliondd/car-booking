@@ -1,10 +1,21 @@
-import { Controller, Post, Get, Patch, Body, Query, Param, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Body,
+  Query,
+  Param,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/booking.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role, BookingStatus } from '@prisma/client';
+import type { AuthenticatedRequest } from '../auth/types/authenticated-user';
 
 @Controller('bookings')
 export class BookingsController {
@@ -34,7 +45,7 @@ export class BookingsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.OWNER)
   @Get('owner/my-requests')
-  async getOwnerRequests(@Req() req: any) {
+  async getOwnerRequests(@Req() req: AuthenticatedRequest) {
     return await this.bookingsService.findOwnerBookings(req.user.id);
   }
 
@@ -53,7 +64,7 @@ export class BookingsController {
   async updateStatus(
     @Param('id') id: string,
     @Body('status') status: BookingStatus,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return await this.bookingsService.updateStatus(id, status, req.user);
   }

@@ -22,7 +22,7 @@ export class CustomersService {
     return customers.map((c) => {
       const totalBookings = c.bookings.length;
       const totalRevenue = c.bookings.reduce((sum, b) => sum + b.totalPrice, 0);
-      
+
       let lastRentalDate: Date | null = null;
       if (totalBookings > 0) {
         const sortedDates = c.bookings
@@ -64,7 +64,11 @@ export class CustomersService {
     return customer;
   }
 
-  async updateSegmentAndNotes(id: string, segment: CustomerSegment, notes?: string): Promise<Customer> {
+  async updateSegmentAndNotes(
+    id: string,
+    segment: CustomerSegment,
+    notes?: string,
+  ): Promise<Customer> {
     await this.findOne(id);
     return await this.prisma.customer.update({
       where: { id },

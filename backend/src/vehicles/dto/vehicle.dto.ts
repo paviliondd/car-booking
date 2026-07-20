@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsArray, IsUrl } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsArray,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateVehicleDto {

@@ -1,4 +1,11 @@
-import { IsString, IsNotEmpty, IsEmail, IsOptional, IsEnum, IsNumber } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsEmail,
+  IsOptional,
+  IsEnum,
+  IsNumber,
+} from 'class-validator';
 import { PaymentMethod } from '@prisma/client';
 import { Type } from 'class-transformer';
 

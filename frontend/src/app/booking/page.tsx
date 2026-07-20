@@ -1,30 +1,48 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
+import Image from 'next/image';
+import { api, type AuthUser, type ChatMessage, type Vehicle } from '@/lib/api';
+import { io, type Socket } from 'socket.io-client';
 import { 
   Car, Calendar, MapPin, User, Phone, 
   CreditCard, Tag, Sparkles, ChevronLeft, Upload, Loader2, CheckCircle2,
-  Star, MessageSquare, Send, X, Shield, ShieldCheck, Map
+  Star, MessageSquare, Send, X, Shield, Map
 } from 'lucide-react';
+
+const tomorrow = new Date();
+tomorrow.setDate(tomorrow.getDate() + 1);
+const threeDaysFromNow = new Date();
+threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+
+const errorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
+type VehicleReview = {
+  id: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  customer?: { fullName?: string } | null;
+};
 
 export default function BookingPage() {
   const router = useRouter();
 
   // Search States
-  const [startDate, setStartDate] = useState('2026-06-25');
+  const [startDate, setStartDate] = useState(() => tomorrow.toISOString().slice(0, 10));
   const [startTime, setStartTime] = useState('08:00');
-  const [endDate, setEndDate] = useState('2026-06-27');
+  const [endDate, setEndDate] = useState(() => threeDaysFromNow.toISOString().slice(0, 10));
   const [endTime, setEndTime] = useState('18:00');
   
-  const [vehicles, setVehicles] = useState<any[]>([]);
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [suggestions, setSuggestions] = useState<Vehicle[]>([]);
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
 
   // Booking details states
-  const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -39,12 +57,12 @@ export default function BookingPage() {
   // New features states
   const [insuranceType, setInsuranceType] = useState<'NONE' | 'BASIC' | 'PREMIUM'>('NONE');
   const [depositPercent, setDepositPercent] = useState<30 | 50>(30);
-  const [reviewsList, setReviewsList] = useState<any[]>([]);
+  const [reviewsList, setReviewsList] = useState<VehicleReview[]>([]);
   const [showChatModal, setShowChatModal] = useState(false);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [newChatMessage, setNewChatMessage] = useState('');
-  const [chatSocket, setChatSocket] = useState<WebSocket | null>(null);
-  const [currentUser, setCurrentUser] = useState<any | null>(null);
+  const chatSocketRef = useRef<Socket | null>(null);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   
   // File Upload State Mocking (lưu base64 hoặc file name để hiển thị)
   const [idCardFront, setIdCardFront] = useState<string | null>(null);
@@ -65,7 +83,7 @@ export default function BookingPage() {
     if (selectedVehicle) {
       // Load reviews
       api.reviews.findByVehicle(selectedVehicle.id).then((revs) => {
-        setReviewsList(revs);
+        setReviewsList(revs as VehicleReview[]);
       }).catch(err => console.error(err));
     }
   }, [selectedVehicle]);
@@ -77,23 +95,26 @@ export default function BookingPage() {
         setChatMessages(history);
       });
 
-      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:5000';
-      const socket = new WebSocket(wsUrl);
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:5000';
+      const socket = io(wsUrl, {
+        auth: { token: localStorage.getItem('token') },
+        transports: ['websocket', 'polling'],
+      });
       
-      socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
+      socket.on('messageReceived', (data: ChatMessage) => {
         if (
           (data.senderId === currentUser.id && data.receiverId === selectedVehicle.ownerId) ||
           (data.senderId === selectedVehicle.ownerId && data.receiverId === currentUser.id)
         ) {
           setChatMessages((prev) => [...prev, data]);
         }
-      };
+      });
       
-      setChatSocket(socket);
+      chatSocketRef.current = socket;
 
       return () => {
-        socket.close();
+        socket.disconnect();
+        chatSocketRef.current = null;
       };
     }
   }, [showChatModal, selectedVehicle, currentUser]);
@@ -103,23 +124,15 @@ export default function BookingPage() {
     if (!newChatMessage.trim() || !selectedVehicle?.ownerId || !currentUser) return;
 
     const payload = {
-      senderId: currentUser.id,
       receiverId: selectedVehicle.ownerId,
       message: newChatMessage,
     };
 
-    if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
-      chatSocket.send(JSON.stringify({ event: 'sendMessage', data: payload }));
+    if (chatSocketRef.current?.connected) {
+      chatSocketRef.current.emit('sendMessage', payload);
     } else {
       try {
-        const saved = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/chat/message`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify(payload)
-        }).then(r => r.json());
+        const saved = await api.chat.sendMessage(payload.receiverId, payload.message);
         setChatMessages((prev) => [...prev, saved]);
       } catch (err) {
         console.error(err);
@@ -144,15 +157,15 @@ export default function BookingPage() {
         setSuggestions(suggs);
       }
       setSearched(true);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Lỗi tìm xe trống. Vui lòng kiểm tra lại ngày giờ.');
+    } catch (err: unknown) {
+      setErrorMsg(errorMessage(err, 'Lỗi tìm xe trống. Vui lòng kiểm tra lại ngày giờ.'));
     } finally {
       setSearching(false);
     }
   };
 
-  const handleFileUploadMock = (field: string, e: any) => {
-    const file = e.target.files[0];
+  const handleFileUploadMock = (field: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -196,10 +209,11 @@ export default function BookingPage() {
       const result = await api.bookings.create(bookingPayload);
       
       // Chuyển sang trang thanh toán
-      router.push(`/payment?bookingId=${result.booking.id}&paymentUrl=${encodeURIComponent(result.paymentUrl)}&amount=${result.booking.totalPrice}&method=${paymentMethod}`);
+      const paymentAmount = result.booking.depositAmount ?? result.booking.totalPrice;
+      router.push(`/payment?bookingId=${result.booking.id}&paymentUrl=${encodeURIComponent(result.paymentUrl)}&amount=${paymentAmount}&method=${paymentMethod}`);
 
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Lỗi trong quá trình đặt xe. Vui lòng kiểm tra lại.');
+    } catch (err: unknown) {
+      setErrorMsg(errorMessage(err, 'Lỗi trong quá trình đặt xe. Vui lòng kiểm tra lại.'));
     } finally {
       setBookingLoading(false);
     }
@@ -368,7 +382,7 @@ export default function BookingPage() {
                   {suggestions.map((car) => (
                     <div key={car.id} className="glass-panel rounded-xl overflow-hidden border border-white/5 flex flex-col group">
                       <div className="relative h-[160px]">
-                        <img src={car.images[0]} alt={car.model} className="object-cover w-full h-full" />
+                        <Image src={car.images[0]} alt={car.model} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
                       </div>
                       <div className="p-5 flex flex-col flex-grow gap-3">
                         <div className="flex justify-between items-start">
@@ -394,7 +408,7 @@ export default function BookingPage() {
                 {vehicles.map((car) => (
                   <div key={car.id} className="glass-panel rounded-xl overflow-hidden border border-white/5 flex flex-col group hover:border-emerald-500/20 transition-all duration-300">
                     <div className="relative h-[180px]">
-                      <img src={car.images[0]} alt={car.model} className="object-cover w-full h-full" />
+                      <Image src={car.images[0]} alt={car.model} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
                       <span className="absolute bottom-3 left-3 bg-[#080b11]/80 text-[#f3f4f6] text-xs font-semibold px-2 py-1 rounded-md border border-white/10">
                         Biển số: {car.plateNumber}
                       </span>
@@ -451,9 +465,11 @@ export default function BookingPage() {
             <div className="glass-panel p-6 rounded-xl border border-white/5 flex flex-col gap-4">
               <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">Tóm tắt chuyến đi</h2>
               <div className="flex gap-4 items-center">
-                <img 
+                <Image
                   src={selectedVehicle.images[0]} 
                   alt={selectedVehicle.model} 
+                  width={80}
+                  height={64}
                   className="w-20 h-16 object-cover rounded-lg border border-white/10" 
                 />
                 <div>
@@ -719,7 +735,7 @@ export default function BookingPage() {
                   <div className="border border-dashed border-white/10 rounded-lg p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-emerald-500/50 transition relative">
                     {idCardFront ? (
                       <div className="w-full h-24 relative rounded overflow-hidden">
-                        <img src={idCardFront} alt="CCCD Front" className="w-full h-full object-cover" />
+                        <Image unoptimized fill sizes="200px" src={idCardFront} alt="CCCD mặt trước" className="object-cover" />
                         <span className="absolute bottom-1 right-1 bg-green-500 text-white text-[10px] px-1 rounded flex items-center gap-0.5"><CheckCircle2 className="h-3 w-3" /> OK</span>
                       </div>
                     ) : (
@@ -739,7 +755,7 @@ export default function BookingPage() {
                   <div className="border border-dashed border-white/10 rounded-lg p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-emerald-500/50 transition relative">
                     {idCardBack ? (
                       <div className="w-full h-24 relative rounded overflow-hidden">
-                        <img src={idCardBack} alt="CCCD Back" className="w-full h-full object-cover" />
+                        <Image unoptimized fill sizes="200px" src={idCardBack} alt="CCCD mặt sau" className="object-cover" />
                         <span className="absolute bottom-1 right-1 bg-green-500 text-white text-[10px] px-1 rounded flex items-center gap-0.5"><CheckCircle2 className="h-3 w-3" /> OK</span>
                       </div>
                     ) : (
@@ -759,7 +775,7 @@ export default function BookingPage() {
                   <div className="border border-dashed border-white/10 rounded-lg p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-emerald-500/50 transition relative">
                     {driverLicense ? (
                       <div className="w-full h-24 relative rounded overflow-hidden">
-                        <img src={driverLicense} alt="GPLX" className="w-full h-full object-cover" />
+                        <Image unoptimized fill sizes="200px" src={driverLicense} alt="Giấy phép lái xe" className="object-cover" />
                         <span className="absolute bottom-1 right-1 bg-green-500 text-white text-[10px] px-1 rounded flex items-center gap-0.5"><CheckCircle2 className="h-3 w-3" /> OK</span>
                       </div>
                     ) : (

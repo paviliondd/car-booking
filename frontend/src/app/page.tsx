@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
-  ShieldCheck, HelpCircle, MapPin, Award, ChevronRight 
+  ShieldCheck, HelpCircle, MapPin, Award, ChevronRight, Phone, Clock
 } from 'lucide-react';
 import SearchBar from '@/components/search/SearchBar';
 import Header from '@/components/layout/Header';
@@ -68,6 +69,7 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-[#080b11] text-gray-900 dark:text-gray-100 transition-colors duration-300">
       {/* Header Layout */}
       <Header />
+      <main>
 
       {/* Hero Section with SearchBar embedded */}
       <section className="relative pt-24 pb-12 px-6 md:px-12 max-w-7xl mx-auto flex flex-col gap-12">
@@ -96,10 +98,13 @@ export default function HomePage() {
           </div>
 
           <div className="relative h-[300px] md:h-[420px] rounded-2xl overflow-hidden border border-gray-100 dark:border-white/10">
-            <img 
+            <Image
               src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80" 
               alt="Showroom Car" 
-              className="object-cover w-full h-full hover:scale-105 transition duration-700" 
+              fill
+              priority
+              sizes="(min-width: 768px) 50vw, 100vw"
+              className="object-cover hover:scale-105 transition duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#080b11] via-transparent to-transparent"></div>
             <div className="absolute bottom-6 left-6 flex gap-4">
@@ -130,9 +135,9 @@ export default function HomePage() {
               <span>Showroom của chúng tôi</span>
             </h2>
             <div className="space-y-6 text-gray-600 dark:text-gray-400">
-              <p>📍 <strong>Địa chỉ chính thức:</strong> Số 12 Khuất Duy Tiến, Thanh Xuân, Hà Nội</p>
-              <p>📞 <strong>Hotline đặt lịch khẩn cấp:</strong> 1900 8888 (Hỗ trợ 24/7)</p>
-              <p>⏰ <strong>Giờ làm việc:</strong> 07:00 AM - 10:00 PM (Cả ngày lễ và Chủ nhật)</p>
+              <p className="flex items-start gap-3"><MapPin className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" /><span><strong>Địa chỉ chính thức:</strong> Số 12 Khuất Duy Tiến, Thanh Xuân, Hà Nội</span></p>
+              <p className="flex items-start gap-3"><Phone className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" /><span><strong>Hotline đặt lịch khẩn cấp:</strong> 1900 8888 (Hỗ trợ 24/7)</span></p>
+              <p className="flex items-start gap-3"><Clock className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" /><span><strong>Giờ làm việc:</strong> 07:00–22:00 (Cả ngày lễ và Chủ nhật)</span></p>
               <p>Hệ thống bàn giao xe trực tiếp tại showroom hoặc hỗ trợ giao xe tận nhà trong bán kính 10km cực kỳ nhanh chóng.</p>
             </div>
           </div>
@@ -160,10 +165,12 @@ export default function HomePage() {
           {featuredCars.map((car) => (
             <div key={car.id} className="bg-white dark:bg-gray-950/20 rounded-xl overflow-hidden border border-gray-100 dark:border-white/5 flex flex-col group hover:border-[#008F5A]/20 dark:hover:border-emerald-500/20 transition-all duration-300 shadow-sm">
               <div className="relative h-[200px] overflow-hidden">
-                <img 
+                <Image
                   src={car.img} 
                   alt={car.name} 
-                  className="object-cover w-full h-full group-hover:scale-105 transition duration-500" 
+                  fill
+                  sizes="(min-width: 768px) 33vw, 100vw"
+                  className="object-cover group-hover:scale-105 transition duration-500"
                 />
                 <span className="absolute top-4 right-4 bg-[#008F5A]/90 dark:bg-emerald-500/90 text-white text-xs font-semibold px-2.5 py-1 rounded-md">
                   {car.type}
@@ -271,6 +278,8 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      </main>
 
       {/* Footer Layout */}
       <Footer />

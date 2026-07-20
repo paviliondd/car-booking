@@ -50,8 +50,8 @@ export declare class CustomersController {
                 updatedAt: Date;
                 status: import("@prisma/client").$Enums.PaymentStatus;
                 amount: number;
-                transactionId: string | null;
                 bookingId: string;
+                transactionId: string | null;
                 method: import("@prisma/client").$Enums.PaymentMethod;
                 paidAt: Date | null;
             } | null;

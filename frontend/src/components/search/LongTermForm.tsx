@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Calendar as CalendarIcon, Clock, Search, Loader2, ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Search, Loader2, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { addMonths, format, startOfDay, isBefore, isSameDay } from 'date-fns';
 import { useToast } from '@/providers/ToastProvider';
 import LocationDropdown from './LocationDropdown';

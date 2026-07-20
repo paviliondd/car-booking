@@ -12,13 +12,29 @@ var DashboardService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DashboardService = void 0;
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../prisma/prisma.service");
 let DashboardService = DashboardService_1 = class DashboardService {
     prisma;
+    configService;
     logger = new common_1.Logger(DashboardService_1.name);
-    constructor(prisma) {
+    constructor(prisma, configService) {
         this.prisma = prisma;
+        this.configService = configService;
+    }
+    isDemoEnabled() {
+        return this.configService.get('ENABLE_DEMO_DATA') === 'true';
+    }
+    useDemoOrThrow(demo, error) {
+        if (this.isDemoEnabled()) {
+            this.logger.warn(`Demo dashboard enabled after data error: ${error instanceof Error ? error.message : String(error)}`);
+            return demo;
+        }
+        throw error;
+    }
+    ownerId(actor) {
+        return actor.role === client_1.Role.OWNER ? actor.id : undefined;
     }
     demoOverview(period) {
         const scale = period === 'last_month' ? 0.82 : period === 'this_month' ? 1.18 : 0.12;
@@ -45,7 +61,7 @@ let DashboardService = DashboardService_1 = class DashboardService {
             };
         });
     }
-    async getOverview(period) {
+    async getOverview(period, actor) {
         try {
             const now = new Date();
             let startDate = new Date();
@@ -64,6 +80,7 @@ let DashboardService = DashboardService_1 = class DashboardService {
             }
             const bookings = await this.prisma.booking.findMany({
                 where: {
+                    vehicle: { ownerId: this.ownerId(actor) },
                     createdAt: {
                         gte: startDate,
                         lte: endDate,
@@ -76,6 +93,7 @@ let DashboardService = DashboardService_1 = class DashboardService {
             });
             const expenses = await this.prisma.expense.aggregate({
                 where: {
+                    vehicle: { ownerId: this.ownerId(actor) },
                     date: {
                         gte: startDate,
                         lte: endDate,
@@ -88,7 +106,11 @@ let DashboardService = DashboardService_1 = class DashboardService {
             const totalContract = bookings.length;
             const totalMoneyContract = bookings.reduce((sum, booking) => sum + booking.totalPrice, 0);
             const totalMoneyForward = Math.round(totalMoneyContract * 0.12);
-            const collectibleStatuses = [client_1.BookingStatus.CONFIRMED, client_1.BookingStatus.RENTING, client_1.BookingStatus.COMPLETED];
+            const collectibleStatuses = [
+                client_1.BookingStatus.CONFIRMED,
+                client_1.BookingStatus.RENTING,
+                client_1.BookingStatus.COMPLETED,
+            ];
             const totalCollect = bookings
                 .filter((booking) => collectibleStatuses.includes(booking.status))
                 .reduce((sum, booking) => sum + booking.totalPrice, 0);
@@ -102,34 +124,48 @@ let DashboardService = DashboardService_1 = class DashboardService {
             };
         }
         catch (error) {
-            this.logger.warn(`Using demo dashboard overview because database is unavailable: ${error instanceof Error ? error.message : error}`);
-            return this.demoOverview(period);
+            return this.useDemoOrThrow(this.demoOverview(period), error);
         }
     }
-    async getCarStatusSummary() {
+    async getCarStatusSummary(actor) {
         try {
+            const ownerId = this.ownerId(actor);
+            const bookingOwnerFilter = { vehicle: { ownerId } };
+            const vehicleOwnerFilter = { ownerId };
             const [waitConfirm, confirmed, received, returned, accident, pledged] = await Promise.all([
-                this.prisma.booking.count({ where: { status: client_1.BookingStatus.PENDING } }),
-                this.prisma.booking.count({ where: { status: client_1.BookingStatus.CONFIRMED } }),
-                this.prisma.booking.count({ where: { status: client_1.BookingStatus.RENTING } }),
-                this.prisma.booking.count({ where: { status: client_1.BookingStatus.COMPLETED } }),
-                this.prisma.vehicle.count({ where: { status: client_1.VehicleStatus.MAINTENANCE } }),
-                this.prisma.vehicle.count({ where: { status: client_1.VehicleStatus.LOCKED } }),
+                this.prisma.booking.count({
+                    where: { ...bookingOwnerFilter, status: client_1.BookingStatus.PENDING },
+                }),
+                this.prisma.booking.count({
+                    where: { ...bookingOwnerFilter, status: client_1.BookingStatus.CONFIRMED },
+                }),
+                this.prisma.booking.count({
+                    where: { ...bookingOwnerFilter, status: client_1.BookingStatus.RENTING },
+                }),
+                this.prisma.booking.count({
+                    where: { ...bookingOwnerFilter, status: client_1.BookingStatus.COMPLETED },
+                }),
+                this.prisma.vehicle.count({
+                    where: { ...vehicleOwnerFilter, status: client_1.VehicleStatus.MAINTENANCE },
+                }),
+                this.prisma.vehicle.count({
+                    where: { ...vehicleOwnerFilter, status: client_1.VehicleStatus.LOCKED },
+                }),
             ]);
             return { waitConfirm, confirmed, received, returned, accident, pledged };
         }
-        catch {
-            return {
+        catch (error) {
+            return this.useDemoOrThrow({
                 waitConfirm: 8,
                 confirmed: 15,
                 received: 6,
                 returned: 22,
                 accident: 1,
                 pledged: 3,
-            };
+            }, error);
         }
     }
-    async getRevenueChart(month) {
+    async getRevenueChart(month, actor) {
         try {
             const [yearStr, monthStr] = month.split('-');
             const year = parseInt(yearStr, 10);
@@ -138,6 +174,7 @@ let DashboardService = DashboardService_1 = class DashboardService {
             const endDate = new Date(year, monthIndex + 1, 0, 23, 59, 59, 999);
             const revenues = await this.prisma.revenue.findMany({
                 where: {
+                    vehicle: { ownerId: this.ownerId(actor) },
                     date: {
                         gte: startDate,
                         lte: endDate,
@@ -153,7 +190,9 @@ let DashboardService = DashboardService_1 = class DashboardService {
                 const day = index + 1;
                 const dayRevenues = revenues.filter((revenue) => {
                     const date = new Date(revenue.date);
-                    return date.getDate() === day && date.getMonth() === monthIndex && date.getFullYear() === year;
+                    return (date.getDate() === day &&
+                        date.getMonth() === monthIndex &&
+                        date.getFullYear() === year);
                 });
                 return {
                     date: `${year}-${monthStr}-${day.toString().padStart(2, '0')}`,
@@ -161,35 +200,41 @@ let DashboardService = DashboardService_1 = class DashboardService {
                 };
             });
         }
-        catch {
-            return this.demoRevenueChart(month);
+        catch (error) {
+            return this.useDemoOrThrow(this.demoRevenueChart(month), error);
         }
     }
-    async getTopServices() {
+    async getTopServices(actor) {
         try {
             const vehicles = await this.prisma.vehicle.findMany({
+                where: { ownerId: this.ownerId(actor) },
                 select: {
                     fuel: true,
                 },
             });
             const counts = {};
             vehicles.forEach((vehicle) => {
-                const key = vehicle.fuel === 'ELECTRIC' ? 'Xe điện' : vehicle.fuel === 'DIESEL' ? 'Xe dầu' : 'Xe xăng';
+                const key = vehicle.fuel === 'ELECTRIC'
+                    ? 'Xe điện'
+                    : vehicle.fuel === 'DIESEL'
+                        ? 'Xe dầu'
+                        : 'Xe xăng';
                 counts[key] = (counts[key] || 0) + 1;
             });
             return Object.entries(counts).map(([name, value]) => ({ name, value }));
         }
-        catch {
-            return [
+        catch (error) {
+            return this.useDemoOrThrow([
                 { name: 'Xe xăng', value: 42 },
                 { name: 'Xe điện', value: 18 },
                 { name: 'Xe dầu', value: 12 },
-            ];
+            ], error);
         }
     }
-    async getTopCars(limit) {
+    async getTopCars(limit, actor) {
         try {
             const vehicles = await this.prisma.vehicle.findMany({
+                where: { ownerId: this.ownerId(actor) },
                 take: limit,
                 include: {
                     bookings: {
@@ -208,18 +253,34 @@ let DashboardService = DashboardService_1 = class DashboardService {
             const maxRevenue = sorted[0]?.revenue || 1;
             return sorted.map((car) => ({ ...car, maxRevenue }));
         }
-        catch {
+        catch (error) {
             const cars = [
-                { name: 'VinFast VF8 (30A-999.99)', bookingsCount: 18, revenue: 72000000 },
-                { name: 'Kia Carnival (30A-111.11)', bookingsCount: 12, revenue: 64800000 },
-                { name: 'Toyota Vios (30A-888.88)', bookingsCount: 24, revenue: 45600000 },
-                { name: 'Mazda CX-5 (30A-777.77)', bookingsCount: 15, revenue: 39000000 },
+                {
+                    name: 'VinFast VF8 (30A-999.99)',
+                    bookingsCount: 18,
+                    revenue: 72000000,
+                },
+                {
+                    name: 'Kia Carnival (30A-111.11)',
+                    bookingsCount: 12,
+                    revenue: 64800000,
+                },
+                {
+                    name: 'Toyota Vios (30A-888.88)',
+                    bookingsCount: 24,
+                    revenue: 45600000,
+                },
+                {
+                    name: 'Mazda CX-5 (30A-777.77)',
+                    bookingsCount: 15,
+                    revenue: 39000000,
+                },
             ].slice(0, limit);
             const maxRevenue = cars[0]?.revenue || 1;
-            return cars.map((car) => ({ ...car, maxRevenue }));
+            return this.useDemoOrThrow(cars.map((car) => ({ ...car, maxRevenue })), error);
         }
     }
-    async getNotifications(limit) {
+    getNotifications(limit) {
         return [
             {
                 id: '1',
@@ -267,12 +328,26 @@ let DashboardService = DashboardService_1 = class DashboardService {
         }
         catch {
             return [
-                { id: 'c1', plateNumber: '30A-999.99', brand: 'VinFast', model: 'VF8', type: 'Đến hạn đăng kiểm', dueDate: '2026-07-15' },
-                { id: 'c2', plateNumber: '30A-888.88', brand: 'Toyota', model: 'Vios', type: 'Đến hạn bảo hiểm', dueDate: '2026-07-20' },
+                {
+                    id: 'c1',
+                    plateNumber: '30A-999.99',
+                    brand: 'VinFast',
+                    model: 'VF8',
+                    type: 'Đến hạn đăng kiểm',
+                    dueDate: '2026-07-15',
+                },
+                {
+                    id: 'c2',
+                    plateNumber: '30A-888.88',
+                    brand: 'Toyota',
+                    model: 'Vios',
+                    type: 'Đến hạn bảo hiểm',
+                    dueDate: '2026-07-20',
+                },
             ];
         }
     }
-    async getCarViolateList() {
+    getCarViolateList() {
         return [
             {
                 id: 'v1',
@@ -296,6 +371,7 @@ let DashboardService = DashboardService_1 = class DashboardService {
 exports.DashboardService = DashboardService;
 exports.DashboardService = DashboardService = DashboardService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        config_1.ConfigService])
 ], DashboardService);
 //# sourceMappingURL=dashboard.service.js.map

@@ -1,5 +1,13 @@
+import { Role } from '@prisma/client';
+import type { Request } from 'express';
 import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto } from './dto/auth.dto';
+import { GoogleLoginDto, LoginDto, RegisterDto, UpgradeOwnerDto, VerifyOwnerDto } from './dto/auth.dto';
+type AuthenticatedRequest = Request & {
+    user: {
+        id: string;
+        role: Role;
+    };
+};
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
@@ -18,11 +26,11 @@ export declare class AuthController {
             role: import("@prisma/client").$Enums.Role;
         };
     }>;
-    getMe(req: any): Promise<any>;
-    googleLogin(body: {
-        email: string;
-        name: string;
-    }): Promise<{
+    getMe(req: AuthenticatedRequest): Express.User & {
+        id: string;
+        role: Role;
+    };
+    googleLogin(dto: GoogleLoginDto): Promise<{
         accessToken: string;
         user: {
             id: string;
@@ -31,43 +39,14 @@ export declare class AuthController {
             role: import("@prisma/client").$Enums.Role;
         };
     }>;
-    facebookLogin(body: {
-        email: string;
-        name: string;
-    }): Promise<{
-        accessToken: string;
-        user: {
-            id: string;
-            email: string;
-            name: string;
-            role: import("@prisma/client").$Enums.Role;
-        };
-    }>;
-    upgradeOwner(req: any, body: {
-        phone: string;
-        idCardNo: string;
-        address: string;
-    }): Promise<{
+    upgradeOwner(req: AuthenticatedRequest, dto: UpgradeOwnerDto): Promise<{
         id: string;
         email: string;
         phone: string | null;
-        idCardNo: string | null;
-        password: string;
         name: string;
-        role: import("@prisma/client").$Enums.Role;
-        avatar: string | null;
         address: string | null;
         isVerifiedOwner: boolean;
         ownerRequestAt: Date | null;
-        createdAt: Date;
-        updatedAt: Date;
-    } | {
-        ownerRequestAt: Date;
-        isVerifiedOwner: boolean;
-        phone: string;
-        idCardNo: string;
-        address: string;
-        id: string;
     }>;
     getOwnerRequests(): Promise<{
         id: string;
@@ -78,21 +57,13 @@ export declare class AuthController {
         address: string | null;
         ownerRequestAt: Date | null;
     }[]>;
-    verifyOwner(userId: string, body: {
-        approve: boolean;
-    }): Promise<{
+    verifyOwner(userId: string, dto: VerifyOwnerDto): Promise<{
         id: string;
         email: string;
-        phone: string | null;
-        idCardNo: string | null;
-        password: string;
         name: string;
         role: import("@prisma/client").$Enums.Role;
-        avatar: string | null;
-        address: string | null;
         isVerifiedOwner: boolean;
         ownerRequestAt: Date | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
 }
+export {};

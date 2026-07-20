@@ -1,6 +1,19 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { Role } from '@prisma/client';
+import type { Request } from 'express';
 import { ContractsService } from './contracts.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { SignContractDto } from './dto/contract.dto';
+
+type AuthenticatedRequest = Request & { user: { id: string; role: Role } };
 
 @Controller('contracts')
 export class ContractsController {
@@ -8,16 +21,24 @@ export class ContractsController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':bookingId')
-  async getContract(@Param('bookingId') bookingId: string) {
-    return await this.contractsService.getOrCreateContract(bookingId);
+  async getContract(
+    @Req() req: AuthenticatedRequest,
+    @Param('bookingId') bookingId: string,
+  ) {
+    return this.contractsService.getOrCreateContract(bookingId, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post(':bookingId/sign')
   async signContract(
     @Param('bookingId') bookingId: string,
-    @Body('renterSignature') renterSignature: string,
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: SignContractDto,
   ) {
-    return await this.contractsService.signContract(bookingId, renterSignature);
+    return this.contractsService.signContract(
+      bookingId,
+      dto.renterSignature,
+      req.user,
+    );
   }
 }

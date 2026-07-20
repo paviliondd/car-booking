@@ -1,10 +1,24 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Patch, Req, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Patch,
+  Req,
+  BadRequestException,
+} from '@nestjs/common';
 import { VehiclesService } from './vehicles.service';
 import { CreateVehicleDto, SearchVehicleDto } from './dto/vehicle.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role, VehicleStatus } from '@prisma/client';
+import type { AuthenticatedRequest } from '../auth/types/authenticated-user';
 
 @Controller('vehicles')
 export class VehiclesController {
@@ -14,7 +28,10 @@ export class VehiclesController {
   @Get('search')
   async search(@Query() query: SearchVehicleDto) {
     const { startDate, endDate, brand, seats } = query;
-    return await this.vehiclesService.findAvailable(startDate, endDate, { brand, seats });
+    return await this.vehiclesService.findAvailable(startDate, endDate, {
+      brand,
+      seats,
+    });
   }
 
   // 2. Lấy gợi ý xe thay thế nếu xe hiện tại bị bận (Public)
@@ -47,7 +64,10 @@ export class VehiclesController {
 
   // 5. Lấy tất cả xe (Public)
   @Get()
-  async findAll(@Query('brand') brand?: string, @Query('seats') seats?: string) {
+  async findAll(
+    @Query('brand') brand?: string,
+    @Query('seats') seats?: string,
+  ) {
     return await this.vehiclesService.findAll({
       brand,
       seats: seats ? parseInt(seats, 10) : undefined,
@@ -58,7 +78,7 @@ export class VehiclesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.OWNER)
   @Get('owner/my-cars')
-  async getMyCars(@Req() req: any) {
+  async getMyCars(@Req() req: AuthenticatedRequest) {
     return await this.vehiclesService.findByOwner(req.user.id);
   }
 
@@ -66,7 +86,10 @@ export class VehiclesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.STAFF, Role.OWNER)
   @Post()
-  async create(@Req() req: any, @Body() dto: CreateVehicleDto) {
+  async create(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: CreateVehicleDto,
+  ) {
     const ownerId = req.user.role === Role.OWNER ? req.user.id : undefined;
     return await this.vehiclesService.create(dto, ownerId);
   }
@@ -75,7 +98,11 @@ export class VehiclesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.STAFF, Role.OWNER)
   @Put(':id')
-  async update(@Req() req: any, @Param('id') id: string, @Body() dto: Partial<CreateVehicleDto>) {
+  async update(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() dto: Partial<CreateVehicleDto>,
+  ) {
     if (req.user.role === Role.OWNER) {
       const car = await this.vehiclesService.findOne(id);
       if (car.ownerId !== req.user.id) {
@@ -89,7 +116,11 @@ export class VehiclesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.STAFF, Role.OWNER)
   @Patch(':id/status')
-  async updateStatus(@Req() req: any, @Param('id') id: string, @Body('status') status: VehicleStatus) {
+  async updateStatus(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body('status') status: VehicleStatus,
+  ) {
     if (req.user.role === Role.OWNER) {
       const car = await this.vehiclesService.findOne(id);
       if (car.ownerId !== req.user.id) {
@@ -103,7 +134,7 @@ export class VehiclesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.OWNER)
   @Delete(':id')
-  async delete(@Req() req: any, @Param('id') id: string) {
+  async delete(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
     if (req.user.role === Role.OWNER) {
       const car = await this.vehiclesService.findOne(id);
       if (car.ownerId !== req.user.id) {

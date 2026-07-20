@@ -18,11 +18,22 @@ let ChatService = class ChatService {
         this.prisma = prisma;
     }
     async saveMessage(senderId, receiverId, message) {
+        const trimmedMessage = message.trim();
+        if (!trimmedMessage || senderId === receiverId) {
+            throw new common_1.BadRequestException('Tin nhắn hoặc người nhận không hợp lệ');
+        }
+        const receiver = await this.prisma.user.findUnique({
+            where: { id: receiverId },
+            select: { id: true },
+        });
+        if (!receiver) {
+            throw new common_1.BadRequestException('Không tìm thấy người nhận');
+        }
         return await this.prisma.chatMessage.create({
             data: {
                 senderId,
                 receiverId,
-                message,
+                message: trimmedMessage,
             },
             include: {
                 sender: {

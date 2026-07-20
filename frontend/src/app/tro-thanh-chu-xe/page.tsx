@@ -1,7 +1,5 @@
-'use client';
+import { permanentRedirect } from 'next/navigation';
 
-import BecomeOwnerPage from '../become-owner/page';
-
-export default function TroThanhChuXePage() {
-  return <BecomeOwnerPage />;
+export default function LegacyOwnerRegistrationPage() {
+  permanentRedirect('/become-owner');
 }

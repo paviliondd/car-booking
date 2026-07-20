@@ -46,7 +46,7 @@ export const dashboardApi = {
     request('/feedback', { method: 'POST', body: JSON.stringify({ category, message }) }),
   submitRating: (stars: number, comment: string) => 
     request('/rating', { method: 'POST', body: JSON.stringify({ stars, comment }) }),
-  submitLongTermBooking: (data: any) => 
+  submitLongTermBooking: (data: unknown) =>
     request('/booking/long-term', { method: 'POST', body: JSON.stringify(data) }),
   
   // Extra Auth

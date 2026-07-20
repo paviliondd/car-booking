@@ -1,8 +1,10 @@
 import { TicketsService } from './tickets.service';
+import type { AuthenticatedRequest } from '../auth/types/authenticated-user';
+import { CreateTicketDto, ReplyTicketDto } from './dto/ticket.dto';
 export declare class TicketsController {
     private readonly ticketsService;
     constructor(ticketsService: TicketsService);
-    create(req: any, subject: string, message: string): Promise<{
+    create(req: AuthenticatedRequest, dto: CreateTicketDto): Promise<{
         id: string;
         createdAt: Date;
         status: string;
@@ -12,7 +14,7 @@ export declare class TicketsController {
         reply: string | null;
         repliedAt: Date | null;
     }>;
-    findAll(req: any): Promise<{
+    findAll(req: AuthenticatedRequest): Promise<{
         id: string;
         createdAt: Date;
         status: string;
@@ -22,7 +24,7 @@ export declare class TicketsController {
         reply: string | null;
         repliedAt: Date | null;
     }[]>;
-    reply(id: string, reply: string, req: any): Promise<{
+    reply(id: string, dto: ReplyTicketDto, req: AuthenticatedRequest): Promise<{
         id: string;
         createdAt: Date;
         status: string;

@@ -27,7 +27,10 @@ let VehiclesController = class VehiclesController {
     }
     async search(query) {
         const { startDate, endDate, brand, seats } = query;
-        return await this.vehiclesService.findAvailable(startDate, endDate, { brand, seats });
+        return await this.vehiclesService.findAvailable(startDate, endDate, {
+            brand,
+            seats,
+        });
     }
     async getSuggestions(brand, seats, startDate, endDate) {
         return await this.vehiclesService.findSuggestions(brand || '', seats ? parseInt(seats, 10) : 4, startDate, endDate);

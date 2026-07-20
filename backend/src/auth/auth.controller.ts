@@ -1,7 +1,29 @@
-import { Controller, Post, Body, Get, UseGuards, Req, Param } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { Role } from '@prisma/client';
+import type { Request } from 'express';
 import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto } from './dto/auth.dto';
+import {
+  GoogleLoginDto,
+  LoginDto,
+  RegisterDto,
+  UpgradeOwnerDto,
+  VerifyOwnerDto,
+} from './dto/auth.dto';
+import { Roles } from './decorators/roles.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
+
+type AuthenticatedRequest = Request & {
+  user: { id: string; role: Role };
+};
 
 @Controller('auth')
 export class AuthController {
@@ -9,45 +31,48 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() dto: RegisterDto) {
-    return await this.authService.register(dto);
+    return this.authService.register(dto);
   }
 
   @Post('login')
   async login(@Body() dto: LoginDto) {
-    return await this.authService.login(dto);
+    return this.authService.login(dto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getMe(@Req() req: any) {
+  getMe(@Req() req: AuthenticatedRequest) {
     return req.user;
   }
 
   @Post('google')
-  async googleLogin(@Body() body: { email: string; name: string }) {
-    return await this.authService.oauthLogin(body.email, body.name);
-  }
-
-  @Post('facebook')
-  async facebookLogin(@Body() body: { email: string; name: string }) {
-    return await this.authService.oauthLogin(body.email, body.name);
+  async googleLogin(@Body() dto: GoogleLoginDto) {
+    return this.authService.googleLogin(dto.credential);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('upgrade-owner')
-  async upgradeOwner(@Req() req: any, @Body() body: { phone: string; idCardNo: string; address: string }) {
-    return await this.authService.upgradeOwner(req.user.id, body);
+  async upgradeOwner(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: UpgradeOwnerDto,
+  ) {
+    return this.authService.upgradeOwner(req.user.id, dto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
   @Get('owner-requests')
   async getOwnerRequests() {
-    return await this.authService.getOwnerRequests();
+    return this.authService.getOwnerRequests();
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
   @Post('verify-owner/:userId')
-  async verifyOwner(@Param('userId') userId: string, @Body() body: { approve: boolean }) {
-    return await this.authService.verifyOwner(userId, body.approve);
+  async verifyOwner(
+    @Param('userId') userId: string,
+    @Body() dto: VerifyOwnerDto,
+  ) {
+    return this.authService.verifyOwner(userId, dto.approve);
   }
 }

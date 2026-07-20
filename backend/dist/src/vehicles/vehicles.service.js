@@ -79,7 +79,9 @@ let VehiclesService = class VehiclesService {
     async findAll(filters) {
         return await this.prisma.vehicle.findMany({
             where: {
-                ...(filters.brand ? { brand: { contains: filters.brand, mode: 'insensitive' } } : {}),
+                ...(filters.brand
+                    ? { brand: { contains: filters.brand, mode: 'insensitive' } }
+                    : {}),
                 ...(filters.seats ? { seats: filters.seats } : {}),
             },
         });
@@ -110,7 +112,9 @@ let VehiclesService = class VehiclesService {
             where: {
                 status: client_1.VehicleStatus.AVAILABLE,
                 id: { notIn: bookedIds },
-                ...(filters.brand ? { brand: { contains: filters.brand, mode: 'insensitive' } } : {}),
+                ...(filters.brand
+                    ? { brand: { contains: filters.brand, mode: 'insensitive' } }
+                    : {}),
                 ...(filters.seats ? { seats: filters.seats } : {}),
             },
         });
@@ -173,7 +177,9 @@ let VehiclesService = class VehiclesService {
     }
     async findSuggestions(brand, seats, startDateStr, endDateStr) {
         const available = await this.findAvailable(startDateStr, endDateStr, {});
-        return available.filter((v) => v.seats === seats || v.brand.toLowerCase() === brand.toLowerCase()).slice(0, 3);
+        return available
+            .filter((v) => v.seats === seats || v.brand.toLowerCase() === brand.toLowerCase())
+            .slice(0, 3);
     }
 };
 exports.VehiclesService = VehiclesService;

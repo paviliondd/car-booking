@@ -1,5 +1,11 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, Length, IsEnum } from 'class-validator';
-import { Role } from '@prisma/client';
+import {
+  IsBoolean,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Length,
+} from 'class-validator';
 
 export class RegisterDto {
   @IsEmail()
@@ -13,10 +19,6 @@ export class RegisterDto {
   @IsString()
   @IsNotEmpty()
   name: string;
-
-  @IsEnum(Role)
-  @IsOptional()
-  role?: Role;
 
   // Dành cho customer profile đi kèm
   @IsString()
@@ -36,4 +38,29 @@ export class LoginDto {
   @IsString()
   @IsNotEmpty()
   password: string;
+}
+
+export class GoogleLoginDto {
+  @IsString()
+  @IsNotEmpty()
+  credential: string;
+}
+
+export class UpgradeOwnerDto {
+  @IsString()
+  @IsNotEmpty()
+  phone: string;
+
+  @IsString()
+  @IsNotEmpty()
+  idCardNo: string;
+
+  @IsString()
+  @IsNotEmpty()
+  address: string;
+}
+
+export class VerifyOwnerDto {
+  @IsBoolean()
+  approve: boolean;
 }

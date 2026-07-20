@@ -41,25 +41,34 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var AuthService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 const jwt_1 = require("@nestjs/jwt");
 const client_1 = require("@prisma/client");
 const bcrypt = __importStar(require("bcrypt"));
+const google_auth_library_1 = require("google-auth-library");
+const node_crypto_1 = require("node:crypto");
 const prisma_service_1 = require("../prisma/prisma.service");
-const demoUsers = new Map();
-let AuthService = AuthService_1 = class AuthService {
+let AuthService = class AuthService {
     prisma;
     jwtService;
-    logger = new common_1.Logger(AuthService_1.name);
-    constructor(prisma, jwtService) {
+    configService;
+    googleClient;
+    constructor(prisma, jwtService, configService) {
         this.prisma = prisma;
         this.jwtService = jwtService;
+        this.configService = configService;
+        this.googleClient = new google_auth_library_1.OAuth2Client(this.configService.get('GOOGLE_CLIENT_ID'));
     }
     signUser(user) {
-        const payload = { email: user.email, sub: user.id, role: user.role, name: user.name };
+        const payload = {
+            email: user.email,
+            sub: user.id,
+            role: user.role,
+            name: user.name,
+        };
         return {
             accessToken: this.jwtService.sign(payload),
             user: {
@@ -70,219 +79,153 @@ let AuthService = AuthService_1 = class AuthService {
             },
         };
     }
-    async fallbackRegister(dto) {
-        const email = dto.email.toLowerCase().trim();
-        if (demoUsers.has(email)) {
-            throw new common_1.ConflictException('Email already registered');
-        }
-        const passwordHash = await bcrypt.hash(dto.password, 10);
-        const user = {
-            id: `demo-${Date.now()}`,
-            email,
-            name: dto.name,
-            passwordHash,
-            role: dto.role || client_1.Role.CUSTOMER,
-            phone: dto.phone,
-        };
-        demoUsers.set(email, user);
-        this.logger.warn(`Database unavailable; registered ${email} in demo memory store.`);
-        return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-        };
-    }
-    async fallbackLogin(dto) {
-        const email = dto.email.toLowerCase().trim();
-        if (email === 'admin@datxe.vn' && dto.password === '123456') {
-            return this.signUser({
-                id: 'demo-admin',
-                email,
-                name: 'Admin datxe',
-                role: client_1.Role.ADMIN,
-            });
-        }
-        const user = demoUsers.get(email);
-        if (!user) {
-            throw new common_1.UnauthorizedException('Invalid credentials');
-        }
-        const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
-        if (!isPasswordValid) {
-            throw new common_1.UnauthorizedException('Invalid credentials');
-        }
-        return this.signUser(user);
-    }
     async register(dto) {
+        const email = dto.email.toLowerCase().trim();
+        const existingUser = await this.prisma.user.findUnique({
+            where: { email },
+        });
+        if (existingUser) {
+            throw new common_1.ConflictException('Email đã được đăng ký');
+        }
+        const hashedPassword = await bcrypt.hash(dto.password, 12);
+        const suffix = (0, node_crypto_1.randomBytes)(8).toString('hex');
         try {
-            const email = dto.email.toLowerCase().trim();
-            const existingUser = await this.prisma.user.findUnique({
-                where: { email },
-            });
-            if (existingUser) {
-                throw new common_1.ConflictException('Email already registered');
-            }
-            const hashedPassword = await bcrypt.hash(dto.password, 10);
-            const customerPhone = dto.phone?.trim() || `PENDING-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-            const customerIdCardNo = dto.idCardNo?.trim() || `CCCD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
             const user = await this.prisma.user.create({
                 data: {
                     email,
                     password: hashedPassword,
-                    name: dto.name,
+                    name: dto.name.trim(),
                     phone: dto.phone?.trim() || undefined,
                     idCardNo: dto.idCardNo?.trim() || undefined,
-                    role: dto.role || client_1.Role.CUSTOMER,
-                    ...(dto.role === client_1.Role.CUSTOMER || !dto.role
-                        ? {
-                            customer: {
-                                create: {
-                                    phone: customerPhone,
-                                    fullName: dto.name,
-                                    idCardNo: customerIdCardNo,
-                                },
-                            },
-                        }
-                        : {}),
+                    role: client_1.Role.CUSTOMER,
+                    customer: {
+                        create: {
+                            phone: dto.phone?.trim() || `PENDING-${suffix}`,
+                            fullName: dto.name.trim(),
+                            idCardNo: dto.idCardNo?.trim() || `PENDING-${suffix}`,
+                        },
+                    },
                 },
-                include: {
-                    customer: true,
-                },
+                select: { id: true, email: true, name: true, role: true },
             });
-            return {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                role: user.role,
-            };
+            return user;
         }
         catch (error) {
-            if (error instanceof common_1.ConflictException)
-                throw error;
-            return this.fallbackRegister(dto);
+            if (error instanceof client_1.Prisma.PrismaClientKnownRequestError &&
+                error.code === 'P2002') {
+                throw new common_1.ConflictException('Email hoặc số điện thoại đã được sử dụng');
+            }
+            throw error;
         }
     }
     async login(dto) {
-        try {
-            const user = await this.prisma.user.findUnique({
-                where: { email: dto.email.toLowerCase().trim() },
-            });
-            if (!user) {
-                throw new common_1.UnauthorizedException('Invalid credentials');
-            }
-            const isPasswordValid = await bcrypt.compare(dto.password, user.password);
-            if (!isPasswordValid) {
-                throw new common_1.UnauthorizedException('Invalid credentials');
-            }
-            return this.signUser(user);
+        const user = await this.prisma.user.findUnique({
+            where: { email: dto.email.toLowerCase().trim() },
+        });
+        if (!user || !(await bcrypt.compare(dto.password, user.password))) {
+            throw new common_1.UnauthorizedException('Email hoặc mật khẩu không chính xác');
         }
-        catch (error) {
-            if (error instanceof common_1.UnauthorizedException)
-                throw error;
-            return this.fallbackLogin(dto);
-        }
+        return this.signUser(user);
     }
-    async oauthLogin(email, name) {
+    async googleLogin(credential) {
+        const clientId = this.configService.get('GOOGLE_CLIENT_ID');
+        if (!clientId) {
+            throw new common_1.ServiceUnavailableException('Đăng nhập Google chưa được cấu hình. Vui lòng thử lại sau.');
+        }
+        let payload;
         try {
-            let user = await this.prisma.user.findUnique({
-                where: { email },
+            const ticket = await this.googleClient.verifyIdToken({
+                idToken: credential,
+                audience: clientId,
             });
-            if (!user) {
-                const dummyPassword = await bcrypt.hash(`OAuth-${Math.random()}`, 10);
-                user = await this.prisma.user.create({
-                    data: {
-                        email,
-                        password: dummyPassword,
-                        name,
-                        role: client_1.Role.CUSTOMER,
-                        customer: {
-                            create: {
-                                phone: `0000-${Date.now()}`,
-                                fullName: name,
-                                idCardNo: `CCCD-${Date.now()}`,
-                            },
+            payload = ticket.getPayload();
+        }
+        catch {
+            throw new common_1.UnauthorizedException('Google ID token không hợp lệ hoặc đã hết hạn');
+        }
+        if (!payload?.email || !payload.email_verified || !payload.sub) {
+            throw new common_1.UnauthorizedException('Tài khoản Google chưa xác minh email');
+        }
+        const email = payload.email.toLowerCase();
+        let user = await this.prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            const suffix = (0, node_crypto_1.randomBytes)(12).toString('hex');
+            user = await this.prisma.user.create({
+                data: {
+                    email,
+                    password: await bcrypt.hash((0, node_crypto_1.randomBytes)(32).toString('hex'), 12),
+                    name: payload.name?.trim() || email.split('@')[0],
+                    avatar: payload.picture,
+                    role: client_1.Role.CUSTOMER,
+                    customer: {
+                        create: {
+                            phone: `GOOGLE-${suffix}`,
+                            fullName: payload.name?.trim() || email.split('@')[0],
+                            idCardNo: `GOOGLE-${suffix}`,
                         },
                     },
-                });
-            }
-            return this.signUser(user);
-        }
-        catch {
-            return this.signUser({
-                id: `demo-oauth-${Date.now()}`,
-                email,
-                name,
-                role: client_1.Role.CUSTOMER,
+                },
             });
         }
+        return this.signUser(user);
     }
     async upgradeOwner(userId, dto) {
-        try {
-            return await this.prisma.user.update({
-                where: { id: userId },
-                data: {
-                    phone: dto.phone,
-                    idCardNo: dto.idCardNo,
-                    address: dto.address,
-                    ownerRequestAt: new Date(),
-                    isVerifiedOwner: false,
-                },
-            });
-        }
-        catch {
-            return {
-                id: userId,
-                ...dto,
-                ownerRequestAt: new Date(),
-                isVerifiedOwner: false,
-            };
-        }
-    }
-    async getOwnerRequests() {
-        try {
-            return await this.prisma.user.findMany({
-                where: {
-                    ownerRequestAt: { not: null },
-                    isVerifiedOwner: false,
-                },
-                select: {
-                    id: true,
-                    email: true,
-                    name: true,
-                    phone: true,
-                    idCardNo: true,
-                    address: true,
-                    ownerRequestAt: true,
-                },
-            });
-        }
-        catch {
-            return [];
-        }
-    }
-    async verifyOwner(userId, approve) {
-        if (approve) {
-            return await this.prisma.user.update({
-                where: { id: userId },
-                data: {
-                    isVerifiedOwner: true,
-                    role: client_1.Role.OWNER,
-                },
-            });
-        }
-        return await this.prisma.user.update({
+        return this.prisma.user.update({
             where: { id: userId },
             data: {
-                ownerRequestAt: null,
+                phone: dto.phone.trim(),
+                idCardNo: dto.idCardNo.trim(),
+                address: dto.address.trim(),
+                ownerRequestAt: new Date(),
                 isVerifiedOwner: false,
+            },
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                phone: true,
+                address: true,
+                ownerRequestAt: true,
+                isVerifiedOwner: true,
+            },
+        });
+    }
+    async getOwnerRequests() {
+        return this.prisma.user.findMany({
+            where: { ownerRequestAt: { not: null }, isVerifiedOwner: false },
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                phone: true,
+                idCardNo: true,
+                address: true,
+                ownerRequestAt: true,
+            },
+        });
+    }
+    async verifyOwner(userId, approve) {
+        return this.prisma.user.update({
+            where: { id: userId },
+            data: approve
+                ? { isVerifiedOwner: true, role: client_1.Role.OWNER }
+                : { ownerRequestAt: null, isVerifiedOwner: false },
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                role: true,
+                isVerifiedOwner: true,
+                ownerRequestAt: true,
             },
         });
     }
 };
 exports.AuthService = AuthService;
-exports.AuthService = AuthService = AuthService_1 = __decorate([
+exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        config_1.ConfigService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

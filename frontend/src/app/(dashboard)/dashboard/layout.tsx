@@ -1,6 +1,4 @@
 'use client';
-/* eslint-disable react-hooks/set-state-in-effect */
-
 import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
@@ -14,7 +12,7 @@ import FeedbackModal from '@/components/dashboard/modals/FeedbackModal';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const toast = useToast();
+  const { error: showError } = useToast();
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isActivityOpen, setIsActivityOpen] = useState(false);
@@ -22,12 +20,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const checkDashboardGuard = useCallback(async () => {
-    setLoading(true);
     const token = localStorage.getItem('token');
 
     if (!token) {
-      toast.error('Bạn cần đăng nhập để truy cập trang quản lý.');
-      router.push('/auth');
+      showError('Bạn cần đăng nhập để truy cập trang quản lý.');
+      router.replace('/auth');
       return;
     }
 
@@ -36,8 +33,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const canAccessDashboard = ['OWNER', 'ADMIN', 'STAFF'].includes(me.role);
 
       if (!canAccessDashboard) {
-        toast.error('Tài khoản của bạn chưa có quyền truy cập trang quản lý.');
-        router.push('/');
+        showError('Tài khoản của bạn chưa có quyền truy cập trang quản lý.');
+        router.replace('/');
         return;
       }
 
@@ -46,26 +43,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     } catch {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      toast.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
-      router.push('/auth');
+      showError('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+      router.replace('/auth');
     }
-  }, [router, toast]);
+  }, [router, showError]);
 
   useEffect(() => {
-    checkDashboardGuard();
+    const guardTimer = window.setTimeout(() => void checkDashboardGuard(), 0);
+    return () => window.clearTimeout(guardTimer);
   }, [checkDashboardGuard]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#14142b] flex flex-col items-center justify-center text-white select-none gap-3">
+      <main className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-slate-950 text-white">
         <Loader2 className="h-10 w-10 text-[#008F5A] animate-spin" />
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Đang xác thực thông tin...</span>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-[#14142b] text-gray-900 dark:text-white font-sans transition-colors duration-300">
+    <div className="flex min-h-dvh max-w-full overflow-x-hidden bg-slate-50 font-sans text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-white">
       <div className="hidden md:block">
         <DashboardSidebar />
       </div>

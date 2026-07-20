@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 
 interface HeroBannerProps {
   onRegisterClick: () => void;
@@ -9,10 +10,13 @@ interface HeroBannerProps {
 export default function HeroBanner({ onRegisterClick }: HeroBannerProps) {
   return (
     <section className="relative h-[480px] md:h-[540px] w-full overflow-hidden bg-gray-950">
-      <img 
+      <Image
         src="https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=1600&q=80" 
         alt="Chủ xe datxe" 
-        className="absolute inset-0 object-cover w-full h-full opacity-85" 
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover opacity-85"
       />
       <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/25 via-slate-950/55 to-slate-950/80 md:to-slate-950/70"></div>
 

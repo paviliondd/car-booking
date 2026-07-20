@@ -1,4 +1,9 @@
-import { Injectable, OnModuleDestroy, OnModuleInit, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleDestroy,
+  OnModuleInit,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, RedisClientType } from 'redis';
 
@@ -11,7 +16,8 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   constructor(private configService: ConfigService) {}
 
   async onModuleInit() {
-    const url = this.configService.get<string>('REDIS_URL') || 'redis://localhost:6379';
+    const url =
+      this.configService.get<string>('REDIS_URL') || 'redis://localhost:6379';
     const client = createClient({
       url,
       socket: {
@@ -20,28 +26,39 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       },
     });
 
-    client.on('error', (err) => {
+    client.on('error', (err: Error) => {
       this.isReady = false;
       this.logger.warn(`Redis unavailable: ${err.message}`);
     });
 
+    let connectionTimer: ReturnType<typeof setTimeout> | undefined;
     try {
       await Promise.race([
         client.connect(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Redis connection timeout')), 2000)),
+        new Promise(
+          (_, reject) =>
+            (connectionTimer = setTimeout(
+              () => reject(new Error('Redis connection timeout')),
+              2000,
+            )),
+        ),
       ]);
-      this.client = client as RedisClientType;
+      this.client = client;
       this.isReady = true;
       this.logger.log('Redis connected successfully.');
     } catch (error) {
       this.isReady = false;
       this.client = null;
-      this.logger.warn(`${error instanceof Error ? error.message : 'Redis connection failed'}. Continuing without Redis.`);
+      this.logger.warn(
+        `${error instanceof Error ? error.message : 'Redis connection failed'}. Continuing without Redis.`,
+      );
       try {
         await client.disconnect();
       } catch {
         // Ignore disconnect failures when the socket never opened.
       }
+    } finally {
+      if (connectionTimer) clearTimeout(connectionTimer);
     }
   }
 

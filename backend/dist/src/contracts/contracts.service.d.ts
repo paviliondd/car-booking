@@ -1,3 +1,4 @@
+import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 export declare class ContractsService {
@@ -5,7 +6,11 @@ export declare class ContractsService {
     private notificationService;
     constructor(prisma: PrismaService, notificationService: NotificationService);
     private getContractTemplate;
-    getOrCreateContract(bookingId: string): Promise<{
+    private assertCanReadContract;
+    getOrCreateContract(bookingId: string, actor: {
+        id: string;
+        role: Role;
+    }): Promise<{
         contract: {
             id: string;
             createdAt: Date;
@@ -101,7 +106,10 @@ export declare class ContractsService {
             depositAmount: number | null;
         };
     }>;
-    signContract(bookingId: string, renterSignature: string): Promise<{
+    signContract(bookingId: string, renterSignature: string, actor: {
+        id: string;
+        role: Role;
+    }): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;

@@ -1,18 +1,29 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ReviewsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: string, vehicleId: string, rating: number, comment: string) {
+  async create(
+    userId: string,
+    vehicleId: string,
+    rating: number,
+    comment: string,
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { customer: true },
     });
 
     if (!user || !user.customer) {
-      throw new BadRequestException('Chỉ khách hàng đã đăng ký hồ sơ đầy đủ mới có quyền đánh giá xe.');
+      throw new BadRequestException(
+        'Chỉ khách hàng đã đăng ký hồ sơ đầy đủ mới có quyền đánh giá xe.',
+      );
     }
 
     if (rating < 1 || rating > 5) {

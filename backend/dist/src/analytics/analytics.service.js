@@ -124,8 +124,12 @@ let AnalyticsService = class AnalyticsService {
                 frequency,
             };
         });
-        const topRevenue = [...mapped].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
-        const topFrequency = [...mapped].sort((a, b) => b.frequency - a.frequency).slice(0, 5);
+        const topRevenue = [...mapped]
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 5);
+        const topFrequency = [...mapped]
+            .sort((a, b) => b.frequency - a.frequency)
+            .slice(0, 5);
         return {
             topRevenue,
             topFrequency,

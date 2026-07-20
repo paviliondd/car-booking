@@ -1,6 +1,4 @@
 'use client';
-/* eslint-disable react-hooks/set-state-in-effect */
-
 import React, { useCallback, useEffect, useState } from 'react';
 import { Calendar, ChevronRight, ShieldAlert, Sparkles } from 'lucide-react';
 import { dashboardApi } from '@/lib/api/dashboard';
@@ -56,8 +54,8 @@ type Notice = {
 };
 
 export default function DashboardHome() {
-  const toast = useToast();
-  const [selectedMonth, setSelectedMonth] = useState('2026-06');
+  const { error: showError, warning: showWarning } = useToast();
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [overviewToday, setOverviewToday] = useState<Overview | null>(null);
   const [overviewThisMonth, setOverviewThisMonth] = useState<Overview | null>(null);
   const [overviewLastMonth, setOverviewLastMonth] = useState<Overview | null>(null);
@@ -77,7 +75,6 @@ export default function DashboardHome() {
 
   const loadDashboardData = useCallback(async () => {
     try {
-      setLoading(true);
       const [
         today,
         thisMonth,
@@ -108,22 +105,16 @@ export default function DashboardHome() {
       setNotices(noticesList);
     } catch (err) {
       console.error('Lỗi tải dữ liệu dashboard', err);
-      toast.error('Không thể đồng bộ dữ liệu thống kê từ máy chủ.');
+      showError('Không thể đồng bộ dữ liệu thống kê từ máy chủ.');
     } finally {
       setLoading(false);
     }
-  }, [selectedMonth, toast]);
+  }, [selectedMonth, showError]);
 
   useEffect(() => {
-    loadDashboardData();
+    const loadTimer = window.setTimeout(() => void loadDashboardData(), 0);
+    return () => window.clearTimeout(loadTimer);
   }, [loadDashboardData]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsRatingOpen(true);
-    }, 6000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const getPercentage = (value: number, total: number) => {
     if (total === 0) return '0%';
@@ -198,7 +189,7 @@ export default function DashboardHome() {
               </div>
 
               <div
-                onClick={() => toast.warning('Chi tiết phạt nguội đang đồng bộ từ Cục CSGT.')}
+                onClick={() => showWarning('Chi tiết phạt nguội đang đồng bộ từ Cục CSGT.')}
                 className="bg-white dark:bg-gray-900 border border-red-200/40 dark:border-white/5 hover:border-red-400 p-5 rounded-2xl shadow-xs flex items-center gap-4 transition duration-200 cursor-pointer hover:scale-[1.01]"
               >
                 <div className="p-3 bg-red-500/10 rounded-xl">

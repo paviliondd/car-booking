@@ -44,7 +44,7 @@ export default function TopServicesChart({ data }: TopServicesChartProps) {
               </Pie>
               <Tooltip 
                 contentStyle={{ background: '#1F2937', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
-                formatter={(value: any) => [`${value} xe`, 'Số lượng']}
+                formatter={(value: unknown) => [`${Number(value || 0)} xe`, 'Số lượng']}
               />
               <Legend 
                 verticalAlign="bottom" 

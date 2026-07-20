@@ -22,8 +22,21 @@ let PaymentsController = class PaymentsController {
         this.paymentsService = paymentsService;
     }
     async momoWebhook(body) {
-        const { orderId, resultCode, message, extraData } = body;
-        let bookingId = extraData;
+        if (!this.paymentsService.verifyMomoSignature(body)) {
+            throw new common_1.BadRequestException('Chữ ký webhook MoMo không hợp lệ');
+        }
+        const orderId = this.asString(body.orderId);
+        const resultCode = Number(body.resultCode);
+        const extraData = this.asString(body.extraData);
+        let bookingId = '';
+        if (extraData) {
+            try {
+                bookingId = Buffer.from(extraData, 'base64').toString('utf8');
+            }
+            catch {
+                bookingId = '';
+            }
+        }
         if (!bookingId && orderId) {
             bookingId = orderId.split('_')[0];
         }
@@ -32,28 +45,20 @@ let PaymentsController = class PaymentsController {
         }
         return {
             partnerCode: body.partnerCode,
-            orderId: body.orderId,
+            orderId,
             requestId: body.requestId,
-            resultCode: body.resultCode,
+            resultCode,
             message: body.message,
-            responseTime: body.responseTime,
-            extraData: body.extraData,
-            signature: body.signature,
         };
+    }
+    asString(value) {
+        return typeof value === 'string' || typeof value === 'number'
+            ? String(value)
+            : '';
     }
     async payosWebhook(body) {
-        const { data, success } = body;
-        if (success && data) {
-            const { orderCode, description } = data;
-        }
+        await this.paymentsService.handlePayosWebhook(body);
         return { status: 'success' };
-    }
-    async simulateSuccess(bookingId, transactionId, method) {
-        await this.paymentsService.verifyPayment(bookingId, transactionId, client_1.PaymentStatus.PAID);
-        return {
-            success: true,
-            message: `Thanh toan gia lap thanh cong qua ${method} cho booking ${bookingId}`,
-        };
     }
 };
 exports.PaymentsController = PaymentsController;
@@ -73,15 +78,6 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], PaymentsController.prototype, "payosWebhook", null);
-__decorate([
-    (0, common_1.Get)('simulate-success'),
-    __param(0, (0, common_1.Query)('bookingId')),
-    __param(1, (0, common_1.Query)('transactionId')),
-    __param(2, (0, common_1.Query)('method')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
-    __metadata("design:returntype", Promise)
-], PaymentsController.prototype, "simulateSuccess", null);
 exports.PaymentsController = PaymentsController = __decorate([
     (0, common_1.Controller)('payments'),
     __metadata("design:paramtypes", [payments_service_1.PaymentsService])

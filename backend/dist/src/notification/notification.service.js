@@ -23,7 +23,9 @@ let NotificationService = NotificationService_1 = class NotificationService {
     logger = new common_1.Logger(NotificationService_1.name);
     constructor(configService) {
         this.configService = configService;
-        this.senderEmail = this.configService.get('AWS_SES_EMAIL_SENDER') || 'noreply@datxe.linuxunity.com';
+        this.senderEmail =
+            this.configService.get('AWS_SES_EMAIL_SENDER') ||
+                'noreply@datxe.linuxunity.com';
         const accessKeyId = this.configService.get('AWS_ACCESS_KEY_ID');
         const secretAccessKey = this.configService.get('AWS_SECRET_ACCESS_KEY');
         const region = this.configService.get('AWS_REGION') || 'us-east-1';
@@ -58,7 +60,7 @@ let NotificationService = NotificationService_1 = class NotificationService {
                 this.logger.log(`Email successfully sent to ${to}`);
             }
             catch (error) {
-                this.logger.error(`Error sending email to ${to} via AWS SES`, error);
+                this.logger.error(`Error sending email to ${to} via AWS SES: ${error instanceof Error ? error.message : String(error)}`);
             }
         }
         else {
@@ -69,7 +71,6 @@ let NotificationService = NotificationService_1 = class NotificationService {
         this.logger.log(`Sending email to ${to} with attachment "${filename}"...`);
         if (this.sesClient) {
             try {
-                const { SendRawEmailCommand } = require('@aws-sdk/client-ses');
                 const boundary = `----=_Part_${Date.now()}`;
                 const rawMessage = [
                     `From: ${this.senderEmail}`,
@@ -91,9 +92,9 @@ let NotificationService = NotificationService_1 = class NotificationService {
                     ``,
                     attachmentBase64,
                     ``,
-                    `--${boundary}--`
+                    `--${boundary}--`,
                 ].join('\r\n');
-                const command = new SendRawEmailCommand({
+                const command = new client_ses_1.SendRawEmailCommand({
                     RawMessage: {
                         Data: Buffer.from(rawMessage),
                     },
@@ -102,7 +103,7 @@ let NotificationService = NotificationService_1 = class NotificationService {
                 this.logger.log(`Email with attachment successfully sent to ${to}`);
             }
             catch (error) {
-                this.logger.error(`Error sending email with attachment to ${to} via AWS SES`, error);
+                this.logger.error(`Error sending email with attachment to ${to} via AWS SES: ${error instanceof Error ? error.message : String(error)}`);
             }
         }
         else {
@@ -121,7 +122,7 @@ let NotificationService = NotificationService_1 = class NotificationService {
                 this.logger.log(`SMS successfully sent to ${phoneNumber}`);
             }
             catch (error) {
-                this.logger.error(`Error sending SMS to ${phoneNumber} via AWS SNS`, error);
+                this.logger.error(`Error sending SMS to ${phoneNumber} via AWS SNS: ${error instanceof Error ? error.message : String(error)}`);
             }
         }
         else {

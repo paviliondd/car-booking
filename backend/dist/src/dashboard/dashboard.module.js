@@ -25,7 +25,7 @@ exports.DashboardModule = DashboardModule = __decorate([
             dashboard_controller_1.FeedbackController,
             dashboard_controller_1.RatingController,
             dashboard_controller_1.DashboardBookingController,
-            dashboard_controller_1.DashboardAuthController
+            dashboard_controller_1.DashboardAuthController,
         ],
     })
 ], DashboardModule);

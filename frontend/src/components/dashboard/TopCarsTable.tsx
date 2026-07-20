@@ -21,17 +21,17 @@ export default function TopCarsTable({ cars }: TopCarsTableProps) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-150 dark:border-white/5 rounded-2xl p-6 shadow-xs flex flex-col gap-4 select-none h-full overflow-x-auto min-h-[300px]">
+    <div className="flex h-full min-h-[300px] min-w-0 flex-col gap-4 overflow-hidden rounded-2xl border border-gray-150 bg-white p-4 shadow-xs select-none dark:border-white/5 dark:bg-gray-900 sm:p-6">
       <h3 className="text-base font-bold text-gray-950 dark:text-white">Top xe thuê</h3>
       
-      <div className="flex-1 min-w-[500px]">
+      <div className="flex-1 overflow-x-auto">
         <table className="w-full text-left text-xs font-semibold border-collapse">
           <thead>
             <tr className="border-b border-gray-100 dark:border-white/5 text-gray-400 font-bold uppercase tracking-wider">
               <th className="py-3 px-2">Tên Xe</th>
               <th className="py-3 px-2 text-center">Số Hợp Đồng</th>
               <th className="py-3 px-2 text-right">Tiền Hợp Đồng</th>
-              <th className="py-3 px-4 w-[160px]">Hiệu Suất</th>
+              <th className="hidden py-3 px-4 w-[160px] sm:table-cell">Hiệu Suất</th>
             </tr>
           </thead>
           <tbody>
@@ -49,7 +49,7 @@ export default function TopCarsTable({ cars }: TopCarsTableProps) {
                     <td className="py-3 px-2 text-gray-900 dark:text-white font-bold">{car.name}</td>
                     <td className="py-3 px-2 text-center text-gray-700 dark:text-gray-300 font-bold">{car.bookingsCount}</td>
                     <td className="py-3 px-2 text-right text-[#008F5A] font-extrabold">{formatMoney(car.revenue)}</td>
-                    <td className="py-3 px-4">
+                    <td className="hidden py-3 px-4 sm:table-cell">
                       {/* Proportional progress bar */}
                       <div className="w-full bg-gray-100 dark:bg-white/5 h-2 rounded-full overflow-hidden">
                         <div 

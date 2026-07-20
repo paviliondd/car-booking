@@ -1,0 +1,201 @@
+# AGENTS.md — datxe car rental system
+
+## Bắt đầu tại đây
+
+File này áp dụng cho toàn repository và là tài liệu bàn giao bắt buộc cho mọi AI agent. Trước khi sửa code:
+
+1. Đọc hết file này và `AGENTS.md` gần nhất trong thư mục đang làm (`frontend/AGENTS.md` có quy tắc Next.js riêng).
+2. Chạy `git status --short`; worktree có thể đang dirty và thay đổi hiện hữu thuộc người dùng.
+3. Không reset, checkout, xóa, commit, push hoặc deploy nếu người dùng chưa yêu cầu rõ.
+4. Nếu thay đổi kiến trúc, env, API, workflow hoặc baseline test, cập nhật file này trong cùng thay đổi.
+
+UI và nội dung sản phẩm dùng tiếng Việt, file lưu UTF-8. Domain production cố định là `datxe.linuxunity.com`; TLS do Nginx/Let's Encrypt quản lý.
+
+## Sản phẩm và kiến trúc
+
+`datxe` là nền tảng thuê xe tự lái gồm:
+
+- Khách hàng: đăng ký/đăng nhập email hoặc Google, tìm xe, đặt xe, cọc/thanh toán, ký hợp đồng, tra cứu đơn, đánh giá, chat chủ xe.
+- Chủ xe: gửi yêu cầu nâng cấp, đăng xe, quản lý trạng thái xe, duyệt booking, doanh thu và chat.
+- Admin/staff: dashboard, booking, CRM khách hàng, bảo dưỡng, tài chính, audit và hỗ trợ.
+
+```text
+Browser
+  -> Nginx :80/:443 (SSL, rate limit, security headers)
+       -> Next.js 16 / React 19 / Tailwind 4 :3000
+       -> NestJS 11 REST /api + Socket.IO :5000
+            -> Prisma 7 + PostgreSQL 15
+            -> Redis 7
+            -> MinIO/S3-compatible storage
+            -> Google Identity Services, PayOS, MoMo, SES/SNS
+```
+
+Production dùng `docker-compose.prod.yml`, `nginx.prod.conf`, image GHCR và `.github/workflows/deploy.yml`. Push vào `main` chạy quality gate, build/push hai image rồi SSH deploy có health check và rollback. Không dùng `docker-compose.yml`/`nginx.conf` legacy làm cấu hình production.
+
+## Bản đồ source
+
+```text
+frontend/
+  src/app/                    Next.js App Router pages
+    auth/                     email + Google Sign-In thật
+    booking/                  tìm xe, hồ sơ, cọc, chat
+    payment/                  chuyển tiếp sang cổng thanh toán thật
+    contract/[bookingId]/     hợp đồng và chữ ký
+    owner/, owner/add-car/    portal chủ xe
+    (dashboard)/dashboard/    dashboard OWNER/ADMIN/STAFF
+  src/components/             layout, auth, search, owner, dashboard
+  src/lib/api.ts              API client/type chính
+  src/lib/api/dashboard.ts    dashboard client (cần hợp nhất dần)
+  src/providers/              query, theme, toast
+  src/app/globals.css         semantic design tokens emerald/navy
+
+backend/
+  src/main.ts                 Helmet, CORS, validation, /api prefix
+  src/app.module.ts           composition root + global throttling
+  src/auth/                   JWT, Google token verification, roles
+  src/<domain>/               controller/service/module theo domain
+  prisma/schema.prisma        source of truth data model
+  prisma/migrations/0001_init initial production migration
+
+.github/workflows/deploy.yml  CI/CD vào VPS
+docker-compose.prod.yml       production stack, network nội bộ
+nginx.prod.conf               TLS/reverse proxy/websocket
+scripts/deploy-vps.sh         migration, deploy, health, rollback
+.env.production.example      danh sách biến production, không có secret thật
+design-system/datxe/MASTER.md design-system do ui-ux-pro-max sinh
+```
+
+Backend domains: `auth`, `vehicles`, `bookings`, `payments`, `contracts`, `reviews`, `chat`, `tickets`, `customers`, `maintenance`, `analytics`, `dashboard`, `audit`, `notification`, `redis`, `prisma`.
+
+## Domain và các invariant bắt buộc
+
+Roles: `ADMIN`, `STAFF`, `CUSTOMER`, `OWNER`.
+
+- Client không bao giờ được chọn role khi đăng ký; đăng ký mới luôn là `CUSTOMER`.
+- OWNER chỉ truy cập vehicle, booking, dashboard thuộc xe có `ownerId` của chính họ.
+- Duyệt yêu cầu owner chỉ dành cho ADMIN/STAFF.
+- JWT phải kiểm tra user/role hiện tại trong DB và fail closed khi DB lỗi.
+- Chỉ customer của booking được ký hợp đồng; owner/admin/staff chỉ có quyền xem theo policy.
+- Chat Socket.IO lấy sender từ JWT handshake, dùng room riêng theo user; không tin `senderId` từ payload và không broadcast toàn cục.
+- Webhook PayOS/MoMo phải xác minh chữ ký trước khi đổi payment/booking. Ghi nhận doanh thu phải idempotent.
+- Mock/demo chỉ được chạy khi flag explicit là `true`; production luôn đặt `ENABLE_DEMO_DATA=false` và `ENABLE_PAYMENT_MOCKS=false`.
+- Availability, giá, cọc và state transition phải được xác thực ở backend; không tin giá/status client gửi.
+
+Trạng thái chính:
+
+- Vehicle: `AVAILABLE`, `RENTED`, `MAINTENANCE`, `LOCKED`.
+- Booking: `PENDING`, `CONFIRMED`, `RENTING`, `COMPLETED`, `CANCELLED`.
+- Payment: `UNPAID`, `DEPOSITED`, `PAID`, `REFUNDED`.
+- Payment method: `MOMO`, `BANK_TRANSFER`, `CASH`.
+
+## Auth và Google OAuth
+
+Email/password dùng bcrypt (12 rounds) và JWT. Frontend hiện lưu `token`/`user` trong `localStorage`; nếu chuyển sang HttpOnly cookie phải đổi toàn bộ API client, guards, Socket.IO handshake và hydration trong một thay đổi có migration rõ ràng.
+
+Google dùng Google Identity Services ID token flow:
+
+- Frontend: `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
+- Backend: `GOOGLE_CLIENT_ID` phải cùng OAuth 2.0 Web Client ID.
+- Backend dùng `google-auth-library` để verify audience, issuer và email verified; tuyệt đối không decode token thủ công.
+- Flow này cần **OAuth 2.0 Web Client ID**, không phải API key và không cần Client Secret.
+- Khi cấu hình Google Console, thêm origin `https://datxe.linuxunity.com` và origin local cần dùng.
+
+## Env và production deploy
+
+Tạo `/opt/datxe/.env` từ `.env.production.example`, permission hạn chế. Tối thiểu cần:
+
+- Core: `POSTGRES_*`, `DATABASE_URL` (Compose tự dựng), `JWT_SECRET` dài/ngẫu nhiên, `CORS_ORIGINS`.
+- Google: `GOOGLE_CLIENT_ID`; GitHub Actions variable `NEXT_PUBLIC_GOOGLE_CLIENT_ID` để bake vào frontend image.
+- Storage/notification: `MINIO_ROOT_*`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `S3_*`, sender SES.
+- PayOS: `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY`.
+- MoMo: `MOMO_PARTNER_CODE`, `MOMO_ACCESS_KEY`, `MOMO_SECRET_KEY`, `MOMO_API_URL`, `MOMO_REDIRECT_URL`, `MOMO_IPN_URL`.
+
+GitHub repository/environment cần:
+
+- Secrets: `VPS_HOST`, `VPS_PORT`, `VPS_USER`, `VPS_SSH_PRIVATE_KEY`, `VPS_SSH_KNOWN_HOSTS`.
+- Variables: `VPS_DEPLOY_PATH` (khuyến nghị `/opt/datxe`), `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
+- Production environment protection/rules tùy chính sách vận hành.
+- VPS phải có Docker Compose v2, quyền pull GHCR, `.env`, và certificate ở `/etc/letsencrypt/live/datxe.linuxunity.com/`.
+
+Mỗi deploy chạy `prisma migrate deploy` trước khi thay container app. Nếu production DB đã tồn tại trước migration `0001_init`, phải baseline một lần theo Prisma trước deploy đầu tiên; không chạy migration init trực tiếp lên schema đã có bảng.
+
+Script giữ `.last-successful-image` và rollback image tag khi health check `https://datxe.linuxunity.com/api/health/ready` thất bại. Không deploy thủ công song song với workflow.
+
+## Quy tắc frontend/UI
+
+- Đây là Next.js 16.2.9; đọc tài liệu tương ứng trong `frontend/node_modules/next/dist/docs/` theo `frontend/AGENTS.md` trước khi dùng API framework có thể đã đổi.
+- Không thêm `any`, raw `<img>`, fake success, fake social login hoặc route/menu không tồn tại.
+- Dùng API types trong `src/lib/api.ts`; hợp nhất dần dashboard client, không tạo request helper thứ ba.
+- Dùng `next/image`, Lucide, semantic token trong `globals.css`, touch target tối thiểu 44px, visible focus, reduced motion và contrast WCAG AA.
+- Palette hiện là emerald/navy, light-first; không quay lại violet hoặc thêm palette mới. Dashboard dark được phép nhưng phải dùng cùng semantic colors.
+- Kiểm tra 375px, 768px, 1024px và desktop; không horizontal overflow; cung cấp loading/empty/error/disabled states.
+- UI không được giả lập dữ liệu production. Khi integration thiếu config, hiển thị trạng thái cấu hình/không khả dụng.
+
+Mọi task UI/UX phải dùng Codex skill `ui-ux-pro-max` tại `C:/Users/pavil/.codex/skills/ui-ux-pro-max/SKILL.md`. Bắt đầu bằng design-system query và tôn trọng `design-system/datxe/MASTER.md`; kết quả skill là đầu vào, không phải lý do phá brand hoặc thêm dependency thừa.
+
+## Quy tắc backend/API
+
+- REST dưới `/api`; controller mỏng, business logic trong service, DB qua `PrismaService`.
+- Body/query mới phải có DTO `class-validator`; global pipe bật whitelist, transform và forbid non-whitelisted.
+- Private endpoint dùng `JwtAuthGuard`; role endpoint thêm `RolesGuard` + `@Roles`; luôn kiểm tra ownership ngoài role.
+- Không trả/log password, JWT, credential thanh toán, CCCD/GPLX hoặc PII không cần thiết.
+- Integration ngoài phải có timeout, fail closed, chữ ký, idempotency và lỗi rõ ràng; không âm thầm trả demo khi production.
+- Khi đổi response/endpoint, cập nhật backend DTO/service, frontend types/callers và test trong cùng thay đổi.
+- Tiền hiện dùng number/Float legacy. Tính năng kế toán mới nên dùng integer VND hoặc Prisma Decimal qua migration có chủ đích.
+
+Khi đổi Prisma schema:
+
+1. Sửa `backend/prisma/schema.prisma`.
+2. Tạo/commit migration, không dùng `db push` cho production.
+3. Chạy `npx prisma generate`.
+4. Cập nhật DTO/service/frontend types/seed/test.
+5. Ghi rõ forward/rollback và tương thích dữ liệu cũ.
+
+## Lệnh chạy và Definition of Done
+
+```powershell
+# backend
+cd backend
+npm ci
+npx prisma generate
+npm run lint:check
+npm run build
+npm test -- --runInBand
+npm run test:e2e -- --runInBand
+
+# frontend
+cd frontend
+npm ci
+npm run lint:check
+npm run build
+
+# local full stack
+docker compose up --build
+```
+
+Baseline xác nhận ngày 2026-07-19:
+
+- Backend lint check: 0 lỗi; build pass.
+- Backend unit: 2 suites, 8 tests pass.
+- Backend e2e: 1 suite, 2 tests pass, không cần DB thật vì health/root test override Prisma.
+- Frontend lint: 0 lỗi, 0 warning; production build pass 14 routes.
+
+Task chỉ hoàn tất khi authorization/ownership/validation đúng, API/UI typed, không thêm mock ẩn, lint/build/test liên quan pass và giới hạn còn lại được báo rõ.
+
+## Nợ kỹ thuật còn lại (không che giấu)
+
+- Tra cứu booking công khai bằng số điện thoại vẫn có rủi ro PII/enumeration; cần OTP hoặc booking code + phone và rate limit riêng.
+- Upload CCCD/GPLX hiện preview base64 phía client, chưa có signed upload, MIME/size scanning và protected object access.
+- Contract PDF được tạo phía client, font tiếng Việt chưa hoàn chỉnh và chưa có immutable signed-document storage/audit trail.
+- Một số dashboard phụ (notifications/violations/feedback/rating/long-term booking/forgot password/logout) vẫn là prototype hoặc chưa persistent; không quảng bá như tính năng hoàn chỉnh.
+- Dashboard client còn tách khỏi API client chính; test coverage business/payment/auth còn thấp.
+- `docker-compose.yml`, `nginx.conf` và Kubernetes manifest là legacy/dev, còn credential mẫu/hard-code; không dùng cho production trước khi harden.
+- `backend/dist/` và `backend/backend-dev.out.log` đang bị Git track từ lịch sử. Đây là artifacts, không phải source of truth; không chỉnh tay hoặc dựa vào chúng. Cần một cleanup riêng được người dùng duyệt để untrack.
+- Cần chạy smoke test production thật với PostgreSQL/Redis/MinIO và sandbox credentials PayOS/MoMo/Google trước go-live.
+
+## Git và vệ sinh workspace
+
+- Không commit `.env`, token, key, credential, `.next`, `dist`, log hoặc dữ liệu local mới.
+- Không sửa `backend/backend-dev.out.log`; file có thể tự đổi do process cũ.
+- Xem `git diff --check`, nhưng bỏ qua whitespace trong tracked runtime log nếu đó là thay đổi có sẵn của người dùng.
+- Chỉ stage/commit/push/deploy khi được yêu cầu rõ, và luôn báo chính xác những kiểm tra đã chạy.

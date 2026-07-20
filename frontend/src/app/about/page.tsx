@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, Car, CheckCircle2, Headphones, ShieldCheck, Users } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -43,10 +44,12 @@ export default function AboutPage() {
             </div>
 
             <div className="relative h-[320px] md:h-[420px] overflow-hidden rounded-2xl border border-emerald-100 shadow-sm">
-              <img
+              <Image
                 src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80"
                 alt="Xe tự lái datxe"
-                className="h-full w-full object-cover"
+                fill
+                sizes="(min-width: 768px) 50vw, 100vw"
+                className="object-cover"
               />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/75 to-transparent p-6">
                 <div className="grid grid-cols-3 gap-3">

@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TicketsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const client_1 = require("@prisma/client");
 let TicketsService = class TicketsService {
     prisma;
     constructor(prisma) {
@@ -28,7 +29,7 @@ let TicketsService = class TicketsService {
         });
     }
     async findAll(user) {
-        if (user.role === 'ADMIN' || user.role === 'STAFF') {
+        if (user.role === client_1.Role.ADMIN || user.role === client_1.Role.STAFF) {
             return await this.prisma.supportTicket.findMany({
                 include: {
                     user: {
@@ -48,7 +49,7 @@ let TicketsService = class TicketsService {
         });
     }
     async reply(id, replyText, adminUser) {
-        if (adminUser.role !== 'ADMIN' && adminUser.role !== 'STAFF') {
+        if (adminUser.role !== client_1.Role.ADMIN && adminUser.role !== client_1.Role.STAFF) {
             throw new common_1.ForbiddenException('Chỉ quản trị viên hoặc nhân viên mới có quyền phản hồi ticket.');
         }
         const ticket = await this.prisma.supportTicket.findUnique({

@@ -27,5 +27,9 @@ export declare class ChatService {
         senderId: string;
         receiverId: string;
     }[]>;
-    getRecentChatPartners(userId: string): Promise<any[]>;
+    getRecentChatPartners(userId: string): Promise<{
+        id: string;
+        name: string;
+        email: string;
+    }[]>;
 }

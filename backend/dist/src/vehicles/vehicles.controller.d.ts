@@ -1,6 +1,7 @@
 import { VehiclesService } from './vehicles.service';
 import { CreateVehicleDto, SearchVehicleDto } from './dto/vehicle.dto';
 import { VehicleStatus } from '@prisma/client';
+import type { AuthenticatedRequest } from '../auth/types/authenticated-user';
 export declare class VehiclesController {
     private readonly vehiclesService;
     constructor(vehiclesService: VehiclesService);
@@ -152,7 +153,7 @@ export declare class VehiclesController {
         terms: string | null;
         ownerId: string | null;
     }[]>;
-    getMyCars(req: any): Promise<{
+    getMyCars(req: AuthenticatedRequest): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -179,7 +180,7 @@ export declare class VehiclesController {
         terms: string | null;
         ownerId: string | null;
     }[]>;
-    create(req: any, dto: CreateVehicleDto): Promise<{
+    create(req: AuthenticatedRequest, dto: CreateVehicleDto): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -206,7 +207,7 @@ export declare class VehiclesController {
         terms: string | null;
         ownerId: string | null;
     }>;
-    update(req: any, id: string, dto: Partial<CreateVehicleDto>): Promise<{
+    update(req: AuthenticatedRequest, id: string, dto: Partial<CreateVehicleDto>): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -233,7 +234,7 @@ export declare class VehiclesController {
         terms: string | null;
         ownerId: string | null;
     }>;
-    updateStatus(req: any, id: string, status: VehicleStatus): Promise<{
+    updateStatus(req: AuthenticatedRequest, id: string, status: VehicleStatus): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -260,5 +261,5 @@ export declare class VehiclesController {
         terms: string | null;
         ownerId: string | null;
     }>;
-    delete(req: any, id: string): Promise<void>;
+    delete(req: AuthenticatedRequest, id: string): Promise<void>;
 }

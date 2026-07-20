@@ -1,4 +1,5 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { AuthenticatedUser } from '../auth/types/authenticated-user';
 export declare class TicketsService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -12,7 +13,7 @@ export declare class TicketsService {
         reply: string | null;
         repliedAt: Date | null;
     }>;
-    findAll(user: any): Promise<{
+    findAll(user: AuthenticatedUser): Promise<{
         id: string;
         createdAt: Date;
         status: string;
@@ -22,7 +23,7 @@ export declare class TicketsService {
         reply: string | null;
         repliedAt: Date | null;
     }[]>;
-    reply(id: string, replyText: string, adminUser: any): Promise<{
+    reply(id: string, replyText: string, adminUser: AuthenticatedUser): Promise<{
         id: string;
         createdAt: Date;
         status: string;

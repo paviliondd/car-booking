@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
-import { FileText, CheckCircle2, ChevronLeft, Loader2, Sparkles, Download } from 'lucide-react';
+import { api, type Booking, type ContractData } from '@/lib/api';
+import { FileText, CheckCircle2, ChevronLeft, Loader2, AlertTriangle } from 'lucide-react';
 import jsPDF from 'jspdf';
 
 export default function ContractPage() {
@@ -14,30 +14,30 @@ export default function ContractPage() {
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [contractData, setContractData] = useState<any>(null);
-  const [bookingData, setBookingData] = useState<any>(null);
+  const [contractData, setContractData] = useState<ContractData | null>(null);
+  const [bookingData, setBookingData] = useState<(Booking & { vehicle: NonNullable<Booking['vehicle']>; customer: NonNullable<Booking['customer']> }) | null>(null);
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isSigned, setIsSigned] = useState(false);
 
-  useEffect(() => {
-    if (bookingId) {
-      loadContract();
-    }
-  }, [bookingId]);
-
-  const loadContract = async () => {
+  const loadContract = useCallback(async () => {
     try {
       const res = await api.contracts.get(bookingId);
       setContractData(res.contract);
       setBookingData(res.booking);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Lỗi nạp thông tin hợp đồng.');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Lỗi nạp thông tin hợp đồng.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [bookingId]);
+
+  useEffect(() => {
+    if (!bookingId) return;
+    const loadTimer = window.setTimeout(() => void loadContract(), 0);
+    return () => window.clearTimeout(loadTimer);
+  }, [bookingId, loadContract]);
 
   // Canvas Handlers
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -148,8 +148,8 @@ export default function ContractPage() {
       doc.save(`HopDong_datxe_${bookingData.bookingNumber}.pdf`);
 
       router.push(`/track?phone=${bookingData.customer.phone}`);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Lỗi xử lý ký số hợp đồng điện tử.');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Lỗi xử lý ký số hợp đồng điện tử.');
     } finally {
       setSigning(false);
     }
@@ -185,7 +185,8 @@ export default function ContractPage() {
 
       {errorMsg && (
         <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-sm z-10">
-          ⚠️ {errorMsg}
+          <AlertTriangle className="mr-2 inline h-4 w-4" aria-hidden="true" />
+          {errorMsg}
         </div>
       )}
 

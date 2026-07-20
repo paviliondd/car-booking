@@ -1,0 +1,11 @@
+.env
+.env.*
+!.env.production.example
+*.log
+node_modules/
+dist/
+.next/
+coverage/
+.deploy.env
+.last-successful-image
+.DS_Store

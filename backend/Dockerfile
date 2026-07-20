@@ -1,34 +1,25 @@
-# Stage 1: Build
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY prisma ./prisma
+COPY prisma.config.ts ./
+RUN npm ci && npx prisma generate
 
-WORKDIR /usr/src/app
-
-COPY package*.json ./
-COPY prisma ./prisma/
-
-RUN npm ci
-
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-RUN npx prisma generate
 RUN npm run build
 
-# Stage 2: Run
-FROM node:20-alpine
-
-WORKDIR /usr/src/app
-
-COPY package*.json ./
-COPY prisma ./prisma/
-
-RUN npm ci --only=production
-
-COPY --from=builder /usr/src/app/dist ./dist
+FROM node:22-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nestjs
+COPY package.json package-lock.json ./
+COPY prisma ./prisma
 COPY prisma.config.ts ./
-
-# Generate prisma client for production
-RUN npx prisma generate
-
+RUN npm ci --omit=dev && npx prisma generate && npm cache clean --force
+COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
+USER nestjs
 EXPOSE 5000
-
 CMD ["node", "dist/src/main.js"]

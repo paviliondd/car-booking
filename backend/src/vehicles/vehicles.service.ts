@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateVehicleDto } from './dto/vehicle.dto';
 import { Vehicle, VehicleStatus } from '@prisma/client';
@@ -24,7 +28,11 @@ export class VehiclesService {
   }
 
   // Thuật toán Dynamic Pricing: Tính giá linh hoạt theo lịch ngày lễ, cuối tuần, ngày thường
-  calculateTotalPrice(vehicle: Vehicle, start: Date, end: Date): { totalPrice: number; totalDays: number; details: any[] } {
+  calculateTotalPrice(
+    vehicle: Vehicle,
+    start: Date,
+    end: Date,
+  ): { totalPrice: number; totalDays: number; details: any[] } {
     if (start >= end) {
       throw new BadRequestException('End date must be greater than start date');
     }
@@ -79,17 +87,26 @@ export class VehiclesService {
     });
   }
 
-  async findAll(filters: { brand?: string; seats?: number }): Promise<Vehicle[]> {
+  async findAll(filters: {
+    brand?: string;
+    seats?: number;
+  }): Promise<Vehicle[]> {
     return await this.prisma.vehicle.findMany({
       where: {
-        ...(filters.brand ? { brand: { contains: filters.brand, mode: 'insensitive' } } : {}),
+        ...(filters.brand
+          ? { brand: { contains: filters.brand, mode: 'insensitive' } }
+          : {}),
         ...(filters.seats ? { seats: filters.seats } : {}),
       },
     });
   }
 
   // Tìm các xe trống không bị trùng lịch
-  async findAvailable(startDateStr: string, endDateStr: string, filters: { brand?: string; seats?: number }): Promise<Vehicle[]> {
+  async findAvailable(
+    startDateStr: string,
+    endDateStr: string,
+    filters: { brand?: string; seats?: number },
+  ): Promise<Vehicle[]> {
     const startDate = new Date(startDateStr);
     const endDate = new Date(endDateStr);
 
@@ -107,8 +124,8 @@ export class VehiclesService {
         status: { in: ['CONFIRMED', 'RENTING', 'PENDING'] },
         NOT: {
           OR: [
-            { endDate: { lte: startDate } },   // Cũ trả trước khi mới nhận
-            { startDate: { gte: endDate } },   // Cũ nhận sau khi mới trả
+            { endDate: { lte: startDate } }, // Cũ trả trước khi mới nhận
+            { startDate: { gte: endDate } }, // Cũ nhận sau khi mới trả
           ],
         },
       },
@@ -122,7 +139,9 @@ export class VehiclesService {
       where: {
         status: VehicleStatus.AVAILABLE, // Chỉ lấy các xe đang hoạt động tốt (không bảo dưỡng, khóa)
         id: { notIn: bookedIds },
-        ...(filters.brand ? { brand: { contains: filters.brand, mode: 'insensitive' } } : {}),
+        ...(filters.brand
+          ? { brand: { contains: filters.brand, mode: 'insensitive' } }
+          : {}),
         ...(filters.seats ? { seats: filters.seats } : {}),
       },
     });
@@ -192,9 +211,19 @@ export class VehiclesService {
   }
 
   // Gợi ý xe tương tự khi xe A hết lịch
-  async findSuggestions(brand: string, seats: number, startDateStr: string, endDateStr: string): Promise<Vehicle[]> {
+  async findSuggestions(
+    brand: string,
+    seats: number,
+    startDateStr: string,
+    endDateStr: string,
+  ): Promise<Vehicle[]> {
     const available = await this.findAvailable(startDateStr, endDateStr, {});
     // Lọc các xe có cùng số ghế hoặc hãng xe
-    return available.filter((v) => v.seats === seats || v.brand.toLowerCase() === brand.toLowerCase()).slice(0, 3);
+    return available
+      .filter(
+        (v) =>
+          v.seats === seats || v.brand.toLowerCase() === brand.toLowerCase(),
+      )
+      .slice(0, 3);
   }
 }

@@ -7,6 +7,7 @@ import { Eye, EyeOff, Loader2, Lock, Mail, Phone, Sparkles, User, X } from 'luci
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useToast } from '@/providers/ToastProvider';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -134,18 +135,14 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onAu
     }
   };
 
-  const handleSocialLogin = async (provider: 'Facebook' | 'Google') => {
+  const handleGoogleLogin = async (credential: string) => {
     setLoading(true);
     setErrors({});
     try {
-      const mockEmail = `${provider.toLowerCase()}_user@datxe.vn`;
-      const mockName = `${provider} User`;
-      const res = provider === 'Google'
-        ? await api.auth.googleLogin(mockEmail, mockName)
-        : await api.auth.facebookLogin(mockEmail, mockName);
+      const res = await api.auth.googleLogin(credential);
       finishLogin(res);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : `Lỗi đăng nhập qua ${provider}`;
+      const message = err instanceof Error ? err.message : 'Không thể đăng nhập qua Google';
       setErrors({ form: message });
       toast.error(message);
     } finally {
@@ -340,14 +337,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onAu
           <div className="flex-grow border-t border-slate-200" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <button type="button" onClick={() => handleSocialLogin('Facebook')} disabled={loading} className="flex items-center justify-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-700 py-2.5 rounded-lg text-xs font-bold transition cursor-pointer disabled:opacity-50">
-            Facebook
-          </button>
-          <button type="button" onClick={() => handleSocialLogin('Google')} disabled={loading} className="flex items-center justify-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-700 py-2.5 rounded-lg text-xs font-bold transition cursor-pointer disabled:opacity-50">
-            Google
-          </button>
-        </div>
+        <GoogleSignInButton onCredential={handleGoogleLogin} disabled={loading} />
 
         <div className="text-center text-xs text-slate-600 mt-6 border-t border-slate-100 pt-4">
           {isLogin ? 'Bạn chưa có tài khoản?' : 'Đã có tài khoản?'}{' '}

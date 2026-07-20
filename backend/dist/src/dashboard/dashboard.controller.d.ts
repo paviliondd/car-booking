@@ -1,15 +1,23 @@
 import { DashboardService } from './dashboard.service';
+import { Role } from '@prisma/client';
+import type { Request } from 'express';
+type DashboardRequest = Request & {
+    user: {
+        id: string;
+        role: Role;
+    };
+};
 export declare class DashboardController {
     private readonly dashboardService;
     constructor(dashboardService: DashboardService);
-    getOverview(period: string): Promise<{
+    getOverview(req: DashboardRequest, period: string): Promise<{
         totalContract: number;
         totalMoneyContract: number;
         totalMoneyForward: number;
         totalCollect: number;
         totalExpense: number;
     }>;
-    getCarStatusSummary(): Promise<{
+    getCarStatusSummary(req: DashboardRequest): Promise<{
         waitConfirm: number;
         confirmed: number;
         received: number;
@@ -17,15 +25,15 @@ export declare class DashboardController {
         accident: number;
         pledged: number;
     }>;
-    getRevenueChart(month: string): Promise<{
+    getRevenueChart(req: DashboardRequest, month: string): Promise<{
         date: string;
         revenue: number;
     }[]>;
-    getTopServices(): Promise<{
+    getTopServices(req: DashboardRequest): Promise<{
         name: string;
         value: number;
     }[]>;
-    getTopCars(limit: string): Promise<{
+    getTopCars(req: DashboardRequest, limit: string): Promise<{
         maxRevenue: number;
         name: string;
         bookingsCount: number;
@@ -35,12 +43,12 @@ export declare class DashboardController {
 export declare class NotificationsController {
     private readonly dashboardService;
     constructor(dashboardService: DashboardService);
-    getNotifications(limit: string): Promise<{
+    getNotifications(limit: string): {
         id: string;
         title: string;
         desc: string;
         date: string;
-    }[]>;
+    }[];
 }
 export declare class CarsController {
     private readonly dashboardService;
@@ -53,15 +61,15 @@ export declare class CarsController {
         type: string;
         dueDate: string;
     }[]>;
-    getViolateList(): Promise<{
+    getViolateList(): {
         id: string;
         plateNumber: string;
         reason: string;
         fineAmount: number;
         violatedAt: string;
         status: string;
-    }[]>;
-    getAvailable(location: string, startDate: string, months: string): Promise<{
+    }[];
+    getAvailable(location: string, startDate: string, months: string): {
         id: string;
         brand: string;
         model: string;
@@ -70,49 +78,50 @@ export declare class CarsController {
         monthlyPrice: number;
         images: string[];
         location: string;
-    }[]>;
+    }[];
 }
 export declare class FeedbackController {
     createFeedback(body: {
         category: string;
         message: string;
-    }): Promise<{
+    }): {
         success: boolean;
         message: string;
         data: {
             category: string;
             message: string;
         };
-    }>;
+    };
 }
 export declare class RatingController {
     createRating(body: {
         stars: number;
         comment: string;
-    }): Promise<{
+    }): {
         success: boolean;
         message: string;
         data: {
             stars: number;
             comment: string;
         };
-    }>;
+    };
 }
 export declare class DashboardBookingController {
-    createLongTermBooking(body: any): Promise<{
+    createLongTermBooking(body: Record<string, unknown>): {
         success: boolean;
         message: string;
         bookingNumber: string;
-        data: any;
-    }>;
+        data: Record<string, unknown>;
+    };
 }
 export declare class DashboardAuthController {
-    logout(): Promise<{
+    logout(): {
         success: boolean;
         message: string;
-    }>;
-    forgotPassword(phone: string): Promise<{
+    };
+    forgotPassword(phone: string): {
         success: boolean;
         message: string;
-    }>;
+    };
 }
+export {};

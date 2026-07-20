@@ -14,37 +14,37 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
+const client_1 = require("@prisma/client");
 const auth_service_1 = require("./auth.service");
 const auth_dto_1 = require("./dto/auth.dto");
+const roles_decorator_1 = require("./decorators/roles.decorator");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
+const roles_guard_1 = require("./guards/roles.guard");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
         this.authService = authService;
     }
     async register(dto) {
-        return await this.authService.register(dto);
+        return this.authService.register(dto);
     }
     async login(dto) {
-        return await this.authService.login(dto);
+        return this.authService.login(dto);
     }
-    async getMe(req) {
+    getMe(req) {
         return req.user;
     }
-    async googleLogin(body) {
-        return await this.authService.oauthLogin(body.email, body.name);
+    async googleLogin(dto) {
+        return this.authService.googleLogin(dto.credential);
     }
-    async facebookLogin(body) {
-        return await this.authService.oauthLogin(body.email, body.name);
-    }
-    async upgradeOwner(req, body) {
-        return await this.authService.upgradeOwner(req.user.id, body);
+    async upgradeOwner(req, dto) {
+        return this.authService.upgradeOwner(req.user.id, dto);
     }
     async getOwnerRequests() {
-        return await this.authService.getOwnerRequests();
+        return this.authService.getOwnerRequests();
     }
-    async verifyOwner(userId, body) {
-        return await this.authService.verifyOwner(userId, body.approve);
+    async verifyOwner(userId, dto) {
+        return this.authService.verifyOwner(userId, dto.approve);
     }
 };
 exports.AuthController = AuthController;
@@ -68,45 +68,40 @@ __decorate([
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], AuthController.prototype, "getMe", null);
 __decorate([
     (0, common_1.Post)('google'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [auth_dto_1.GoogleLoginDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "googleLogin", null);
-__decorate([
-    (0, common_1.Post)('facebook'),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "facebookLogin", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)('upgrade-owner'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, auth_dto_1.UpgradeOwnerDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "upgradeOwner", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF),
     (0, common_1.Get)('owner-requests'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getOwnerRequests", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF),
     (0, common_1.Post)('verify-owner/:userId'),
     __param(0, (0, common_1.Param)('userId')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, auth_dto_1.VerifyOwnerDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "verifyOwner", null);
 exports.AuthController = AuthController = __decorate([

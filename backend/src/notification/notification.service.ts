@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
+import {
+  SESClient,
+  SendEmailCommand,
+  SendRawEmailCommand,
+} from '@aws-sdk/client-ses';
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 
 @Injectable()
@@ -11,9 +15,13 @@ export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
 
   constructor(private configService: ConfigService) {
-    this.senderEmail = this.configService.get<string>('AWS_SES_EMAIL_SENDER') || 'noreply@datxe.linuxunity.com';
+    this.senderEmail =
+      this.configService.get<string>('AWS_SES_EMAIL_SENDER') ||
+      'noreply@datxe.linuxunity.com';
     const accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID');
-    const secretAccessKey = this.configService.get<string>('AWS_SECRET_ACCESS_KEY');
+    const secretAccessKey = this.configService.get<string>(
+      'AWS_SECRET_ACCESS_KEY',
+    );
     const region = this.configService.get<string>('AWS_REGION') || 'us-east-1';
 
     if (accessKeyId && secretAccessKey) {
@@ -27,7 +35,9 @@ export class NotificationService {
       });
       this.logger.log('AWS SES & SNS Clients initialized successfully.');
     } else {
-      this.logger.warn('AWS Credentials missing. Notification Service will run in MOCK mode (logging to console).');
+      this.logger.warn(
+        'AWS Credentials missing. Notification Service will run in MOCK mode (logging to console).',
+      );
     }
   }
 
@@ -46,19 +56,27 @@ export class NotificationService {
         await this.sesClient.send(command);
         this.logger.log(`Email successfully sent to ${to}`);
       } catch (error) {
-        this.logger.error(`Error sending email to ${to} via AWS SES`, error);
+        this.logger.error(
+          `Error sending email to ${to} via AWS SES: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     } else {
-      this.logger.log(`[MOCK EMAIL SENT] To: ${to}\nSubject: ${subject}\nBody:\n${body}\n----------------------`);
+      this.logger.log(
+        `[MOCK EMAIL SENT] To: ${to}\nSubject: ${subject}\nBody:\n${body}\n----------------------`,
+      );
     }
   }
 
-  async sendEmailWithAttachment(to: string, subject: string, body: string, attachmentBase64: string, filename: string): Promise<void> {
+  async sendEmailWithAttachment(
+    to: string,
+    subject: string,
+    body: string,
+    attachmentBase64: string,
+    filename: string,
+  ): Promise<void> {
     this.logger.log(`Sending email to ${to} with attachment "${filename}"...`);
     if (this.sesClient) {
       try {
-        const { SendRawEmailCommand } = require('@aws-sdk/client-ses');
-        
         const boundary = `----=_Part_${Date.now()}`;
         const rawMessage = [
           `From: ${this.senderEmail}`,
@@ -80,7 +98,7 @@ export class NotificationService {
           ``,
           attachmentBase64,
           ``,
-          `--${boundary}--`
+          `--${boundary}--`,
         ].join('\r\n');
 
         const command = new SendRawEmailCommand({
@@ -91,10 +109,14 @@ export class NotificationService {
         await this.sesClient.send(command);
         this.logger.log(`Email with attachment successfully sent to ${to}`);
       } catch (error) {
-        this.logger.error(`Error sending email with attachment to ${to} via AWS SES`, error);
+        this.logger.error(
+          `Error sending email with attachment to ${to} via AWS SES: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     } else {
-      this.logger.log(`[MOCK EMAIL SENT WITH ATTACHMENT] To: ${to}\nSubject: ${subject}\nFilename: ${filename}\nBody:\n${body}\n----------------------`);
+      this.logger.log(
+        `[MOCK EMAIL SENT WITH ATTACHMENT] To: ${to}\nSubject: ${subject}\nFilename: ${filename}\nBody:\n${body}\n----------------------`,
+      );
     }
   }
 
@@ -109,10 +131,14 @@ export class NotificationService {
         await this.snsClient.send(command);
         this.logger.log(`SMS successfully sent to ${phoneNumber}`);
       } catch (error) {
-        this.logger.error(`Error sending SMS to ${phoneNumber} via AWS SNS`, error);
+        this.logger.error(
+          `Error sending SMS to ${phoneNumber} via AWS SNS: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     } else {
-      this.logger.log(`[MOCK SMS SENT] To: ${phoneNumber}\nMessage: ${message}\n----------------------`);
+      this.logger.log(
+        `[MOCK SMS SENT] To: ${phoneNumber}\nMessage: ${message}\n----------------------`,
+      );
     }
   }
 }

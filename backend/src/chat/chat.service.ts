@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -6,11 +6,24 @@ export class ChatService {
   constructor(private prisma: PrismaService) {}
 
   async saveMessage(senderId: string, receiverId: string, message: string) {
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage || senderId === receiverId) {
+      throw new BadRequestException('Tin nhắn hoặc người nhận không hợp lệ');
+    }
+
+    const receiver = await this.prisma.user.findUnique({
+      where: { id: receiverId },
+      select: { id: true },
+    });
+    if (!receiver) {
+      throw new BadRequestException('Không tìm thấy người nhận');
+    }
+
     return await this.prisma.chatMessage.create({
       data: {
         senderId,
         receiverId,
-        message,
+        message: trimmedMessage,
       },
       include: {
         sender: {
@@ -47,7 +60,10 @@ export class ChatService {
       select: { sender: { select: { id: true, name: true, email: true } } },
     });
 
-    const partnersMap = new Map<string, any>();
+    const partnersMap = new Map<
+      string,
+      { id: string; name: string; email: string }
+    >();
     sent.forEach((m) => partnersMap.set(m.receiver.id, m.receiver));
     received.forEach((m) => partnersMap.set(m.sender.id, m.sender));
 

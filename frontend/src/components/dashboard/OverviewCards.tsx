@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { FileSpreadsheet, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { FileSpreadsheet } from 'lucide-react';
 
 interface PeriodData {
   totalContract: number;

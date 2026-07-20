@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { CheckCircle2, AlertTriangle, X } from 'lucide-react';
 
 type ToastType = 'success' | 'error' | 'warning';
@@ -28,7 +28,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const addToast = useCallback((type: ToastType, message: string) => {
     const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, type, message }]);
+    setToasts((prev) => [...prev.slice(-3), { id, type, message }]);
 
     // Auto remove after 4 seconds
     setTimeout(() => {
@@ -39,12 +39,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const success = useCallback((message: string) => addToast('success', message), [addToast]);
   const error = useCallback((message: string) => addToast('error', message), [addToast]);
   const warning = useCallback((message: string) => addToast('warning', message), [addToast]);
+  const value = useMemo(() => ({ success, error, warning }), [success, error, warning]);
 
   return (
-    <ToastContext.Provider value={{ success, error, warning }}>
+    <ToastContext.Provider value={value}>
       {children}
       {/* Floating toast stack */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none">
+      <div className="pointer-events-none fixed inset-x-4 bottom-4 z-50 flex flex-col gap-3 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-full sm:max-w-sm" aria-live="polite" aria-atomic="false">
         {toasts.map((t) => (
           <div
             key={t.id}
@@ -63,8 +64,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             <div className="flex-grow text-sm font-medium">{t.message}</div>
             
             <button
+              type="button"
               onClick={() => removeToast(t.id)}
-              className="text-gray-400 hover:text-white transition flex-shrink-0 cursor-pointer"
+              className="-m-2 flex min-h-11 min-w-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-lg text-gray-400 transition hover:bg-white/10 hover:text-white"
+              aria-label="Đóng thông báo"
             >
               <X className="h-4 w-4" />
             </button>

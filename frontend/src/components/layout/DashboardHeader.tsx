@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
-  Menu, Bell, Shield, ShieldAlert, Award, FileClock, Gift, HelpCircle, 
+  Menu, Bell, ShieldAlert, Award, FileClock, Gift, HelpCircle,
   ChevronDown, Landmark, LogOut, Key, User, Lock, Sparkles
 } from 'lucide-react';
 import { useToast } from '@/providers/ToastProvider';
@@ -35,12 +35,12 @@ export default function DashboardHeader({
   const [isBranchOpen, setIsBranchOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(branches[0]);
-  const [userEmail, setUserEmail] = useState('owner@datxe.linuxunity.com');
+  const [userEmail] = useState('owner@datxe.linuxunity.com');
 
   // Badge alert counts
-  const [notifyCount, setNotifyCount] = useState(2);
-  const [violateCount, setViolateCount] = useState(2);
-  const [workingCount, setWorkingCount] = useState(5);
+  const notifyCount = 2;
+  const violateCount = 2;
+  const workingCount = 5;
 
   const branchRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);

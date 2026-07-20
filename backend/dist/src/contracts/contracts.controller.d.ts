@@ -1,8 +1,17 @@
+import { Role } from '@prisma/client';
+import type { Request } from 'express';
 import { ContractsService } from './contracts.service';
+import { SignContractDto } from './dto/contract.dto';
+type AuthenticatedRequest = Request & {
+    user: {
+        id: string;
+        role: Role;
+    };
+};
 export declare class ContractsController {
     private readonly contractsService;
     constructor(contractsService: ContractsService);
-    getContract(bookingId: string): Promise<{
+    getContract(req: AuthenticatedRequest, bookingId: string): Promise<{
         contract: {
             id: string;
             createdAt: Date;
@@ -98,7 +107,7 @@ export declare class ContractsController {
             depositAmount: number | null;
         };
     }>;
-    signContract(bookingId: string, renterSignature: string): Promise<{
+    signContract(bookingId: string, req: AuthenticatedRequest, dto: SignContractDto): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -110,3 +119,4 @@ export declare class ContractsController {
         pdfUrl: string | null;
     }>;
 }
+export {};

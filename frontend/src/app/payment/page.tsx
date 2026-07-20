@@ -1,160 +1,90 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
-import { CheckCircle2, Loader2, CreditCard, ChevronRight, Home } from 'lucide-react';
+import { Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  ArrowUpRight,
+  Banknote,
+  CheckCircle2,
+  CreditCard,
+  Home,
+  Loader2,
+  ShieldCheck,
+} from 'lucide-react';
 
 function PaymentContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-
   const bookingId = searchParams.get('bookingId') || '';
-  const initialPaymentUrl = searchParams.get('paymentUrl') || '';
-  const amountStr = searchParams.get('amount') || '0';
+  const paymentUrl = searchParams.get('paymentUrl') || '';
+  const amount = Number(searchParams.get('amount') || 0);
   const method = searchParams.get('method') || 'BANK_TRANSFER';
 
-  const [paymentUrl, setPaymentUrl] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [statusMsg, setStatusMsg] = useState('');
+  if (!bookingId) {
+    return (
+      <section className="w-full max-w-lg rounded-3xl border border-red-200 bg-white p-8 text-center shadow-xl" role="alert">
+        <h1 className="text-2xl font-bold text-slate-950">Không tìm thấy đơn thanh toán</h1>
+        <p className="mt-3 text-slate-600">Liên kết không hợp lệ hoặc đã thiếu mã đặt xe.</p>
+        <button type="button" onClick={() => router.replace('/booking')} className="mt-6 min-h-11 rounded-xl bg-emerald-600 px-5 font-semibold text-white hover:bg-emerald-700">Quay lại đặt xe</button>
+      </section>
+    );
+  }
 
-  useEffect(() => {
-    if (initialPaymentUrl) {
-      setPaymentUrl(decodeURIComponent(initialPaymentUrl));
-    }
-  }, [initialPaymentUrl]);
-
-  const handleSimulatePayment = async () => {
-    setLoading(true);
-    setStatusMsg('');
-    try {
-      const transactionId = `TX-${Date.now()}`;
-      await api.payments.simulateSuccess(bookingId, transactionId, method);
-      setSuccess(true);
-      setStatusMsg('Thanh toán đặt cọc thành công! Đã tự động kích hoạt trạng thái Đã xác nhận đơn hàng.');
-    } catch (err: any) {
-      setStatusMsg(err.message || 'Lỗi giả lập thanh toán.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getPaymentName = () => {
-    if (method === 'MOMO') return 'Ví MoMo';
-    if (method === 'BANK_TRANSFER') return 'Chuyển khoản VietQR';
-    return 'Tiền mặt tại showroom';
-  };
+  const paymentName = method === 'MOMO' ? 'Ví MoMo' : method === 'CASH' ? 'Tiền mặt khi nhận xe' : 'Chuyển khoản PayOS/VietQR';
+  const needsOnlinePayment = method !== 'CASH';
 
   return (
-    <div className="max-w-md w-full glass-panel border border-white/5 rounded-2xl p-8 flex flex-col gap-6 text-center shadow-xl">
-      {success ? (
-        <>
-          <div className="h-16 w-16 bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center text-green-400 mx-auto animate-bounce">
-            <CheckCircle2 className="h-10 w-10" />
-          </div>
-          <h1 className="text-2xl font-bold text-white">Thanh Toán Thành Công!</h1>
-          <p className="text-sm text-gray-400 leading-relaxed">
-            {statusMsg || 'Cảm ơn bạn! Đơn đặt xe của bạn đã được thanh toán đặt cọc và xác nhận thành công trên hệ thống.'}
-          </p>
-          <div className="flex flex-col gap-3 mt-4">
-            <button
-              onClick={() => router.push('/track')}
-              className="w-full gradient-btn text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2"
-            >
-              <span>Kiểm tra lịch trình đơn</span>
-              <ChevronRight className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => router.push('/')}
-              className="w-full bg-gray-900 hover:bg-gray-800 text-gray-300 py-3 rounded-lg font-semibold border border-white/5 flex items-center justify-center gap-2"
-            >
-              <Home className="h-4 w-4" />
-              <span>Quay về Trang chủ</span>
-            </button>
-          </div>
-        </>
+    <section className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-6 text-slate-900 shadow-xl sm:p-9">
+      <div className="flex items-start gap-4">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+          {method === 'CASH' ? <Banknote className="h-6 w-6" /> : <CreditCard className="h-6 w-6" />}
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-emerald-700">Đơn {bookingId.slice(0, 8).toUpperCase()}</p>
+          <h1 className="mt-1 text-2xl font-bold text-slate-950">Hoàn tất thanh toán</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{paymentName}</p>
+        </div>
+      </div>
+
+      <div className="my-7 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <p className="text-sm text-slate-600">Số tiền cần thanh toán</p>
+        <p className="mt-1 text-3xl font-bold tabular-nums text-slate-950">{amount.toLocaleString('vi-VN')} ₫</p>
+      </div>
+
+      {needsOnlinePayment ? (
+        <div className="space-y-4">
+          <p className="text-sm leading-6 text-slate-600">Giao dịch chỉ được xác nhận sau khi cổng thanh toán gửi webhook hợp lệ về datxe. Không cần gửi ảnh chuyển khoản.</p>
+          {paymentUrl ? (
+            <a href={paymentUrl} target="_blank" rel="noopener noreferrer" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 font-semibold text-white transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
+              Mở cổng thanh toán an toàn <ArrowUpRight className="h-5 w-5" />
+            </a>
+          ) : (
+            <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800" role="alert">Cổng thanh toán chưa trả về liên kết. Vui lòng chọn phương thức khác hoặc liên hệ hỗ trợ.</p>
+          )}
+        </div>
       ) : (
-        <>
-          <div className="flex flex-col gap-2">
-            <span className="text-xs text-emerald-400 uppercase tracking-widest font-bold">Cổng Thanh Toán Hợp Lệ</span>
-            <h1 className="text-xl font-bold text-white">Thanh Toán Tiền Cọc</h1>
-            <p className="text-xs text-gray-400">Đơn hàng: {bookingId.slice(0, 8)}... | Hình thức: {getPaymentName()}</p>
-          </div>
-
-          <div className="bg-gray-950 p-4 rounded-xl border border-white/10 flex flex-col gap-2">
-            <span className="text-xs text-gray-500">Số tiền đặt cọc</span>
-            <span className="text-2xl font-black text-emerald-400">
-              {parseInt(amountStr, 10).toLocaleString()} VND
-            </span>
-          </div>
-
-          {method === 'BANK_TRANSFER' && (
-            <div className="flex flex-col items-center gap-4">
-              <div className="bg-white p-3 rounded-xl inline-block">
-                <img
-                  src={paymentUrl || `https://img.vietqr.io/image/970415-101234567890-compact2.png?amount=${amountStr}&addInfo=datxe_${bookingId.slice(0, 8)}`}
-                  alt="VietQR Payment Code"
-                  className="w-48 h-48 object-contain"
-                />
-              </div>
-              <p className="text-xs text-gray-400 leading-relaxed max-w-[280px]">
-                Vui lòng dùng ứng dụng Ngân hàng (Mobile Banking) quét mã VietQR ở trên để chuyển khoản tự động điền thông tin.
-              </p>
-            </div>
-          )}
-
-          {method === 'MOMO' && (
-            <div className="flex flex-col items-center gap-4 py-4">
-              <div className="h-16 w-16 rounded-xl bg-pink-600 flex items-center justify-center text-white font-extrabold text-3xl">M</div>
-              <p className="text-xs text-gray-400 leading-relaxed max-w-[280px]">
-                Cổng kết nối tự động với ví điện tử MoMo. Ấn nút bên dưới để thanh toán.
-              </p>
-              {paymentUrl && (
-                <a href={paymentUrl} target="_blank" rel="noreferrer"
-                  className="bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 px-6 rounded-lg text-sm transition">
-                  Mở Ví MoMo thanh toán
-                </a>
-              )}
-            </div>
-          )}
-
-          {method === 'CASH' && (
-            <div className="flex flex-col items-center gap-2 py-4">
-              <p className="text-sm text-amber-400">Vui lòng thanh toán trực tiếp tại Showroom khi đến nhận xe.</p>
-              <p className="text-xs text-gray-400">Địa chỉ: Số 12 Khuất Duy Tiến, Thanh Xuân, Hà Nội.</p>
-            </div>
-          )}
-
-          <hr className="border-white/5" />
-
-          <div className="flex flex-col gap-2">
-            <span className="text-[10px] text-gray-500 block">DÀNH CHO KIỂM THỬ (SIMULATION Webhook)</span>
-            <button
-              onClick={handleSimulatePayment}
-              disabled={loading}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer transition"
-            >
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              <span>Giả lập Thanh Toán Thành Công</span>
-            </button>
-          </div>
-        </>
+        <div className="flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
+          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
+          <p className="text-sm leading-6">Đơn đã được ghi nhận. Bạn thanh toán và đối chiếu giấy tờ tại điểm nhận xe.</p>
+        </div>
       )}
-    </div>
+
+      <div className="mt-7 flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row">
+        <button type="button" onClick={() => router.push('/track')} className="min-h-11 flex-1 rounded-xl border border-slate-300 px-4 font-semibold text-slate-700 hover:bg-slate-50">Theo dõi đơn</button>
+        <button type="button" onClick={() => router.push('/')} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 font-semibold text-slate-700 hover:bg-slate-50"><Home className="h-4 w-4" /> Trang chủ</button>
+      </div>
+
+      <p className="mt-5 flex items-center justify-center gap-2 text-center text-xs leading-5 text-slate-500"><ShieldCheck className="h-4 w-4" />Datxe không bao giờ yêu cầu mật khẩu ngân hàng hoặc mã OTP.</p>
+    </section>
   );
 }
 
 export default function PaymentPage() {
   return (
-    <div className="min-h-screen bg-[#080b11] py-16 px-6 flex items-center justify-center">
-      <Suspense fallback={
-        <div className="glass-panel border border-white/5 rounded-2xl p-12 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 text-emerald-400 animate-spin" />
-        </div>
-      }>
+    <main className="flex min-h-dvh items-center justify-center bg-slate-50 px-4 py-12 sm:px-6">
+      <Suspense fallback={<div className="flex min-h-40 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-emerald-600" aria-label="Đang tải" /></div>}>
         <PaymentContent />
       </Suspense>
-    </div>
+    </main>
   );
 }

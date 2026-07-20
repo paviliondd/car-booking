@@ -16,12 +16,22 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { ChatModule } from './chat/chat.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60_000,
+        limit: 120,
+      },
+    ]),
     PrismaModule,
     RedisModule,
     NotificationModule,
@@ -38,6 +48,14 @@ import { DashboardModule } from './dashboard/dashboard.module';
     TicketsModule,
     ChatModule,
     DashboardModule,
+  ],
+  controllers: [AppController],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

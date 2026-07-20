@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ContractsService = void 0;
 const common_1 = require("@nestjs/common");
+const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../prisma/prisma.service");
 const notification_service_1 = require("../notification/notification.service");
 let ContractsService = class ContractsService {
@@ -50,7 +51,15 @@ Bên A đồng ý cho Bên B thuê xe tự lái với các thông tin sau:
 - Trả xe đúng thời hạn quy định trong đơn đặt lịch.
     `.trim();
     }
-    async getOrCreateContract(bookingId) {
+    assertCanReadContract(booking, actor) {
+        const privileged = actor.role === client_1.Role.ADMIN || actor.role === client_1.Role.STAFF;
+        const isRenter = booking.customer.userId === actor.id;
+        const isOwner = booking.vehicle.ownerId === actor.id;
+        if (!privileged && !isRenter && !isOwner) {
+            throw new common_1.ForbiddenException('Bạn không có quyền truy cập hợp đồng này');
+        }
+    }
+    async getOrCreateContract(bookingId, actor) {
         const booking = await this.prisma.booking.findUnique({
             where: { id: bookingId },
             include: {
@@ -65,6 +74,7 @@ Bên A đồng ý cho Bên B thuê xe tự lái với các thông tin sau:
         if (!booking) {
             throw new common_1.NotFoundException(`Không tìm thấy đơn đặt xe với ID ${bookingId}`);
         }
+        this.assertCanReadContract(booking, actor);
         let contract = await this.prisma.contract.findUnique({
             where: { bookingId },
         });
@@ -83,8 +93,11 @@ Bên A đồng ý cho Bên B thuê xe tự lái với các thông tin sau:
             booking,
         };
     }
-    async signContract(bookingId, renterSignature) {
-        const { contract, booking } = await this.getOrCreateContract(bookingId);
+    async signContract(bookingId, renterSignature, actor) {
+        const { contract, booking } = await this.getOrCreateContract(bookingId, actor);
+        if (booking.customer.userId !== actor.id) {
+            throw new common_1.ForbiddenException('Chỉ người thuê xe mới có thể ký hợp đồng');
+        }
         if (contract.renterSignature) {
             throw new common_1.BadRequestException('Hợp đồng này đã được ký trước đó.');
         }
@@ -99,7 +112,6 @@ Bên A đồng ý cho Bên B thuê xe tự lái với các thông tin sau:
             where: { id: bookingId },
             data: { status: 'CONFIRMED' },
         });
-        const customerEmail = booking.customer.fullName;
         const user = await this.prisma.user.findFirst({
             where: { customer: { id: booking.customerId } },
         });

@@ -16,13 +16,14 @@ exports.ReviewsController = void 0;
 const common_1 = require("@nestjs/common");
 const reviews_service_1 = require("./reviews.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const review_dto_1 = require("./dto/review.dto");
 let ReviewsController = class ReviewsController {
     reviewsService;
     constructor(reviewsService) {
         this.reviewsService = reviewsService;
     }
-    async create(req, vehicleId, rating, comment) {
-        return await this.reviewsService.create(req.user.id, vehicleId, rating, comment);
+    async create(req, dto) {
+        return await this.reviewsService.create(req.user.id, dto.vehicleId, dto.rating, dto.comment || '');
     }
     async findByVehicle(vehicleId) {
         return await this.reviewsService.findByVehicle(vehicleId);
@@ -33,11 +34,9 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)(),
     __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Body)('vehicleId')),
-    __param(2, (0, common_1.Body)('rating')),
-    __param(3, (0, common_1.Body)('comment')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, Number, String]),
+    __metadata("design:paramtypes", [Object, review_dto_1.CreateReviewDto]),
     __metadata("design:returntype", Promise)
 ], ReviewsController.prototype, "create", null);
 __decorate([

@@ -2,12 +2,17 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') || 5000;
+
+  app.set('trust proxy', 1);
+  app.use(helmet());
 
   // Cấu hình Global Validation
   app.useGlobalPipes(
@@ -18,9 +23,26 @@ async function bootstrap() {
     }),
   );
 
-  // Kích hoạt CORS cho phép Frontend truy cập
+  const configuredOrigins = configService
+    .get<string>(
+      'CORS_ORIGINS',
+      'http://localhost:3000,https://datxe.linuxunity.com',
+    )
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: '*', // Trong môi trường thực tế nên giới hạn domain như datxe.linuxunity.com
+    origin: (
+      origin: string | undefined,
+      callback: (error: Error | null, allow?: boolean) => void,
+    ) => {
+      if (!origin || configuredOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error('Origin không được CORS cho phép'), false);
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
@@ -28,7 +50,7 @@ async function bootstrap() {
   // Đặt tiền tố API toàn cục
   app.setGlobalPrefix('api');
 
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   console.log(`Application is running on: http://localhost:${port}/api`);
 }
-bootstrap();
+void bootstrap();

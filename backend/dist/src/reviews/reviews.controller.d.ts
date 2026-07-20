@@ -1,8 +1,10 @@
 import { ReviewsService } from './reviews.service';
+import type { AuthenticatedRequest } from '../auth/types/authenticated-user';
+import { CreateReviewDto } from './dto/review.dto';
 export declare class ReviewsController {
     private readonly reviewsService;
     constructor(reviewsService: ReviewsService);
-    create(req: any, vehicleId: string, rating: number, comment: string): Promise<{
+    create(req: AuthenticatedRequest, dto: CreateReviewDto): Promise<{
         customer: {
             id: string;
             phone: string;

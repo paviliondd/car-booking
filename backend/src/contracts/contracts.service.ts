@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 
@@ -9,7 +15,14 @@ export class ContractsService {
     private notificationService: NotificationService,
   ) {}
 
-  private getContractTemplate(bookingNumber: string, renterName: string, ownerName: string, vehicleBrand: string, vehiclePlate: string, totalPrice: number): string {
+  private getContractTemplate(
+    bookingNumber: string,
+    renterName: string,
+    ownerName: string,
+    vehicleBrand: string,
+    vehiclePlate: string,
+    totalPrice: number,
+  ): string {
     return `
 CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
 Độc lập - Tự do - Hạnh phúc
@@ -40,7 +53,26 @@ Bên A đồng ý cho Bên B thuê xe tự lái với các thông tin sau:
     `.trim();
   }
 
-  async getOrCreateContract(bookingId: string) {
+  private assertCanReadContract(
+    booking: {
+      customer: { userId: string | null };
+      vehicle: { ownerId: string | null };
+    },
+    actor: { id: string; role: Role },
+  ) {
+    const privileged = actor.role === Role.ADMIN || actor.role === Role.STAFF;
+    const isRenter = booking.customer.userId === actor.id;
+    const isOwner = booking.vehicle.ownerId === actor.id;
+
+    if (!privileged && !isRenter && !isOwner) {
+      throw new ForbiddenException('Bạn không có quyền truy cập hợp đồng này');
+    }
+  }
+
+  async getOrCreateContract(
+    bookingId: string,
+    actor: { id: string; role: Role },
+  ) {
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
       include: {
@@ -54,8 +86,12 @@ Bên A đồng ý cho Bên B thuê xe tự lái với các thông tin sau:
     });
 
     if (!booking) {
-      throw new NotFoundException(`Không tìm thấy đơn đặt xe với ID ${bookingId}`);
+      throw new NotFoundException(
+        `Không tìm thấy đơn đặt xe với ID ${bookingId}`,
+      );
     }
+
+    this.assertCanReadContract(booking, actor);
 
     let contract = await this.prisma.contract.findUnique({
       where: { bookingId },
@@ -86,8 +122,19 @@ Bên A đồng ý cho Bên B thuê xe tự lái với các thông tin sau:
     };
   }
 
-  async signContract(bookingId: string, renterSignature: string) {
-    const { contract, booking } = await this.getOrCreateContract(bookingId);
+  async signContract(
+    bookingId: string,
+    renterSignature: string,
+    actor: { id: string; role: Role },
+  ) {
+    const { contract, booking } = await this.getOrCreateContract(
+      bookingId,
+      actor,
+    );
+
+    if (booking.customer.userId !== actor.id) {
+      throw new ForbiddenException('Chỉ người thuê xe mới có thể ký hợp đồng');
+    }
 
     if (contract.renterSignature) {
       throw new BadRequestException('Hợp đồng này đã được ký trước đó.');
@@ -108,7 +155,6 @@ Bên A đồng ý cho Bên B thuê xe tự lái với các thông tin sau:
     });
 
     // Gửi email đính kèm tệp PDF hợp đồng
-    const customerEmail = booking.customer.fullName; // Giả lập Email từ customer profile
     const user = await this.prisma.user.findFirst({
       where: { customer: { id: booking.customerId } },
     });
@@ -124,7 +170,8 @@ Bên A đồng ý cho Bên B thuê xe tự lái với các thông tin sau:
     `;
 
     // Một tệp PDF mock base64 đơn giản để gửi đi
-    const mockPdfBase64 = 'JVBERi0xLjQKJdPr6eEKMSAwIG9iago8PAovVGl0bGUgKEhvcCBkb25nIERBVFhFKQovQXV0aG9yIChEQVRYRSkKPj4KZW5kb2JqCnhyZWYKMCAxCjAwMDAwMDAwMDAgNjU1MzUgZiAKdHJhaWxlcgo8PAovU2l6ZSAyCj4+CnN0YXJ0eHJlZgoxMTYKJSVFT0Y=';
+    const mockPdfBase64 =
+      'JVBERi0xLjQKJdPr6eEKMSAwIG9iago8PAovVGl0bGUgKEhvcCBkb25nIERBVFhFKQovQXV0aG9yIChEQVRYRSkKPj4KZW5kb2JqCnhyZWYKMCAxCjAwMDAwMDAwMDAgNjU1MzUgZiAKdHJhaWxlcgo8PAovU2l6ZSAyCj4+CnN0YXJ0eHJlZgoxMTYKJSVFT0Y=';
 
     await this.notificationService.sendEmailWithAttachment(
       targetEmail,

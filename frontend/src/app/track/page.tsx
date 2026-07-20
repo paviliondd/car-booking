@@ -2,14 +2,15 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
-import { Search, Loader2, Calendar, CreditCard, Car, ChevronLeft, MapPin } from 'lucide-react';
+import Image from 'next/image';
+import { api, type Booking } from '@/lib/api';
+import { Search, Loader2, Calendar, Car, ChevronLeft, MapPin } from 'lucide-react';
 
 export default function TrackPage() {
   const router = useRouter();
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [searched, setSearched] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -21,8 +22,8 @@ export default function TrackPage() {
       const results = await api.bookings.track(phone);
       setBookings(results);
       setSearched(true);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Lỗi tra cứu đơn hàng.');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Lỗi tra cứu đơn hàng.');
     } finally {
       setLoading(false);
     }
@@ -114,14 +115,14 @@ export default function TrackPage() {
         {searched && bookings.length > 0 && bookings.map((b) => (
           <div key={b.id} className="glass-panel rounded-xl overflow-hidden border border-white/5 flex flex-col md:flex-row gap-6 p-6">
             <div className="md:w-1/3 relative h-[140px] rounded-lg overflow-hidden border border-white/10">
-              <img src={b.vehicle.images[0]} alt={b.vehicle.model} className="object-cover w-full h-full" />
+              <Image src={b.vehicle!.images[0]} alt={b.vehicle!.model} fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover" />
             </div>
             
             <div className="md:w-2/3 flex flex-col gap-4 justify-between">
               <div className="flex justify-between items-start gap-4">
                 <div>
-                  <span className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">{b.vehicle.brand}</span>
-                  <h3 className="text-lg font-bold text-white mt-0.5">{b.vehicle.model} <span className="text-xs text-gray-500 font-normal">({b.vehicle.plateNumber})</span></h3>
+                  <span className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">{b.vehicle!.brand}</span>
+                  <h3 className="text-lg font-bold text-white mt-0.5">{b.vehicle!.model} <span className="text-xs text-gray-500 font-normal">({b.vehicle!.plateNumber})</span></h3>
                   <span className="text-[11px] text-gray-400 block mt-1">Mã đơn: <strong className="text-emerald-400">{b.bookingNumber}</strong></span>
                 </div>
                 <div className="flex flex-col items-end gap-1.5">
@@ -135,14 +136,14 @@ export default function TrackPage() {
                   <Calendar className="h-4 w-4 text-emerald-400 flex-shrink-0" />
                   <div>
                     <span className="block text-[10px] text-gray-500">Nhận xe</span>
-                    <strong>{new Date(b.startDate).toLocaleString('vi-VN')}</strong>
+                    <strong>{new Date(b.startDate!).toLocaleString('vi-VN')}</strong>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-emerald-400 flex-shrink-0" />
                   <div>
                     <span className="block text-[10px] text-gray-500">Trả xe</span>
-                    <strong>{new Date(b.endDate).toLocaleString('vi-VN')}</strong>
+                    <strong>{new Date(b.endDate!).toLocaleString('vi-VN')}</strong>
                   </div>
                 </div>
               </div>

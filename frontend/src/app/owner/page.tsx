@@ -1,18 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
+import Image from 'next/image';
+import { api, type AuthUser, type Booking, type ChatMessage, type ChatPartner, type Vehicle } from '@/lib/api';
+import { io, type Socket } from 'socket.io-client';
 import { 
-  Car, User, Phone, MapPin, DollarSign, Calendar, MessageSquare, 
-  ChevronRight, ArrowUpRight, Check, X, ShieldAlert, Award, FileText, 
+  Car, Phone, MapPin, DollarSign, Calendar, MessageSquare,
+  Check,
   Activity, Loader2, Plus, LogOut, Send, AlertCircle
 } from 'lucide-react';
 
 export default function OwnerDashboard() {
   const router = useRouter();
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<any | null>(null);
+  const [token, setToken] = useState<string | null>(() =>
+    typeof window === 'undefined' ? null : localStorage.getItem('token'),
+  );
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Upgrade form states
@@ -27,79 +31,67 @@ export default function OwnerDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'vehicles' | 'requests' | 'chat'>('overview');
 
   // Owner Data States
-  const [myCars, setMyCars] = useState<any[]>([]);
-  const [bookingRequests, setBookingRequests] = useState<any[]>([]);
+  const [myCars, setMyCars] = useState<Vehicle[]>([]);
+  const [bookingRequests, setBookingRequests] = useState<Booking[]>([]);
   const [earnings, setEarnings] = useState(0);
   const [completedTrips, setCompletedTrips] = useState(0);
 
   // Chat States
-  const [chatPartners, setChatPartners] = useState<any[]>([]);
-  const [selectedPartner, setSelectedPartner] = useState<any | null>(null);
-  const [chatHistory, setChatHistory] = useState<any[]>([]);
+  const [chatPartners, setChatPartners] = useState<ChatPartner[]>([]);
+  const [selectedPartner, setSelectedPartner] = useState<ChatPartner | null>(null);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [ws, setWs] = useState<WebSocket | null>(null);
+  const wsRef = useRef<Socket | null>(null);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedToken = localStorage.getItem('token');
-      if (storedToken) {
-        setToken(storedToken);
-        fetchMe();
-      } else {
-        setLoading(false);
-      }
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setToken(null);
+    setUser(null);
+    router.replace('/auth');
+  }, [router]);
+
+  const loadOwnerData = useCallback(async () => {
+    try {
+      const [cars, requests, partners] = await Promise.all([
+        api.vehicles.getMyCars(),
+        api.bookings.getOwnerRequests(),
+        api.chat.getPartners(),
+      ]);
+      setMyCars(cars);
+      setBookingRequests(requests);
+      setChatPartners(partners);
+
+      const completed = requests.filter((request) => request.status === 'COMPLETED');
+      setEarnings(completed.reduce((total, request) => total + request.totalPrice, 0));
+      setCompletedTrips(completed.length);
+    } catch (err) {
+      console.error('Lỗi nạp dữ liệu chủ xe', err);
     }
   }, []);
 
-  const fetchMe = async () => {
+  const fetchMe = useCallback(async () => {
     try {
       const me = await api.auth.me();
       setUser(me);
-      if (me.role === 'OWNER' && me.isVerifiedOwner) {
-        await loadOwnerData();
-      }
+      localStorage.setItem('user', JSON.stringify(me));
+      if (me.role === 'OWNER' && me.isVerifiedOwner) await loadOwnerData();
     } catch (err) {
       console.error(err);
       handleLogout();
     } finally {
       setLoading(false);
     }
-  };
+  }, [handleLogout, loadOwnerData]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-    router.push('/auth');
-  };
-
-  const loadOwnerData = async () => {
-    try {
-      const cars = await api.vehicles.getMyCars();
-      setMyCars(cars);
-
-      const requests = await api.bookings.getOwnerRequests();
-      setBookingRequests(requests);
-
-      // Tính toán doanh thu & số chuyến đi đã hoàn thành
-      let totalEarnings = 0;
-      let tripsCount = 0;
-      requests.forEach((req: any) => {
-        if (req.status === 'COMPLETED') {
-          totalEarnings += req.totalPrice;
-          tripsCount++;
-        }
-      });
-      setEarnings(totalEarnings);
-      setCompletedTrips(tripsCount);
-
-      // Load chat partners
-      const partners = await api.chat.getPartners();
-      setChatPartners(partners);
-    } catch (err) {
-      console.error('Lỗi nạp dữ liệu chủ xe', err);
+  useEffect(() => {
+    if (!token) {
+      router.replace('/auth');
+      return;
     }
-  };
+    const authTimer = window.setTimeout(() => void fetchMe(), 0);
+    return () => window.clearTimeout(authTimer);
+  }, [fetchMe, router, token]);
 
   // Nâng cấp lên chủ xe
   const handleUpgrade = async (e: React.FormEvent) => {
@@ -116,8 +108,8 @@ export default function OwnerDashboard() {
       setTimeout(() => {
         fetchMe();
       }, 3000);
-    } catch (err: any) {
-      setUpgradeError(err.message || 'Lỗi nâng cấp tài khoản.');
+    } catch (err: unknown) {
+      setUpgradeError(err instanceof Error ? err.message : 'Lỗi nâng cấp tài khoản.');
     } finally {
       setUpgradeLoading(false);
     }
@@ -128,8 +120,8 @@ export default function OwnerDashboard() {
     try {
       await api.bookings.updateStatus(bookingId, status);
       await loadOwnerData();
-    } catch (err: any) {
-      alert(err.message || 'Lỗi cập nhật trạng thái đơn đặt.');
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Lỗi cập nhật trạng thái đơn đặt.');
     }
   };
 
@@ -139,65 +131,62 @@ export default function OwnerDashboard() {
       const newStatus = currentStatus === 'AVAILABLE' ? 'MAINTENANCE' : 'AVAILABLE';
       await api.vehicles.updateStatus(carId, newStatus);
       await loadOwnerData();
-    } catch (err: any) {
-      alert(err.message || 'Lỗi cập nhật trạng thái xe.');
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Lỗi cập nhật trạng thái xe.');
     }
   };
 
   // Chat Real-time (Sử dụng WebSockets Gateway backend)
   useEffect(() => {
-    if (selectedPartner) {
+    if (selectedPartner && user) {
+      const currentUserId = user.id;
+      const partnerId = selectedPartner.id;
       // Load lịch sử chat
-      api.chat.getHistory(selectedPartner.id).then((history) => {
+      api.chat.getHistory(partnerId).then((history) => {
         setChatHistory(history);
       });
 
       // Kết nối WebSocket trực tiếp tới backend Gateway
-      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:5000';
-      const socket = new WebSocket(wsUrl);
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:5000';
+      const socket = io(wsUrl, {
+        auth: { token: localStorage.getItem('token') },
+        transports: ['websocket', 'polling'],
+      });
 
-      socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
+      socket.on('messageReceived', (data: ChatMessage) => {
         if (
-          (data.senderId === user.id && data.receiverId === selectedPartner.id) ||
-          (data.senderId === selectedPartner.id && data.receiverId === user.id)
+          (data.senderId === currentUserId && data.receiverId === partnerId) ||
+          (data.senderId === partnerId && data.receiverId === currentUserId)
         ) {
           setChatHistory((prev) => [...prev, data]);
         }
-      };
+      });
 
-      setWs(socket);
+      wsRef.current = socket;
 
       return () => {
-        socket.close();
+        socket.disconnect();
+        wsRef.current = null;
       };
     }
-  }, [selectedPartner]);
+  }, [selectedPartner, user]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedPartner || !user) return;
 
     const payload = {
-      senderId: user.id,
       receiverId: selectedPartner.id,
       message: newMessage,
     };
 
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ event: 'sendMessage', data: payload }));
+    if (wsRef.current?.connected) {
+      wsRef.current.emit('sendMessage', payload);
     } else {
       // Dự phòng bằng REST API hoặc tự đẩy vào state để giả lập phản hồi nhanh
       // (Nhưng backend Gateway đã có WS socket.io)
       try {
-        const saved = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/chat/message`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify(payload)
-        }).then(r => r.json());
+        const saved = await api.chat.sendMessage(payload.receiverId, payload.message);
         setChatHistory((prev) => [...prev, saved]);
       } catch (err) {
         console.error(err);
@@ -215,8 +204,11 @@ export default function OwnerDashboard() {
   }
 
   if (!token) {
-    router.push('/auth');
-    return null;
+    return (
+      <main className="flex min-h-dvh items-center justify-center bg-slate-950 text-slate-300">
+        Đang chuyển đến trang đăng nhập…
+      </main>
+    );
   }
 
   // TRƯỜNG HỢP: LÀ CUSTOMER VÀ CHƯA ĐƯỢC PHÊ DUYỆT CHỦ XE
@@ -425,12 +417,12 @@ export default function OwnerDashboard() {
                 <p className="text-sm text-gray-400 text-center py-4">Chưa có yêu cầu mới nào.</p>
               ) : (
                 <div className="space-y-4">
-                  {bookingRequests.filter(r => r.status === 'PENDING').map((r: any) => (
+                  {bookingRequests.filter(r => r.status === 'PENDING').map((r) => (
                     <div key={r.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-lg bg-white/2 border border-white/5 gap-4">
                       <div>
-                        <strong className="text-white block">{r.vehicle.brand} {r.vehicle.model}</strong>
-                        <span className="text-xs text-gray-400">Khách hàng: {r.customer.fullName} ({r.customer.phone})</span>
-                        <span className="block text-xs text-gray-500 mt-1">Lịch thuê: {new Date(r.startDate).toLocaleDateString()} - {new Date(r.endDate).toLocaleDateString()}</span>
+                        <strong className="text-white block">{r.vehicle!.brand} {r.vehicle!.model}</strong>
+                        <span className="text-xs text-gray-400">Khách hàng: {r.customer!.fullName} ({r.customer!.phone})</span>
+                        <span className="block text-xs text-gray-500 mt-1">Lịch thuê: {new Date(r.startDate!).toLocaleDateString()} - {new Date(r.endDate!).toLocaleDateString()}</span>
                       </div>
                       <div className="flex gap-2 w-full sm:w-auto">
                         <button 
@@ -472,7 +464,7 @@ export default function OwnerDashboard() {
               {myCars.map((car) => (
                 <div key={car.id} className="glass-panel rounded-xl overflow-hidden border border-white/5 flex flex-col group">
                   <div className="relative h-[180px]">
-                    <img src={car.images[0]} alt={car.model} className="object-cover w-full h-full" />
+                    <Image src={car.images[0]} alt={car.model} fill sizes="(min-width: 1024px) 33vw, 50vw" className="object-cover" />
                     <span className={`absolute top-4 right-4 text-xs font-semibold px-2 py-0.5 rounded border ${
                       car.status === 'AVAILABLE' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                     }`}>
@@ -546,13 +538,13 @@ export default function OwnerDashboard() {
                   {bookingRequests.map((b) => (
                     <tr key={b.id} className="hover:bg-white/1">
                       <td className="px-6 py-4"><strong className="text-white">{b.bookingNumber}</strong></td>
-                      <td className="px-6 py-4">{b.vehicle.brand} {b.vehicle.model}</td>
+                      <td className="px-6 py-4">{b.vehicle!.brand} {b.vehicle!.model}</td>
                       <td className="px-6 py-4">
-                        <span className="block text-white font-medium">{b.customer.fullName}</span>
-                        <span className="text-xs text-gray-500">{b.customer.phone}</span>
+                        <span className="block text-white font-medium">{b.customer!.fullName}</span>
+                        <span className="text-xs text-gray-500">{b.customer!.phone}</span>
                       </td>
                       <td className="px-6 py-4 text-xs">
-                        {new Date(b.startDate).toLocaleDateString()} - {new Date(b.endDate).toLocaleDateString()}
+                        {new Date(b.startDate!).toLocaleDateString()} - {new Date(b.endDate!).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 font-semibold text-green-400">{(b.totalPrice).toLocaleString()}đ</td>
                       <td className="px-6 py-4">

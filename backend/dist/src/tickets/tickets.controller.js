@@ -16,19 +16,20 @@ exports.TicketsController = void 0;
 const common_1 = require("@nestjs/common");
 const tickets_service_1 = require("./tickets.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const ticket_dto_1 = require("./dto/ticket.dto");
 let TicketsController = class TicketsController {
     ticketsService;
     constructor(ticketsService) {
         this.ticketsService = ticketsService;
     }
-    async create(req, subject, message) {
-        return await this.ticketsService.create(req.user.id, subject, message);
+    async create(req, dto) {
+        return await this.ticketsService.create(req.user.id, dto.subject, dto.message);
     }
     async findAll(req) {
         return await this.ticketsService.findAll(req.user);
     }
-    async reply(id, reply, req) {
-        return await this.ticketsService.reply(id, reply, req.user);
+    async reply(id, dto, req) {
+        return await this.ticketsService.reply(id, dto.reply, req.user);
     }
 };
 exports.TicketsController = TicketsController;
@@ -36,10 +37,9 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)(),
     __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Body)('subject')),
-    __param(2, (0, common_1.Body)('message')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:paramtypes", [Object, ticket_dto_1.CreateTicketDto]),
     __metadata("design:returntype", Promise)
 ], TicketsController.prototype, "create", null);
 __decorate([
@@ -54,10 +54,10 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Put)(':id/reply'),
     __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)('reply')),
+    __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:paramtypes", [String, ticket_dto_1.ReplyTicketDto, Object]),
     __metadata("design:returntype", Promise)
 ], TicketsController.prototype, "reply", null);
 exports.TicketsController = TicketsController = __decorate([

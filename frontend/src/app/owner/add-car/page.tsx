@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { api } from '@/lib/api';
-import { Car, ChevronLeft, Upload, CheckCircle2, Loader2, DollarSign, MapPin, Sliders, X } from 'lucide-react';
+import { Car, ChevronLeft, Upload, Loader2, DollarSign, MapPin, Sliders, X } from 'lucide-react';
 
 export default function AddCarPage() {
   const router = useRouter();
+  const [authorized, setAuthorized] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -37,6 +39,22 @@ export default function AddCarPage() {
     'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80'
   ]);
   const [newImageUrl, setNewImageUrl] = useState('');
+
+  useEffect(() => {
+    const verifyOwner = async () => {
+      try {
+        const me = await api.auth.me();
+        if (me.role !== 'OWNER' || !me.isVerifiedOwner) {
+          router.replace('/owner');
+          return;
+        }
+        setAuthorized(true);
+      } catch {
+        router.replace('/auth');
+      }
+    };
+    void verifyOwner();
+  }, [router]);
 
   const handleAddImage = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -79,12 +97,20 @@ export default function AddCarPage() {
 
       await api.vehicles.create(payload);
       router.push('/owner');
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Lỗi thêm xe mới. Hãy kiểm tra lại biển số hoặc dữ liệu nhập.');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Lỗi thêm xe mới. Hãy kiểm tra lại biển số hoặc dữ liệu nhập.');
     } finally {
       setLoading(false);
     }
   };
+
+  if (!authorized) {
+    return (
+      <main className="flex min-h-dvh items-center justify-center bg-slate-950">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" aria-label="Đang xác thực quyền chủ xe" />
+      </main>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#080b11] py-12 px-6 md:px-12 max-w-4xl mx-auto flex flex-col gap-8">
@@ -264,7 +290,7 @@ export default function AddCarPage() {
           <div className="grid grid-cols-4 gap-4 mt-2">
             {images.map((img, i) => (
               <div key={i} className="relative h-20 border border-white/10 rounded-lg overflow-hidden group">
-                <img src={img} alt="Vehicle Thumbnail" className="w-full h-full object-cover" />
+                <Image unoptimized fill sizes="180px" src={img} alt={`Ảnh xe ${i + 1}`} className="object-cover" />
                 <button 
                   type="button" 
                   onClick={() => handleRemoveImage(i)}

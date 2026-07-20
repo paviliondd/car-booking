@@ -1,11 +1,30 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { PaymentsService } from '../payments/payments.service';
 import { NotificationService } from '../notification/notification.service';
 import { CreateBookingDto } from './dto/booking.dto';
-import { Booking, BookingStatus, PaymentStatus, Role } from '@prisma/client';
+import {
+  BookingStatus,
+  PaymentStatus,
+  Prisma,
+  VehicleStatus,
+} from '@prisma/client';
+import { AuthenticatedUser } from '../auth/types/authenticated-user';
+
+type BookingDetails = Prisma.BookingGetPayload<{
+  include: {
+    customer: { include: { user: true } };
+    vehicle: true;
+    payment: true;
+  };
+}>;
 
 @Injectable()
 export class BookingsService {
@@ -19,14 +38,16 @@ export class BookingsService {
     private notificationService: NotificationService,
   ) {}
 
-  async createBooking(dto: CreateBookingDto): Promise<any> {
+  async createBooking(dto: CreateBookingDto) {
     const lockKey = `vehicle:${dto.vehicleId}`;
     this.logger.log(`Acquiring lock for ${lockKey}`);
-    
+
     // 1. Acquire Distributed Lock (Redis) - Hạn chế race condition trùng lịch
     const locked = await this.redisService.acquireLock(lockKey, 5000);
     if (!locked) {
-      throw new BadRequestException('Hệ thống đang xử lý yêu cầu đặt xe này. Vui lòng quay lại sau vài giây!');
+      throw new BadRequestException(
+        'Hệ thống đang xử lý yêu cầu đặt xe này. Vui lòng quay lại sau vài giây!',
+      );
     }
 
     try {
@@ -41,7 +62,9 @@ export class BookingsService {
         throw new NotFoundException('Không tìm thấy xe yêu cầu');
       }
       if (vehicle.status === 'LOCKED' || vehicle.status === 'MAINTENANCE') {
-        throw new BadRequestException('Xe hiện tại không sẵn sàng để cho thuê (đang khóa hoặc bảo dưỡng)');
+        throw new BadRequestException(
+          'Xe hiện tại không sẵn sàng để cho thuê (đang khóa hoặc bảo dưỡng)',
+        );
       }
 
       // 3. Double-check conflict in Database
@@ -50,16 +73,15 @@ export class BookingsService {
           vehicleId: dto.vehicleId,
           status: { in: ['CONFIRMED', 'RENTING', 'PENDING'] },
           NOT: {
-            OR: [
-              { endDate: { lte: start } },
-              { startDate: { gte: end } },
-            ],
+            OR: [{ endDate: { lte: start } }, { startDate: { gte: end } }],
           },
         },
       });
 
       if (conflict) {
-        throw new BadRequestException('Xe đã bị đặt hoặc đang trong chuyến đi khác vào thời gian này. Vui lòng chọn xe khác!');
+        throw new BadRequestException(
+          'Xe đã bị đặt hoặc đang trong chuyến đi khác vào thời gian này. Vui lòng chọn xe khác!',
+        );
       }
 
       // 4. Find or Create Customer Profile (CRM & Segmentation)
@@ -79,7 +101,9 @@ export class BookingsService {
         });
       } else {
         if (customer.segment === 'BLACKLIST') {
-          throw new BadRequestException('Tài khoản của bạn nằm trong danh sách đen (Blacklist). Vui lòng liên hệ Hotline.');
+          throw new BadRequestException(
+            'Tài khoản của bạn nằm trong danh sách đen (Blacklist). Vui lòng liên hệ Hotline.',
+          );
         }
         // Cập nhật thông tin mới nhất
         customer = await this.prisma.customer.update({
@@ -92,7 +116,11 @@ export class BookingsService {
       }
 
       // 5. Calculate Base Price via Dynamic Pricing Module
-      const pricing = this.vehiclesService.calculateTotalPrice(vehicle, start, end);
+      const pricing = this.vehiclesService.calculateTotalPrice(
+        vehicle,
+        start,
+        end,
+      );
       let totalPrice = pricing.totalPrice;
       let discountAmount = 0;
 
@@ -104,7 +132,11 @@ export class BookingsService {
 
         if (coupon) {
           const now = new Date();
-          if (now >= coupon.startDate && now <= coupon.endDate && coupon.usedCount < coupon.usageLimit) {
+          if (
+            now >= coupon.startDate &&
+            now <= coupon.endDate &&
+            coupon.usedCount < coupon.usageLimit
+          ) {
             if (pricing.totalPrice >= coupon.minOrderValue) {
               if (coupon.discountType === 'PERCENTAGE') {
                 discountAmount = (pricing.totalPrice * coupon.value) / 100;
@@ -116,7 +148,7 @@ export class BookingsService {
               }
 
               totalPrice = Math.max(0, pricing.totalPrice - discountAmount);
-              
+
               // Cập nhật số lần dùng coupon
               await this.prisma.coupon.update({
                 where: { code: dto.couponCode },
@@ -128,13 +160,11 @@ export class BookingsService {
       }
 
       // 7. Affiliate (Cộng tác viên)
-      let affiliateId = null;
       if (dto.affiliateCode) {
         const affiliate = await this.prisma.affiliate.findUnique({
           where: { code: dto.affiliateCode },
         });
         if (affiliate) {
-          affiliateId = affiliate.id;
           // Cập nhật referrer của customer
           await this.prisma.customer.update({
             where: { id: customer.id },
@@ -196,8 +226,12 @@ export class BookingsService {
       });
 
       // 10. Generate Gateway Payment Link (MoMo / PayOS / VietQR)
-      const payGateway = await this.paymentsService.createPaymentUrl(result.booking.id, totalPrice, dto.paymentMethod);
-      
+      const payGateway = await this.paymentsService.createPaymentUrl(
+        result.booking.id,
+        result.payment.amount,
+        dto.paymentMethod,
+      );
+
       // Cập nhật mã giao dịch trong payment
       await this.prisma.payment.update({
         where: { bookingId: result.booking.id },
@@ -214,7 +248,11 @@ export class BookingsService {
         <p>Tổng tiền thanh toán: ${totalPrice.toLocaleString()} VND</p>
         <p>Vui lòng click vào link sau để tiến hành đặt cọc/thanh toán: <a href="${payGateway.paymentUrl}">Thanh toán ngay</a></p>
       `;
-      await this.notificationService.sendEmail(dto.email, `[datxe] Xác nhận đặt xe ${bookingNumber}`, emailContent);
+      await this.notificationService.sendEmail(
+        dto.email,
+        `[datxe] Xác nhận đặt xe ${bookingNumber}`,
+        emailContent,
+      );
 
       const smsContent = `datxe: Dat xe ${bookingNumber} thanh cong cho xe ${vehicle.brand}. Vui long thanh toan: ${payGateway.paymentUrl}`;
       await this.notificationService.sendSMS(dto.phone, smsContent);
@@ -224,7 +262,6 @@ export class BookingsService {
         paymentUrl: payGateway.paymentUrl,
         transactionId: payGateway.transactionId,
       };
-
     } finally {
       // 12. Release Lock
       this.logger.log(`Releasing lock for ${lockKey}`);
@@ -232,7 +269,7 @@ export class BookingsService {
     }
   }
 
-  async trackBookings(phone: string): Promise<any[]> {
+  async trackBookings(phone: string) {
     const customer = await this.prisma.customer.findUnique({
       where: { phone },
     });
@@ -250,7 +287,7 @@ export class BookingsService {
     });
   }
 
-  async findAll(): Promise<Booking[]> {
+  async findAll() {
     return await this.prisma.booking.findMany({
       include: {
         customer: true,
@@ -261,11 +298,11 @@ export class BookingsService {
     });
   }
 
-  async findOne(id: string): Promise<Booking> {
+  async findOne(id: string): Promise<BookingDetails> {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
       include: {
-        customer: true,
+        customer: { include: { user: true } },
         vehicle: true,
         payment: true,
       },
@@ -276,7 +313,7 @@ export class BookingsService {
     return booking;
   }
 
-  async findOwnerBookings(ownerId: string): Promise<any[]> {
+  async findOwnerBookings(ownerId: string) {
     return await this.prisma.booking.findMany({
       where: {
         vehicle: { ownerId },
@@ -291,13 +328,19 @@ export class BookingsService {
   }
 
   // Cập nhật trạng thái đơn (Duyệt, từ chối, nhận xe, trả xe) & Log Audit
-  async updateStatus(id: string, status: BookingStatus, user: any): Promise<Booking> {
-    const currentBooking = (await this.findOne(id)) as any;
+  async updateStatus(
+    id: string,
+    status: BookingStatus,
+    user: AuthenticatedUser,
+  ) {
+    const currentBooking = await this.findOne(id);
 
     // Nếu người thực hiện là OWNER, kiểm tra xem họ có sở hữu xe của đơn đặt này hay không
     if (user.role === 'OWNER') {
       if (currentBooking.vehicle.ownerId !== user.id) {
-        throw new BadRequestException('Bạn không sở hữu phương tiện của đơn đặt xe này.');
+        throw new BadRequestException(
+          'Bạn không sở hữu phương tiện của đơn đặt xe này.',
+        );
       }
     }
 
@@ -312,25 +355,32 @@ export class BookingsService {
       });
 
       // 2. Cập nhật trạng thái xe tương ứng
-      let vehicleStatus = 'AVAILABLE';
+      let vehicleStatus: VehicleStatus = VehicleStatus.AVAILABLE;
       if (status === BookingStatus.RENTING) {
-        vehicleStatus = 'RENTED';
-      } else if (status === BookingStatus.COMPLETED || status === BookingStatus.CANCELLED) {
-        vehicleStatus = 'AVAILABLE';
+        vehicleStatus = VehicleStatus.RENTED;
+      } else if (
+        status === BookingStatus.COMPLETED ||
+        status === BookingStatus.CANCELLED
+      ) {
+        vehicleStatus = VehicleStatus.AVAILABLE;
       }
 
       await tx.vehicle.update({
         where: { id: currentBooking.vehicleId },
-        data: { status: vehicleStatus as any },
+        data: { status: vehicleStatus },
       });
 
       // 3. Xử lý Affiliate Commission nếu booking hoàn thành
-      if (status === BookingStatus.COMPLETED && currentBooking.customer.affiliateId) {
+      if (
+        status === BookingStatus.COMPLETED &&
+        currentBooking.customer.affiliateId
+      ) {
         const affiliate = await tx.affiliate.findUnique({
           where: { id: currentBooking.customer.affiliateId },
         });
         if (affiliate) {
-          const commission = currentBooking.totalPrice * affiliate.commissionRate;
+          const commission =
+            currentBooking.totalPrice * affiliate.commissionRate;
           await tx.affiliate.update({
             where: { id: affiliate.id },
             data: { balance: { increment: commission } },
@@ -355,10 +405,11 @@ export class BookingsService {
 
     // 5. Gửi thông báo SMS / Email khi đổi trạng thái đơn
     const customerPhone = currentBooking.customer.phone;
-    const customerEmail = currentBooking.customer.user?.email || '';
-
     if (status === BookingStatus.CONFIRMED) {
-      await this.notificationService.sendSMS(customerPhone, `datxe: Don hang ${currentBooking.bookingNumber} da duoc XAC NHAN. Hen gap ban luc nhan xe.`);
+      await this.notificationService.sendSMS(
+        customerPhone,
+        `datxe: Don hang ${currentBooking.bookingNumber} da duoc XAC NHAN. Hen gap ban luc nhan xe.`,
+      );
     }
 
     return updated;

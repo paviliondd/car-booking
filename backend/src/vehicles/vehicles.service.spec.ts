@@ -5,7 +5,16 @@ import { Vehicle, VehicleStatus } from '@prisma/client';
 
 describe('VehiclesService Unit Tests', () => {
   let service: VehiclesService;
-  let prismaMock: any;
+  let prismaMock: {
+    vehicle: {
+      findUnique: jest.Mock;
+      findMany: jest.Mock;
+      create: jest.Mock;
+      update: jest.Mock;
+      delete: jest.Mock;
+    };
+    booking: { findMany: jest.Mock };
+  };
 
   beforeEach(async () => {
     // Mock Prisma Service
@@ -59,9 +68,9 @@ describe('VehiclesService Unit Tests', () => {
       transmission: 'AUTO',
       fuel: 'GASOLINE',
       color: 'White',
-      dailyPrice: 600000,   // Ngày thường: 600K
+      dailyPrice: 600000, // Ngày thường: 600K
       weekendPrice: 800000, // Cuối tuần: 800K
-      holidayPrice: 1000000,// Ngày lễ: 1M
+      holidayPrice: 1000000, // Ngày lễ: 1M
       penaltyRate: 80000,
       images: [],
       videoUrl: null,
@@ -104,7 +113,9 @@ describe('VehiclesService Unit Tests', () => {
       const start = new Date('2026-06-15');
       const end = new Date('2026-06-14');
 
-      expect(() => service.calculateTotalPrice(mockVehicle, start, end)).toThrow();
+      expect(() =>
+        service.calculateTotalPrice(mockVehicle, start, end),
+      ).toThrow();
     });
   });
 });

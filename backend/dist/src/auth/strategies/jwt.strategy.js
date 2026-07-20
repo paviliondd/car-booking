@@ -22,44 +22,30 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         super({
             jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
-            secretOrKey: configService.get('JWT_SECRET') || 'supersecretjwtkey987654321!',
+            secretOrKey: configService.getOrThrow('JWT_SECRET'),
         });
         this.configService = configService;
         this.prisma = prisma;
     }
     async validate(payload) {
-        try {
-            const user = await this.prisma.user.findUnique({
-                where: { id: payload.sub },
-                select: {
-                    id: true,
-                    email: true,
-                    name: true,
-                    role: true,
-                    phone: true,
-                    idCardNo: true,
-                    address: true,
-                    isVerifiedOwner: true,
-                    ownerRequestAt: true,
-                },
-            });
-            if (!user) {
-                throw new common_1.UnauthorizedException('User not found or token invalid');
-            }
-            return user;
+        const user = await this.prisma.user.findUnique({
+            where: { id: payload.sub },
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                role: true,
+                phone: true,
+                idCardNo: true,
+                address: true,
+                isVerifiedOwner: true,
+                ownerRequestAt: true,
+            },
+        });
+        if (!user || user.role !== payload.role) {
+            throw new common_1.UnauthorizedException('Người dùng hoặc token không còn hợp lệ');
         }
-        catch (error) {
-            if (error instanceof common_1.UnauthorizedException)
-                throw error;
-            return {
-                id: payload.sub,
-                email: payload.email,
-                name: payload.name || payload.email,
-                role: payload.role,
-                isVerifiedOwner: payload.role === 'OWNER',
-                ownerRequestAt: null,
-            };
-        }
+        return user;
     }
 };
 exports.JwtStrategy = JwtStrategy;

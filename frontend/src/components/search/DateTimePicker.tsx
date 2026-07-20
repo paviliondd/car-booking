@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight, X, AlertCircle } from 'lucide-react';
 import { addMonths, subMonths, startOfDay, isBefore, isSameDay } from 'date-fns';
 import { formatDateLabel } from '@/lib/utils/date';
@@ -25,6 +25,9 @@ const monthNames = [
   'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
 ];
 
+const formatTime = (date: Date) =>
+  `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+
 export default function DateTimePicker({ startDate, endDate, onChange }: DateTimePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -32,13 +35,35 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
   // Temporary selection states
   const [tempStart, setTempStart] = useState<Date | null>(startDate);
   const [tempEnd, setTempEnd] = useState<Date | null>(endDate);
-  const [tempStartTime, setTempStartTime] = useState('08:30');
-  const [tempEndTime, setTempEndTime] = useState('19:30');
+  const [tempStartTime, setTempStartTime] = useState(() => formatTime(startDate));
+  const [tempEndTime, setTempEndTime] = useState(() => formatTime(endDate));
   const [errorMsg, setErrorMsg] = useState('');
 
   // Calendar states
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [currentMonth, setCurrentMonth] = useState<Date>(startDate);
   const [selecting, setSelecting] = useState<'start' | 'end'>('start');
+
+  const handleCancel = useCallback(() => {
+    setTempStart(startDate);
+    setTempEnd(endDate);
+    setTempStartTime(formatTime(startDate));
+    setTempEndTime(formatTime(endDate));
+    setErrorMsg('');
+    setIsOpen(false);
+  }, [startDate, endDate]);
+
+  const handleToggle = () => {
+    if (!isOpen) {
+      setTempStart(startDate);
+      setTempEnd(endDate);
+      setTempStartTime(formatTime(startDate));
+      setTempEndTime(formatTime(endDate));
+      setCurrentMonth(startDate);
+      setSelecting('start');
+      setErrorMsg('');
+    }
+    setIsOpen((open) => !open);
+  };
 
   // Click outside listener
   useEffect(() => {
@@ -49,47 +74,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [startDate, endDate]);
-
-  // Update temp states when props change
-  useEffect(() => {
-    if (startDate) {
-      setTempStart(startDate);
-      const sh = startDate.getHours().toString().padStart(2, '0');
-      const sm = startDate.getMinutes().toString().padStart(2, '0');
-      setTempStartTime(`${sh}:${sm}`);
-    }
-    if (endDate) {
-      setTempEnd(endDate);
-      const eh = endDate.getHours().toString().padStart(2, '0');
-      const em = endDate.getMinutes().toString().padStart(2, '0');
-      setTempEndTime(`${eh}:${em}`);
-    }
-  }, [startDate, endDate]);
-
-  // Set default hours on load
-  useEffect(() => {
-    // Default Giờ nhận = giờ hiện tại làm tròn lên 30p
-    const now = new Date();
-    const mins = now.getMinutes();
-    const hrs = now.getHours();
-    let roundedMins = 0;
-    let roundedHrs = hrs;
-    if (mins > 30) {
-      roundedMins = 0;
-      roundedHrs = (hrs + 1) % 24;
-    } else if (mins > 0) {
-      roundedMins = 30;
-    }
-    const startStr = `${roundedHrs.toString().padStart(2, '0')}:${roundedMins.toString().padStart(2, '0')}`;
-    
-    // Giờ trả = giờ nhận + 1 tiếng
-    const endH = (roundedHrs + 1) % 24;
-    const endStr = `${endH.toString().padStart(2, '0')}:${roundedMins.toString().padStart(2, '0')}`;
-    
-    setTempStartTime(startStr);
-    setTempEndTime(endStr);
-  }, []);
+  }, [handleCancel]);
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -160,24 +145,6 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
     setIsOpen(false);
   };
 
-  const handleCancel = () => {
-    // Reset to props
-    setTempStart(startDate);
-    setTempEnd(endDate);
-    if (startDate) {
-      const sh = startDate.getHours().toString().padStart(2, '0');
-      const sm = startDate.getMinutes().toString().padStart(2, '0');
-      setTempStartTime(`${sh}:${sm}`);
-    }
-    if (endDate) {
-      const eh = endDate.getHours().toString().padStart(2, '0');
-      const em = endDate.getMinutes().toString().padStart(2, '0');
-      setTempEndTime(`${eh}:${em}`);
-    }
-    setErrorMsg('');
-    setIsOpen(false);
-  };
-
   const renderMonthCalendar = (monthDate: Date) => {
     const daysInMonth = getDaysInMonth(monthDate);
     const firstDay = getFirstDayOfMonth(monthDate);
@@ -235,7 +202,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
   return (
     <div ref={containerRef} className="relative flex-1 md:flex-[1.5] flex items-center gap-3 px-6 py-3 cursor-pointer select-none border-t md:border-t-0 md:border-l border-gray-100 dark:border-white/5">
       <div 
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className="flex items-center gap-3 w-full"
       >
         <CalendarIcon className="h-5 w-5 text-[#008F5A] flex-shrink-0" />

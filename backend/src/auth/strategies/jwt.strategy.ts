@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
@@ -13,40 +14,30 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'supersecretjwtkey987654321!',
+      secretOrKey: configService.getOrThrow<string>('JWT_SECRET'),
     });
   }
 
-  async validate(payload: any) {
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: { id: payload.sub },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          phone: true,
-          idCardNo: true,
-          address: true,
-          isVerifiedOwner: true,
-          ownerRequestAt: true,
-        },
-      });
-      if (!user) {
-        throw new UnauthorizedException('User not found or token invalid');
-      }
-      return user;
-    } catch (error) {
-      if (error instanceof UnauthorizedException) throw error;
-      return {
-        id: payload.sub,
-        email: payload.email,
-        name: payload.name || payload.email,
-        role: payload.role,
-        isVerifiedOwner: payload.role === 'OWNER',
-        ownerRequestAt: null,
-      };
+  async validate(payload: { sub: string; role: Role }) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        phone: true,
+        idCardNo: true,
+        address: true,
+        isVerifiedOwner: true,
+        ownerRequestAt: true,
+      },
+    });
+
+    if (!user || user.role !== payload.role) {
+      throw new UnauthorizedException('Người dùng hoặc token không còn hợp lệ');
     }
+
+    return user;
   }
 }

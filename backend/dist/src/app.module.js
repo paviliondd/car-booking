@@ -25,6 +25,10 @@ const reviews_module_1 = require("./reviews/reviews.module");
 const tickets_module_1 = require("./tickets/tickets.module");
 const chat_module_1 = require("./chat/chat.module");
 const dashboard_module_1 = require("./dashboard/dashboard.module");
+const core_1 = require("@nestjs/core");
+const throttler_1 = require("@nestjs/throttler");
+const app_controller_1 = require("./app.controller");
+const app_service_1 = require("./app.service");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -34,6 +38,12 @@ exports.AppModule = AppModule = __decorate([
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
             }),
+            throttler_1.ThrottlerModule.forRoot([
+                {
+                    ttl: 60_000,
+                    limit: 120,
+                },
+            ]),
             prisma_module_1.PrismaModule,
             redis_module_1.RedisModule,
             notification_module_1.NotificationModule,
@@ -50,6 +60,14 @@ exports.AppModule = AppModule = __decorate([
             tickets_module_1.TicketsModule,
             chat_module_1.ChatModule,
             dashboard_module_1.DashboardModule,
+        ],
+        controllers: [app_controller_1.AppController],
+        providers: [
+            app_service_1.AppService,
+            {
+                provide: core_1.APP_GUARD,
+                useClass: throttler_1.ThrottlerGuard,
+            },
         ],
     })
 ], AppModule);

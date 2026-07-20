@@ -12,16 +12,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark'); // Sleek dark mode by default
-
-  useEffect(() => {
-    const storedTheme = localStorage.getItem('theme') as Theme | null;
-    if (storedTheme) {
-      setTheme(storedTheme);
-    } else {
-      localStorage.setItem('theme', 'dark');
-    }
-  }, []);
+  const [theme, setTheme] = useState<Theme>('light');
 
   useEffect(() => {
     const root = window.document.documentElement;

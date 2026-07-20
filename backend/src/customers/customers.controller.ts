@@ -30,7 +30,15 @@ export class CustomersController {
     return await this.prismaCustomerUpdate(id, segment, notes);
   }
 
-  private async prismaCustomerUpdate(id: string, segment: CustomerSegment, notes?: string) {
-    return await this.customersService.updateSegmentAndNotes(id, segment, notes);
+  private async prismaCustomerUpdate(
+    id: string,
+    segment: CustomerSegment,
+    notes?: string,
+  ) {
+    return await this.customersService.updateSegmentAndNotes(
+      id,
+      segment,
+      notes,
+    );
   }
 }

@@ -56,10 +56,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
                     vehicleId: dto.vehicleId,
                     status: { in: ['CONFIRMED', 'RENTING', 'PENDING'] },
                     NOT: {
-                        OR: [
-                            { endDate: { lte: start } },
-                            { startDate: { gte: end } },
-                        ],
+                        OR: [{ endDate: { lte: start } }, { startDate: { gte: end } }],
                     },
                 },
             });
@@ -100,7 +97,9 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 });
                 if (coupon) {
                     const now = new Date();
-                    if (now >= coupon.startDate && now <= coupon.endDate && coupon.usedCount < coupon.usageLimit) {
+                    if (now >= coupon.startDate &&
+                        now <= coupon.endDate &&
+                        coupon.usedCount < coupon.usageLimit) {
                         if (pricing.totalPrice >= coupon.minOrderValue) {
                             if (coupon.discountType === 'PERCENTAGE') {
                                 discountAmount = (pricing.totalPrice * coupon.value) / 100;
@@ -120,13 +119,11 @@ let BookingsService = BookingsService_1 = class BookingsService {
                     }
                 }
             }
-            let affiliateId = null;
             if (dto.affiliateCode) {
                 const affiliate = await this.prisma.affiliate.findUnique({
                     where: { code: dto.affiliateCode },
                 });
                 if (affiliate) {
-                    affiliateId = affiliate.id;
                     await this.prisma.customer.update({
                         where: { id: customer.id },
                         data: { affiliateId: affiliate.id },
@@ -177,7 +174,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 });
                 return { booking, payment };
             });
-            const payGateway = await this.paymentsService.createPaymentUrl(result.booking.id, totalPrice, dto.paymentMethod);
+            const payGateway = await this.paymentsService.createPaymentUrl(result.booking.id, result.payment.amount, dto.paymentMethod);
             await this.prisma.payment.update({
                 where: { bookingId: result.booking.id },
                 data: { transactionId: payGateway.transactionId },
@@ -235,7 +232,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         const booking = await this.prisma.booking.findUnique({
             where: { id },
             include: {
-                customer: true,
+                customer: { include: { user: true } },
                 vehicle: true,
                 payment: true,
             },
@@ -259,7 +256,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         });
     }
     async updateStatus(id, status, user) {
-        const currentBooking = (await this.findOne(id));
+        const currentBooking = await this.findOne(id);
         if (user.role === 'OWNER') {
             if (currentBooking.vehicle.ownerId !== user.id) {
                 throw new common_1.BadRequestException('Bạn không sở hữu phương tiện của đơn đặt xe này.');
@@ -273,18 +270,20 @@ let BookingsService = BookingsService_1 = class BookingsService {
                     staffId: user.id,
                 },
             });
-            let vehicleStatus = 'AVAILABLE';
+            let vehicleStatus = client_1.VehicleStatus.AVAILABLE;
             if (status === client_1.BookingStatus.RENTING) {
-                vehicleStatus = 'RENTED';
+                vehicleStatus = client_1.VehicleStatus.RENTED;
             }
-            else if (status === client_1.BookingStatus.COMPLETED || status === client_1.BookingStatus.CANCELLED) {
-                vehicleStatus = 'AVAILABLE';
+            else if (status === client_1.BookingStatus.COMPLETED ||
+                status === client_1.BookingStatus.CANCELLED) {
+                vehicleStatus = client_1.VehicleStatus.AVAILABLE;
             }
             await tx.vehicle.update({
                 where: { id: currentBooking.vehicleId },
                 data: { status: vehicleStatus },
             });
-            if (status === client_1.BookingStatus.COMPLETED && currentBooking.customer.affiliateId) {
+            if (status === client_1.BookingStatus.COMPLETED &&
+                currentBooking.customer.affiliateId) {
                 const affiliate = await tx.affiliate.findUnique({
                     where: { id: currentBooking.customer.affiliateId },
                 });
@@ -309,7 +308,6 @@ let BookingsService = BookingsService_1 = class BookingsService {
             return book;
         });
         const customerPhone = currentBooking.customer.phone;
-        const customerEmail = currentBooking.customer.user?.email || '';
         if (status === client_1.BookingStatus.CONFIRMED) {
             await this.notificationService.sendSMS(customerPhone, `datxe: Don hang ${currentBooking.bookingNumber} da duoc XAC NHAN. Hen gap ban luc nhan xe.`);
         }

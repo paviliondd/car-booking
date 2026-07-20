@@ -1,5 +1,11 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Role } from '@prisma/client';
+import { AuthenticatedUser } from '../auth/types/authenticated-user';
 
 @Injectable()
 export class TicketsService {
@@ -16,8 +22,8 @@ export class TicketsService {
     });
   }
 
-  async findAll(user: any) {
-    if (user.role === 'ADMIN' || user.role === 'STAFF') {
+  async findAll(user: AuthenticatedUser) {
+    if (user.role === Role.ADMIN || user.role === Role.STAFF) {
       return await this.prisma.supportTicket.findMany({
         include: {
           user: {
@@ -31,7 +37,7 @@ export class TicketsService {
         orderBy: { createdAt: 'desc' },
       });
     }
-    
+
     // Khách hàng hoặc chủ xe chỉ xem được ticket của mình
     return await this.prisma.supportTicket.findMany({
       where: { userId: user.id },
@@ -39,9 +45,11 @@ export class TicketsService {
     });
   }
 
-  async reply(id: string, replyText: string, adminUser: any) {
-    if (adminUser.role !== 'ADMIN' && adminUser.role !== 'STAFF') {
-      throw new ForbiddenException('Chỉ quản trị viên hoặc nhân viên mới có quyền phản hồi ticket.');
+  async reply(id: string, replyText: string, adminUser: AuthenticatedUser) {
+    if (adminUser.role !== Role.ADMIN && adminUser.role !== Role.STAFF) {
+      throw new ForbiddenException(
+        'Chỉ quản trị viên hoặc nhân viên mới có quyền phản hồi ticket.',
+      );
     }
 
     const ticket = await this.prisma.supportTicket.findUnique({

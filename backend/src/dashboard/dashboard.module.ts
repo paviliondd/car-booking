@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
 import { DashboardService } from './dashboard.service';
-import { 
-  DashboardController, 
-  NotificationsController, 
-  CarsController, 
-  FeedbackController, 
-  RatingController, 
+import {
+  DashboardController,
+  NotificationsController,
+  CarsController,
+  FeedbackController,
+  RatingController,
   DashboardBookingController,
-  DashboardAuthController
+  DashboardAuthController,
 } from './dashboard.controller';
 
 @Module({
@@ -21,7 +21,7 @@ import {
     FeedbackController,
     RatingController,
     DashboardBookingController,
-    DashboardAuthController
+    DashboardAuthController,
   ],
 })
 export class DashboardModule {}

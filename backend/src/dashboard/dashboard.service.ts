@@ -1,15 +1,38 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { BookingStatus, VehicleStatus } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
+import { BookingStatus, Role, VehicleStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class DashboardService {
   private readonly logger = new Logger(DashboardService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  private isDemoEnabled() {
+    return this.configService.get<string>('ENABLE_DEMO_DATA') === 'true';
+  }
+
+  private useDemoOrThrow<T>(demo: T, error: unknown): T {
+    if (this.isDemoEnabled()) {
+      this.logger.warn(
+        `Demo dashboard enabled after data error: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return demo;
+    }
+    throw error;
+  }
+
+  private ownerId(actor: { id: string; role: Role }) {
+    return actor.role === Role.OWNER ? actor.id : undefined;
+  }
 
   private demoOverview(period: string) {
-    const scale = period === 'last_month' ? 0.82 : period === 'this_month' ? 1.18 : 0.12;
+    const scale =
+      period === 'last_month' ? 0.82 : period === 'this_month' ? 1.18 : 0.12;
     const totalMoneyContract = Math.round(186000000 * scale);
 
     return {
@@ -37,7 +60,7 @@ export class DashboardService {
     });
   }
 
-  async getOverview(period: string) {
+  async getOverview(period: string, actor: { id: string; role: Role }) {
     try {
       const now = new Date();
       let startDate = new Date();
@@ -48,14 +71,31 @@ export class DashboardService {
         endDate.setHours(23, 59, 59, 999);
       } else if (period === 'this_month') {
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        endDate = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+          999,
+        );
       } else if (period === 'last_month') {
         startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+        endDate = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          0,
+          23,
+          59,
+          59,
+          999,
+        );
       }
 
       const bookings = await this.prisma.booking.findMany({
         where: {
+          vehicle: { ownerId: this.ownerId(actor) },
           createdAt: {
             gte: startDate,
             lte: endDate,
@@ -69,6 +109,7 @@ export class DashboardService {
 
       const expenses = await this.prisma.expense.aggregate({
         where: {
+          vehicle: { ownerId: this.ownerId(actor) },
           date: {
             gte: startDate,
             lte: endDate,
@@ -80,9 +121,16 @@ export class DashboardService {
       });
 
       const totalContract = bookings.length;
-      const totalMoneyContract = bookings.reduce((sum, booking) => sum + booking.totalPrice, 0);
+      const totalMoneyContract = bookings.reduce(
+        (sum, booking) => sum + booking.totalPrice,
+        0,
+      );
       const totalMoneyForward = Math.round(totalMoneyContract * 0.12);
-      const collectibleStatuses: BookingStatus[] = [BookingStatus.CONFIRMED, BookingStatus.RENTING, BookingStatus.COMPLETED];
+      const collectibleStatuses: BookingStatus[] = [
+        BookingStatus.CONFIRMED,
+        BookingStatus.RENTING,
+        BookingStatus.COMPLETED,
+      ];
       const totalCollect = bookings
         .filter((booking) => collectibleStatuses.includes(booking.status))
         .reduce((sum, booking) => sum + booking.totalPrice, 0);
@@ -96,36 +144,54 @@ export class DashboardService {
         totalExpense,
       };
     } catch (error) {
-      this.logger.warn(`Using demo dashboard overview because database is unavailable: ${error instanceof Error ? error.message : error}`);
-      return this.demoOverview(period);
+      return this.useDemoOrThrow(this.demoOverview(period), error);
     }
   }
 
-  async getCarStatusSummary() {
+  async getCarStatusSummary(actor: { id: string; role: Role }) {
     try {
-      const [waitConfirm, confirmed, received, returned, accident, pledged] = await Promise.all([
-        this.prisma.booking.count({ where: { status: BookingStatus.PENDING } }),
-        this.prisma.booking.count({ where: { status: BookingStatus.CONFIRMED } }),
-        this.prisma.booking.count({ where: { status: BookingStatus.RENTING } }),
-        this.prisma.booking.count({ where: { status: BookingStatus.COMPLETED } }),
-        this.prisma.vehicle.count({ where: { status: VehicleStatus.MAINTENANCE } }),
-        this.prisma.vehicle.count({ where: { status: VehicleStatus.LOCKED } }),
-      ]);
+      const ownerId = this.ownerId(actor);
+      const bookingOwnerFilter = { vehicle: { ownerId } };
+      const vehicleOwnerFilter = { ownerId };
+      const [waitConfirm, confirmed, received, returned, accident, pledged] =
+        await Promise.all([
+          this.prisma.booking.count({
+            where: { ...bookingOwnerFilter, status: BookingStatus.PENDING },
+          }),
+          this.prisma.booking.count({
+            where: { ...bookingOwnerFilter, status: BookingStatus.CONFIRMED },
+          }),
+          this.prisma.booking.count({
+            where: { ...bookingOwnerFilter, status: BookingStatus.RENTING },
+          }),
+          this.prisma.booking.count({
+            where: { ...bookingOwnerFilter, status: BookingStatus.COMPLETED },
+          }),
+          this.prisma.vehicle.count({
+            where: { ...vehicleOwnerFilter, status: VehicleStatus.MAINTENANCE },
+          }),
+          this.prisma.vehicle.count({
+            where: { ...vehicleOwnerFilter, status: VehicleStatus.LOCKED },
+          }),
+        ]);
 
       return { waitConfirm, confirmed, received, returned, accident, pledged };
-    } catch {
-      return {
-        waitConfirm: 8,
-        confirmed: 15,
-        received: 6,
-        returned: 22,
-        accident: 1,
-        pledged: 3,
-      };
+    } catch (error) {
+      return this.useDemoOrThrow(
+        {
+          waitConfirm: 8,
+          confirmed: 15,
+          received: 6,
+          returned: 22,
+          accident: 1,
+          pledged: 3,
+        },
+        error,
+      );
     }
   }
 
-  async getRevenueChart(month: string) {
+  async getRevenueChart(month: string, actor: { id: string; role: Role }) {
     try {
       const [yearStr, monthStr] = month.split('-');
       const year = parseInt(yearStr, 10);
@@ -135,6 +201,7 @@ export class DashboardService {
 
       const revenues = await this.prisma.revenue.findMany({
         where: {
+          vehicle: { ownerId: this.ownerId(actor) },
           date: {
             gte: startDate,
             lte: endDate,
@@ -151,22 +218,30 @@ export class DashboardService {
         const day = index + 1;
         const dayRevenues = revenues.filter((revenue) => {
           const date = new Date(revenue.date);
-          return date.getDate() === day && date.getMonth() === monthIndex && date.getFullYear() === year;
+          return (
+            date.getDate() === day &&
+            date.getMonth() === monthIndex &&
+            date.getFullYear() === year
+          );
         });
 
         return {
           date: `${year}-${monthStr}-${day.toString().padStart(2, '0')}`,
-          revenue: dayRevenues.reduce((sum, revenue) => sum + revenue.amount, 0),
+          revenue: dayRevenues.reduce(
+            (sum, revenue) => sum + revenue.amount,
+            0,
+          ),
         };
       });
-    } catch {
-      return this.demoRevenueChart(month);
+    } catch (error) {
+      return this.useDemoOrThrow(this.demoRevenueChart(month), error);
     }
   }
 
-  async getTopServices() {
+  async getTopServices(actor: { id: string; role: Role }) {
     try {
       const vehicles = await this.prisma.vehicle.findMany({
+        where: { ownerId: this.ownerId(actor) },
         select: {
           fuel: true,
         },
@@ -174,23 +249,32 @@ export class DashboardService {
 
       const counts: Record<string, number> = {};
       vehicles.forEach((vehicle) => {
-        const key = vehicle.fuel === 'ELECTRIC' ? 'Xe điện' : vehicle.fuel === 'DIESEL' ? 'Xe dầu' : 'Xe xăng';
+        const key =
+          vehicle.fuel === 'ELECTRIC'
+            ? 'Xe điện'
+            : vehicle.fuel === 'DIESEL'
+              ? 'Xe dầu'
+              : 'Xe xăng';
         counts[key] = (counts[key] || 0) + 1;
       });
 
       return Object.entries(counts).map(([name, value]) => ({ name, value }));
-    } catch {
-      return [
-        { name: 'Xe xăng', value: 42 },
-        { name: 'Xe điện', value: 18 },
-        { name: 'Xe dầu', value: 12 },
-      ];
+    } catch (error) {
+      return this.useDemoOrThrow(
+        [
+          { name: 'Xe xăng', value: 42 },
+          { name: 'Xe điện', value: 18 },
+          { name: 'Xe dầu', value: 12 },
+        ],
+        error,
+      );
     }
   }
 
-  async getTopCars(limit: number) {
+  async getTopCars(limit: number, actor: { id: string; role: Role }) {
     try {
       const vehicles = await this.prisma.vehicle.findMany({
+        where: { ownerId: this.ownerId(actor) },
         take: limit,
         include: {
           bookings: {
@@ -204,25 +288,47 @@ export class DashboardService {
         .map((vehicle) => ({
           name: `${vehicle.brand} ${vehicle.model} (${vehicle.plateNumber})`,
           bookingsCount: vehicle.bookings.length,
-          revenue: vehicle.revenues.reduce((sum, revenue) => sum + revenue.amount, 0),
+          revenue: vehicle.revenues.reduce(
+            (sum, revenue) => sum + revenue.amount,
+            0,
+          ),
         }))
         .sort((a, b) => b.revenue - a.revenue);
       const maxRevenue = sorted[0]?.revenue || 1;
 
       return sorted.map((car) => ({ ...car, maxRevenue }));
-    } catch {
+    } catch (error) {
       const cars = [
-        { name: 'VinFast VF8 (30A-999.99)', bookingsCount: 18, revenue: 72000000 },
-        { name: 'Kia Carnival (30A-111.11)', bookingsCount: 12, revenue: 64800000 },
-        { name: 'Toyota Vios (30A-888.88)', bookingsCount: 24, revenue: 45600000 },
-        { name: 'Mazda CX-5 (30A-777.77)', bookingsCount: 15, revenue: 39000000 },
+        {
+          name: 'VinFast VF8 (30A-999.99)',
+          bookingsCount: 18,
+          revenue: 72000000,
+        },
+        {
+          name: 'Kia Carnival (30A-111.11)',
+          bookingsCount: 12,
+          revenue: 64800000,
+        },
+        {
+          name: 'Toyota Vios (30A-888.88)',
+          bookingsCount: 24,
+          revenue: 45600000,
+        },
+        {
+          name: 'Mazda CX-5 (30A-777.77)',
+          bookingsCount: 15,
+          revenue: 39000000,
+        },
       ].slice(0, limit);
       const maxRevenue = cars[0]?.revenue || 1;
-      return cars.map((car) => ({ ...car, maxRevenue }));
+      return this.useDemoOrThrow(
+        cars.map((car) => ({ ...car, maxRevenue })),
+        error,
+      );
     }
   }
 
-  async getNotifications(limit: number) {
+  getNotifications(limit: number) {
     return [
       {
         id: '1',
@@ -270,13 +376,27 @@ export class DashboardService {
       }));
     } catch {
       return [
-        { id: 'c1', plateNumber: '30A-999.99', brand: 'VinFast', model: 'VF8', type: 'Đến hạn đăng kiểm', dueDate: '2026-07-15' },
-        { id: 'c2', plateNumber: '30A-888.88', brand: 'Toyota', model: 'Vios', type: 'Đến hạn bảo hiểm', dueDate: '2026-07-20' },
+        {
+          id: 'c1',
+          plateNumber: '30A-999.99',
+          brand: 'VinFast',
+          model: 'VF8',
+          type: 'Đến hạn đăng kiểm',
+          dueDate: '2026-07-15',
+        },
+        {
+          id: 'c2',
+          plateNumber: '30A-888.88',
+          brand: 'Toyota',
+          model: 'Vios',
+          type: 'Đến hạn bảo hiểm',
+          dueDate: '2026-07-20',
+        },
       ];
     }
   }
 
-  async getCarViolateList() {
+  getCarViolateList() {
     return [
       {
         id: 'v1',

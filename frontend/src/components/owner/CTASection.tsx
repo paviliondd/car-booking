@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Car } from 'lucide-react';
 
@@ -45,10 +46,12 @@ export default function CTASection({ onRegisterClick }: CTASectionProps) {
 
         {/* Right column image with diagonal cut */}
         <div className="relative h-[320px] md:h-full min-h-[360px] w-full hidden md:block overflow-hidden">
-          <img 
+          <Image
             src="https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=800&q=80" 
             alt="Hand on steering wheel with bokeh lights" 
-            className="w-full h-full object-cover"
+            fill
+            sizes="50vw"
+            className="object-cover"
             style={{
               clipPath: 'polygon(15% 0%, 100% 0%, 100% 100%, 0% 100%)'
             }}

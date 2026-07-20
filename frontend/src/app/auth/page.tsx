@@ -2,17 +2,9 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
-import { Car, Loader2, Lock, Mail, User } from 'lucide-react';
-
-type AuthResponse = {
-  accessToken: string;
-  user: {
-    email?: string;
-    name?: string;
-    role?: string;
-  };
-};
+import { api, type AuthResponse } from '@/lib/api';
+import { Car, CheckCircle2, Loader2, Lock, Mail, ShieldCheck, User } from 'lucide-react';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 
 export default function AuthPage() {
   const router = useRouter();
@@ -60,59 +52,53 @@ export default function AuthPage() {
     }
   };
 
-  const handleSocialLogin = async (provider: 'Google' | 'Facebook') => {
+  const handleGoogleLogin = async (credential: string) => {
     setLoading(true);
     setMessage('');
     setIsSuccess(false);
     try {
-      const mockEmail = `${provider.toLowerCase()}_user@datxe.vn`;
-      const mockName = `${provider} User`;
-      const res = provider === 'Google'
-        ? await api.auth.googleLogin(mockEmail, mockName)
-        : await api.auth.facebookLogin(mockEmail, mockName);
+      const res = await api.auth.googleLogin(credential);
       storeSession(res);
     } catch (err: unknown) {
-      setMessage(err instanceof Error ? err.message : `Lỗi đăng nhập qua ${provider}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDemoAdminLogin = async () => {
-    setEmail('admin@datxe.vn');
-    setPassword('123456');
-    setIsLogin(true);
-    setLoading(true);
-    setMessage('');
-    setIsSuccess(false);
-
-    try {
-      const res = await api.auth.login({ email: 'admin@datxe.vn', password: '123456' });
-      storeSession(res);
-    } catch (err: unknown) {
-      setMessage(err instanceof Error ? err.message : 'Không thể đăng nhập tài khoản quản trị demo.');
+      setMessage(err instanceof Error ? err.message : 'Không thể đăng nhập qua Google');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-6">
-      <div className="max-w-md w-full bg-slate-900/80 border border-white/10 rounded-2xl p-8 flex flex-col gap-6 shadow-2xl">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center p-3 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-4">
-            <Car className="h-8 w-8 text-emerald-400" />
+    <main className="min-h-dvh bg-slate-50 px-4 py-10 text-slate-900 sm:px-6">
+      <div className="mx-auto grid w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl lg:grid-cols-[1.05fr_1fr]">
+        <section className="hidden bg-slate-950 p-12 text-white lg:flex lg:flex-col lg:justify-between" aria-label="Lợi ích của datxe">
+          <div>
+            <div className="mb-8 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white">
+              <Car className="h-7 w-7" />
+            </div>
+            <h2 className="max-w-sm text-4xl font-bold leading-tight">Mỗi hành trình bắt đầu bằng một chiếc xe phù hợp.</h2>
+            <p className="mt-5 max-w-md text-base leading-7 text-slate-300">Đặt xe minh bạch, quản lý lịch trình tập trung và luôn biết rõ chi phí trước khi xác nhận.</p>
           </div>
-          <h1 className="text-2xl font-extrabold text-white">
+          <ul className="space-y-4 text-sm text-slate-200">
+            {['Xe và chủ xe được kiểm duyệt', 'Hợp đồng điện tử rõ ràng', 'Hỗ trợ trong suốt hành trình'].map((benefit) => (
+              <li key={benefit} className="flex items-center gap-3"><CheckCircle2 className="h-5 w-5 text-emerald-400" />{benefit}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="flex flex-col gap-6 p-6 sm:p-10 lg:p-12">
+        <div className="text-center">
+          <div className="mb-4 inline-flex items-center justify-center rounded-2xl bg-emerald-50 p-3 text-emerald-700 lg:hidden">
+            <Car className="h-7 w-7" />
+          </div>
+          <h1 className="text-3xl font-bold text-slate-950">
             {isLogin ? 'Chào mừng quay trở lại!' : 'Tạo tài khoản mới'}
           </h1>
-          <p className="text-xs text-slate-400 mt-2">
+          <p className="mt-2 text-sm leading-6 text-slate-600">
             {isLogin ? 'Đăng nhập để đặt xe và theo dõi hành trình của bạn' : 'Trở thành thành viên datxe ngay hôm nay'}
           </p>
         </div>
 
         {message && (
-          <div className={`p-3 rounded-lg text-xs border ${isSuccess ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : 'bg-red-500/10 border-red-500/20 text-red-300'}`}>
+          <div role={isSuccess ? 'status' : 'alert'} className={`rounded-xl border p-3 text-sm ${isSuccess ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700'}`}>
             {message}
           </div>
         )}
@@ -120,48 +106,54 @@ export default function AuthPage() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {!isLogin && (
             <div>
-              <label className="text-xs text-slate-400 block mb-1.5 font-medium">Họ và tên</label>
+              <label htmlFor="auth-name" className="mb-1.5 block text-sm font-semibold text-slate-700">Họ và tên</label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                 <input
                   type="text"
+                  id="auth-name"
+                  autoComplete="name"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Nguyễn Văn A"
-                  className="w-full bg-slate-950 border border-white/10 rounded-lg py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:border-emerald-500 text-white"
+                  className="min-h-11 w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-base text-slate-950 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
                 />
               </div>
             </div>
           )}
 
           <div>
-            <label className="text-xs text-slate-400 block mb-1.5 font-medium">Địa chỉ email</label>
+            <label htmlFor="auth-email" className="mb-1.5 block text-sm font-semibold text-slate-700">Địa chỉ email</label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
               <input
+                id="auth-email"
                 type="email"
+                autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ban@datxe.vn"
-                className="w-full bg-slate-950 border border-white/10 rounded-lg py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:border-emerald-500 text-white"
+                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-base text-slate-950 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs text-slate-400 block mb-1.5 font-medium">Mật khẩu</label>
+            <label htmlFor="auth-password" className="mb-1.5 block text-sm font-semibold text-slate-700">Mật khẩu</label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
               <input
+                id="auth-password"
                 type="password"
+                autoComplete={isLogin ? 'current-password' : 'new-password'}
                 required
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-slate-950 border border-white/10 rounded-lg py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:border-emerald-500 text-white"
+                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-base text-slate-950 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
               />
             </div>
           </div>
@@ -169,7 +161,7 @@ export default function AuthPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#008F5A] hover:bg-[#007A4D] text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2 transition"
+            className="mt-2 flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
             <span>{isLogin ? 'Đăng nhập' : 'Đăng ký tài khoản'}</span>
@@ -177,36 +169,22 @@ export default function AuthPage() {
         </form>
 
         <div className="relative flex py-2 items-center">
-          <div className="flex-grow border-t border-white/10" />
-          <span className="flex-shrink mx-4 text-slate-500 text-xs uppercase">Hoặc tiếp tục bằng</span>
-          <div className="flex-grow border-t border-white/10" />
+          <div className="flex-grow border-t border-slate-200" />
+          <span className="mx-4 flex-shrink text-xs font-medium uppercase text-slate-500">Hoặc</span>
+          <div className="flex-grow border-t border-slate-200" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <button type="button" onClick={() => handleSocialLogin('Google')} disabled={loading} className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white py-2 rounded-lg text-sm font-semibold transition cursor-pointer disabled:opacity-50">
-            Google
-          </button>
-          <button type="button" onClick={() => handleSocialLogin('Facebook')} disabled={loading} className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white py-2 rounded-lg text-sm font-semibold transition cursor-pointer disabled:opacity-50">
-            Facebook
-          </button>
-        </div>
+        <GoogleSignInButton onCredential={handleGoogleLogin} disabled={loading} />
 
-        <button
-          type="button"
-          onClick={handleDemoAdminLogin}
-          disabled={loading}
-          className="w-full border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-300 py-2.5 rounded-lg text-sm font-bold transition cursor-pointer disabled:opacity-50"
-        >
-          Dùng tài khoản quản trị demo
-        </button>
-
-        <div className="text-center text-xs text-slate-400 mt-2">
+        <div className="mt-2 text-center text-sm text-slate-600">
           {isLogin ? 'Chưa có tài khoản?' : 'Đã có tài khoản?'}{' '}
-          <button onClick={() => setIsLogin(!isLogin)} className="text-emerald-400 font-bold hover:underline cursor-pointer">
+          <button type="button" onClick={() => setIsLogin(!isLogin)} className="min-h-11 cursor-pointer px-2 font-bold text-emerald-700 hover:underline">
             {isLogin ? 'Đăng ký ngay' : 'Đăng nhập ngay'}
           </button>
         </div>
+        <p className="flex items-center justify-center gap-2 text-center text-xs leading-5 text-slate-500"><ShieldCheck className="h-4 w-4" />Thông tin đăng nhập được bảo vệ và không chia sẻ với chủ xe.</p>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

@@ -34,7 +34,9 @@ let MaintenanceService = class MaintenanceService {
         });
     }
     async complete(id, cost) {
-        const maintenance = await this.prisma.maintenance.findUnique({ where: { id } });
+        const maintenance = await this.prisma.maintenance.findUnique({
+            where: { id },
+        });
         if (!maintenance) {
             throw new common_1.NotFoundException('Không tìm thấy lịch bảo dưỡng');
         }

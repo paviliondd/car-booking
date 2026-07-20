@@ -15,16 +15,53 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChatGateway = void 0;
 const websockets_1 = require("@nestjs/websockets");
 const socket_io_1 = require("socket.io");
+const jwt_1 = require("@nestjs/jwt");
+const prisma_service_1 = require("../prisma/prisma.service");
 const chat_service_1 = require("./chat.service");
+const chat_dto_1 = require("./dto/chat.dto");
 let ChatGateway = class ChatGateway {
     chatService;
+    jwtService;
+    prisma;
     server;
-    constructor(chatService) {
+    constructor(chatService, jwtService, prisma) {
         this.chatService = chatService;
+        this.jwtService = jwtService;
+        this.prisma = prisma;
+    }
+    async handleConnection(client) {
+        const token = typeof client.handshake.auth?.token === 'string'
+            ? client.handshake.auth.token
+            : undefined;
+        if (!token) {
+            client.disconnect(true);
+            return;
+        }
+        try {
+            const payload = await this.jwtService.verifyAsync(token);
+            const user = await this.prisma.user.findUnique({
+                where: { id: payload.sub },
+                select: { id: true },
+            });
+            if (!user)
+                throw new Error('User not found');
+            client.data.identity = user;
+            await client.join(`user:${user.id}`);
+        }
+        catch {
+            client.disconnect(true);
+        }
     }
     async handleMessage(client, data) {
-        const saved = await this.chatService.saveMessage(data.senderId, data.receiverId, data.message);
-        this.server.emit('messageReceived', saved);
+        const identity = client.data.identity;
+        if (!identity) {
+            client.disconnect(true);
+            return;
+        }
+        const saved = await this.chatService.saveMessage(identity.id, data.receiverId, data.message);
+        this.server
+            .to([`user:${identity.id}`, `user:${data.receiverId}`])
+            .emit('messageReceived', saved);
         return saved;
     }
 };
@@ -38,15 +75,22 @@ __decorate([
     __param(0, (0, websockets_1.ConnectedSocket)()),
     __param(1, (0, websockets_1.MessageBody)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
+    __metadata("design:paramtypes", [socket_io_1.Socket,
+        chat_dto_1.SendMessageDto]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleMessage", null);
 exports.ChatGateway = ChatGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({
         cors: {
-            origin: '*',
+            origin: (process.env.CORS_ORIGINS ||
+                'http://localhost:3000,https://datxe.linuxunity.com')
+                .split(',')
+                .map((origin) => origin.trim()),
+            credentials: true,
         },
     }),
-    __metadata("design:paramtypes", [chat_service_1.ChatService])
+    __metadata("design:paramtypes", [chat_service_1.ChatService,
+        jwt_1.JwtService,
+        prisma_service_1.PrismaService])
 ], ChatGateway);
 //# sourceMappingURL=chat.gateway.js.map

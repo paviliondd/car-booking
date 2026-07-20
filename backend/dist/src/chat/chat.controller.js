@@ -16,16 +16,20 @@ exports.ChatController = void 0;
 const common_1 = require("@nestjs/common");
 const chat_service_1 = require("./chat.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const chat_dto_1 = require("./dto/chat.dto");
 let ChatController = class ChatController {
     chatService;
     constructor(chatService) {
         this.chatService = chatService;
     }
     async getPartners(req) {
-        return await this.chatService.getRecentChatPartners(req.user.id);
+        return this.chatService.getRecentChatPartners(req.user.id);
     }
     async getHistory(req, partnerId) {
-        return await this.chatService.getChatHistory(req.user.id, partnerId);
+        return this.chatService.getChatHistory(req.user.id, partnerId);
+    }
+    async sendMessage(req, dto) {
+        return this.chatService.saveMessage(req.user.id, dto.receiverId, dto.message);
     }
 };
 exports.ChatController = ChatController;
@@ -46,6 +50,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "getHistory", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('message'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, chat_dto_1.SendMessageDto]),
+    __metadata("design:returntype", Promise)
+], ChatController.prototype, "sendMessage", null);
 exports.ChatController = ChatController = __decorate([
     (0, common_1.Controller)('chat'),
     __metadata("design:paramtypes", [chat_service_1.ChatService])

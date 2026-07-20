@@ -22,41 +22,17 @@ let PrismaService = PrismaService_1 = class PrismaService extends client_1.Prism
     constructor() {
         const dbUrl = process.env.DATABASE_URL;
         if (!dbUrl || dbUrl.trim() === '') {
-            common_1.Logger.error('CRITICAL: DATABASE_URL environment variable is missing or empty! Prisma will run in unconfigured/dry-run mode.', '', 'PrismaService');
-            const dummyPool = new pg_1.Pool({
-                connectionString: 'postgresql://dummy_user:dummy_password@localhost:5432/dummy_db',
-                connectionTimeoutMillis: 1000,
-            });
-            const adapter = new adapter_pg_1.PrismaPg(dummyPool);
-            super({ adapter });
-            this.isConfigured = false;
+            throw new Error('DATABASE_URL environment variable is required');
         }
-        else {
-            try {
-                const pool = new pg_1.Pool({
-                    connectionString: dbUrl,
-                    max: 10,
-                    idleTimeoutMillis: 30000,
-                    connectionTimeoutMillis: 5000,
-                });
-                const adapter = new adapter_pg_1.PrismaPg(pool);
-                super({
-                    adapter,
-                    log: ['error', 'warn'],
-                });
-                this.pool = pool;
-            }
-            catch (err) {
-                common_1.Logger.error('Failed to parse DATABASE_URL or configure database pool in PrismaService:', err.message || err);
-                const dummyPool = new pg_1.Pool({
-                    connectionString: 'postgresql://dummy_user:dummy_password@localhost:5432/dummy_db',
-                    connectionTimeoutMillis: 1000,
-                });
-                const adapter = new adapter_pg_1.PrismaPg(dummyPool);
-                super({ adapter });
-                this.isConfigured = false;
-            }
-        }
+        const pool = new pg_1.Pool({
+            connectionString: dbUrl,
+            max: 10,
+            idleTimeoutMillis: 30000,
+            connectionTimeoutMillis: 5000,
+        });
+        const adapter = new adapter_pg_1.PrismaPg(pool);
+        super({ adapter, log: ['error', 'warn'] });
+        this.pool = pool;
     }
     async onModuleInit() {
         if (!this.isConfigured || !this.pool) {
@@ -70,7 +46,7 @@ let PrismaService = PrismaService_1 = class PrismaService extends client_1.Prism
             this.logger.log('Prisma successfully connected to PostgreSQL database using pg Driver Adapter.');
         }
         catch (error) {
-            this.logger.error('Failed to establish database connection during initialization:', error.message || error);
+            this.logger.error(`Failed to establish database connection during initialization: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
     async onModuleDestroy() {

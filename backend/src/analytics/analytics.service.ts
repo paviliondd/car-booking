@@ -65,9 +65,13 @@ export class AnalyticsService {
       },
     });
 
-    const totalDaysRented = activeBookings.reduce((sum, b) => sum + b.totalDays, 0);
+    const totalDaysRented = activeBookings.reduce(
+      (sum, b) => sum + b.totalDays,
+      0,
+    );
     const totalPossibleDays = stats.total * 30;
-    const occupancyRate = totalPossibleDays > 0 ? (totalDaysRented / totalPossibleDays) * 100 : 0;
+    const occupancyRate =
+      totalPossibleDays > 0 ? (totalDaysRented / totalPossibleDays) * 100 : 0;
 
     return {
       vehicleStats: stats,
@@ -90,10 +94,13 @@ export class AnalyticsService {
 
     return vehicles.map((v) => {
       const totalRevenue = v.revenues.reduce((sum, r) => sum + r.amount, 0);
-      
+
       // Chi phí bảo dưỡng
-      const maintenanceCost = v.maintenances.reduce((sum, m) => sum + m.cost, 0);
-      
+      const maintenanceCost = v.maintenances.reduce(
+        (sum, m) => sum + m.cost,
+        0,
+      );
+
       // Chi phí vận hành khác (Khấu hao, đăng kiểm, bảo hiểm...)
       const otherExpense = v.expenses.reduce((sum, e) => sum + e.amount, 0);
 
@@ -144,9 +151,13 @@ export class AnalyticsService {
     });
 
     // Sắp xếp theo doanh thu cao nhất
-    const topRevenue = [...mapped].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+    const topRevenue = [...mapped]
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
     // Sắp xếp theo tần suất thuê nhiều nhất
-    const topFrequency = [...mapped].sort((a, b) => b.frequency - a.frequency).slice(0, 5);
+    const topFrequency = [...mapped]
+      .sort((a, b) => b.frequency - a.frequency)
+      .slice(0, 5);
 
     return {
       topRevenue,
