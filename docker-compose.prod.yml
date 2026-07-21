@@ -55,7 +55,7 @@ services:
           "wget",
           "-q",
           "--spider",
-          "http://localhost:5000/api/health/ready",
+          "http://127.0.0.1:5000/api/health/ready",
         ]
       interval: 15s
       timeout: 5s
@@ -72,7 +72,7 @@ services:
     depends_on:
       backend: { condition: service_healthy }
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/"]
       interval: 15s
       timeout: 5s
       retries: 10
@@ -92,7 +92,7 @@ services:
       backend: { condition: service_healthy }
       frontend: { condition: service_healthy }
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost/nginx-health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/nginx-health"]
       interval: 15s
       timeout: 5s
       retries: 5
