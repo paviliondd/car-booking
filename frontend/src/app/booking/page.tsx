@@ -8,8 +8,15 @@ import { io, type Socket } from 'socket.io-client';
 import { 
   Car, Calendar, MapPin, User, Phone, 
   CreditCard, Tag, Sparkles, ChevronLeft, Upload, Loader2, CheckCircle2,
-  Star, MessageSquare, Send, X, Shield, Map
+  Star, MessageSquare, Send, X, Shield, Map, AlertTriangle
 } from 'lucide-react';
+
+const fieldClassName = 'min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 disabled:cursor-not-allowed disabled:bg-slate-100';
+const fieldLabelClassName = 'mb-1.5 block text-sm font-medium text-slate-700';
+const panelClassName = 'rounded-2xl border border-slate-200 bg-white shadow-sm';
+const optionClassName = 'rounded-xl border p-4 transition focus-within:ring-2 focus-within:ring-emerald-600/20';
+const selectedOptionClassName = 'border-emerald-600 bg-emerald-50 ring-1 ring-emerald-600/15';
+const idleOptionClassName = 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50';
 
 const tomorrow = new Date();
 tomorrow.setDate(tomorrow.getDate() + 1);
@@ -251,29 +258,31 @@ export default function BookingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#080b11] py-12 px-6 md:px-12 max-w-7xl mx-auto flex flex-col gap-8">
+    <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 sm:px-6 sm:py-10 lg:px-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
       {/* Header Back */}
-      <div className="flex justify-between items-center border-b border-white/5 pb-6">
+      <div className="flex flex-col items-start justify-between gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center">
         <button 
           onClick={() => {
             if (selectedVehicle) setSelectedVehicle(null);
             else router.push('/');
           }}
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition bg-gray-900/50 px-4 py-2 rounded-lg border border-white/5 cursor-pointer"
+          className="flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 cursor-pointer"
         >
           <ChevronLeft className="h-4 w-4" />
           <span>{selectedVehicle ? 'Quay lại danh sách' : 'Về trang chủ'}</span>
         </button>
 
-        <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-          <Car className="h-6 w-6 text-emerald-500" />
+        <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-slate-950">
+          <Car className="h-6 w-6 text-emerald-600" />
           <span>Đặt Xe Tự Lái</span>
         </h1>
       </div>
 
       {errorMsg && (
-        <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-sm">
-          ⚠️ {errorMsg}
+        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+          <span>{errorMsg}</span>
         </div>
       )}
 
@@ -281,70 +290,70 @@ export default function BookingPage() {
       {!selectedVehicle && (
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Cột Trái: Bộ tìm kiếm */}
-          <div className="lg:col-span-1 glass-panel p-6 rounded-xl border border-white/5 h-fit flex flex-col gap-6">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2 border-b border-white/5 pb-3">
-              <Calendar className="h-5 w-5 text-emerald-400" />
+          <div className={`lg:col-span-1 ${panelClassName} flex h-fit flex-col gap-6 p-6`}>
+            <h2 className="flex items-center gap-2 border-b border-slate-200 pb-3 text-lg font-bold text-slate-950">
+              <Calendar className="h-5 w-5 text-emerald-600" />
               <span>Thời Gian & Địa Điểm</span>
             </h2>
 
             <form onSubmit={handleSearch} className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1.5 font-medium">Ngày Nhận</label>
+                  <label className={fieldLabelClassName}>Ngày Nhận</label>
                   <input 
                     type="date" 
                     value={startDate} 
                     onChange={(e) => setStartDate(e.target.value)}
                     required
-                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-emerald-500" 
+                    className={fieldClassName}
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1.5 font-medium">Giờ Nhận</label>
+                  <label className={fieldLabelClassName}>Giờ Nhận</label>
                   <input 
                     type="time" 
                     value={startTime} 
                     onChange={(e) => setStartTime(e.target.value)}
                     required
-                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-emerald-500" 
+                    className={fieldClassName}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1.5 font-medium">Ngày Trả</label>
+                  <label className={fieldLabelClassName}>Ngày Trả</label>
                   <input 
                     type="date" 
                     value={endDate} 
                     onChange={(e) => setEndDate(e.target.value)}
                     required
-                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-emerald-500" 
+                    className={fieldClassName}
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1.5 font-medium">Giờ Trả</label>
+                  <label className={fieldLabelClassName}>Giờ Trả</label>
                   <input 
                     type="time" 
                     value={endTime} 
                     onChange={(e) => setEndTime(e.target.value)}
                     required
-                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-emerald-500" 
+                    className={fieldClassName}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs text-gray-400 block mb-1.5 font-medium">Điểm Nhận/Trả Xe</label>
+                <label className={fieldLabelClassName}>Điểm Nhận/Trả Xe</label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                  <MapPin className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-500" />
                   <input 
                     type="text" 
                     value={pickupLoc}
                     onChange={(e) => { setPickupLoc(e.target.value); setDropoffLoc(e.target.value); }}
                     placeholder="Điểm nhận xe" 
                     required
-                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-emerald-500" 
+                    className={`${fieldClassName} pl-10`}
                   />
                 </div>
               </div>
@@ -352,7 +361,7 @@ export default function BookingPage() {
               <button 
                 type="submit" 
                 disabled={searching}
-                className="w-full gradient-btn text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 mt-2 disabled:opacity-50 cursor-pointer"
+                className="gradient-btn mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 py-3 font-semibold text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               >
                 {searching && <Loader2 className="h-4 w-4 animate-spin" />}
                 <span>{searching ? 'Đang tìm kiếm...' : 'Tìm Xe Trống'}</span>
@@ -363,36 +372,38 @@ export default function BookingPage() {
           {/* Cột Phải: Danh sách xe trống */}
           <div className="lg:col-span-2 flex flex-col gap-6">
             {!searched && (
-              <div className="glass-panel p-12 text-center rounded-xl border border-white/5 flex flex-col items-center gap-4 text-gray-400">
-                <Car className="h-12 w-12 text-emerald-500/50 animate-bounce" />
-                <p className="text-lg font-bold text-white">Vui lòng chọn lịch trình để quét tìm xe trống</p>
-                <p className="text-sm">Hệ thống sẽ lọc thời gian và loại bỏ ngay lập tức các xe trùng lịch đã được xác nhận cọc.</p>
+              <div className={`${panelClassName} flex flex-col items-center gap-4 p-8 text-center text-slate-600 sm:p-12`}>
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+                  <Car className="h-8 w-8 text-emerald-600" aria-hidden="true" />
+                </div>
+                <p className="text-lg font-bold text-slate-950">Vui lòng chọn lịch trình để tìm xe trống</p>
+                <p className="max-w-xl text-sm leading-6">Hệ thống sẽ kiểm tra thời gian và loại bỏ các xe trùng lịch đã được xác nhận cọc.</p>
               </div>
             )}
 
             {searched && vehicles.length === 0 && (
               <div className="flex flex-col gap-6">
-                <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-6 rounded-xl">
-                  <h3 className="font-bold text-lg mb-2">🚗 Không tìm thấy xe trống theo lịch yêu cầu!</h3>
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-amber-950">
+                  <h3 className="mb-2 flex items-center gap-2 text-lg font-bold"><Car className="h-5 w-5" aria-hidden="true" /> Không tìm thấy xe trống theo lịch yêu cầu</h3>
                   <p className="text-sm">Dưới đây là một số dòng xe tương tự hiện đang còn trống lịch ở khoảng thời gian lân cận để bạn tham khảo:</p>
                 </div>
 
                 {/* Grid xe gợi ý thay thế */}
                 <div className="grid md:grid-cols-2 gap-6">
                   {suggestions.map((car) => (
-                    <div key={car.id} className="glass-panel rounded-xl overflow-hidden border border-white/5 flex flex-col group">
+                    <div key={car.id} className={`${panelClassName} group flex flex-col overflow-hidden`}>
                       <div className="relative h-[160px]">
                         <Image src={car.images[0]} alt={car.model} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
                       </div>
                       <div className="p-5 flex flex-col flex-grow gap-3">
                         <div className="flex justify-between items-start">
-                          <h3 className="font-bold text-white text-lg">{car.brand} {car.model}</h3>
-                          <span className="text-emerald-400 font-bold">{(car.dailyPrice).toLocaleString()}đ/ngày</span>
+                          <h3 className="text-lg font-bold text-slate-950">{car.brand} {car.model}</h3>
+                          <span className="font-bold text-emerald-700">{(car.dailyPrice).toLocaleString()}đ/ngày</span>
                         </div>
-                        <p className="text-xs text-gray-400">Năm sản xuất: {car.year} | Ghế: {car.seats} | {car.transmission === 'AUTO' ? 'Tự động' : 'Số sàn'}</p>
+                        <p className="text-xs leading-5 text-slate-600">Năm sản xuất: {car.year} | Ghế: {car.seats} | {car.transmission === 'AUTO' ? 'Tự động' : 'Số sàn'}</p>
                         <button 
                           onClick={() => setSelectedVehicle(car)}
-                          className="w-full bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-white py-2 rounded-lg text-xs font-bold transition mt-2 cursor-pointer"
+                          className="mt-2 min-h-11 w-full rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-800 transition hover:border-emerald-600 hover:bg-emerald-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 cursor-pointer"
                         >
                           Chọn xe gợi ý này
                         </button>
@@ -406,7 +417,7 @@ export default function BookingPage() {
             {searched && vehicles.length > 0 && (
               <div className="grid md:grid-cols-2 gap-6">
                 {vehicles.map((car) => (
-                  <div key={car.id} className="glass-panel rounded-xl overflow-hidden border border-white/5 flex flex-col group hover:border-emerald-500/20 transition-all duration-300">
+                  <div key={car.id} className={`${panelClassName} group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md motion-reduce:transform-none`}>
                     <div className="relative h-[180px]">
                       <Image src={car.images[0]} alt={car.model} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
                       <span className="absolute bottom-3 left-3 bg-[#080b11]/80 text-[#f3f4f6] text-xs font-semibold px-2 py-1 rounded-md border border-white/10">
@@ -417,32 +428,32 @@ export default function BookingPage() {
                       <div className="flex justify-between items-start">
                         <div>
                           <span className="text-xs text-gray-500 block uppercase font-medium">{car.brand}</span>
-                          <h3 className="text-lg font-bold text-white mt-0.5">{car.model}</h3>
+                          <h3 className="mt-0.5 text-lg font-bold text-slate-950">{car.model}</h3>
                         </div>
                         <div className="text-right">
                           <span className="text-xs text-gray-500 block">Giá chuẩn</span>
-                          <span className="text-base font-bold text-emerald-400">{(car.dailyPrice).toLocaleString()}đ/ngày</span>
+                          <span className="text-base font-bold text-emerald-700">{(car.dailyPrice).toLocaleString()}đ/ngày</span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-2 py-2 border-y border-white/5 text-xs text-gray-400 text-center bg-white/1 rounded-lg">
+                      <div className="grid grid-cols-3 gap-2 rounded-lg border-y border-slate-200 bg-slate-50 py-2 text-center text-xs text-slate-700">
                         <div>
-                          <span className="block text-gray-500">Ghế</span>
+                          <span className="block text-slate-500">Ghế</span>
                           <strong>{car.seats} Chỗ</strong>
                         </div>
                         <div>
-                          <span className="block text-gray-500">Số</span>
+                          <span className="block text-slate-500">Số</span>
                           <strong>{car.transmission === 'AUTO' ? 'Tự động' : 'Số sàn'}</strong>
                         </div>
                         <div>
-                          <span className="block text-gray-500">Vận hành</span>
+                          <span className="block text-slate-500">Vận hành</span>
                           <strong>{car.fuel === 'ELECTRIC' ? 'Điện' : 'Xăng/Dầu'}</strong>
                         </div>
                       </div>
 
                       <button 
                         onClick={() => setSelectedVehicle(car)}
-                        className="w-full gradient-btn text-white py-2.5 rounded-lg text-sm font-semibold transition mt-auto cursor-pointer"
+                        className="gradient-btn mt-auto min-h-11 w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 cursor-pointer"
                       >
                         Chọn & Điền hồ sơ
                       </button>
@@ -462,55 +473,55 @@ export default function BookingPage() {
           <div className="lg:col-span-1 flex flex-col gap-6">
             
             {/* 1. Tóm tắt chuyến đi */}
-            <div className="glass-panel p-6 rounded-xl border border-white/5 flex flex-col gap-4">
-              <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">Tóm tắt chuyến đi</h2>
+            <div className={`${panelClassName} flex flex-col gap-4 p-6`}>
+              <h2 className="border-b border-slate-200 pb-3 text-lg font-bold text-slate-950">Tóm tắt chuyến đi</h2>
               <div className="flex gap-4 items-center">
                 <Image
                   src={selectedVehicle.images[0]} 
                   alt={selectedVehicle.model} 
                   width={80}
                   height={64}
-                  className="w-20 h-16 object-cover rounded-lg border border-white/10" 
+                  className="h-16 w-20 rounded-lg border border-slate-200 object-cover"
                 />
                 <div>
-                  <h3 className="font-bold text-white">{selectedVehicle.brand} {selectedVehicle.model}</h3>
-                  <p className="text-xs text-gray-400">Biển số: {selectedVehicle.plateNumber}</p>
+                  <h3 className="font-bold text-slate-950">{selectedVehicle.brand} {selectedVehicle.model}</h3>
+                  <p className="text-xs text-slate-600">Biển số: {selectedVehicle.plateNumber}</p>
                 </div>
               </div>
-              <hr className="border-white/5" />
+              <hr className="border-slate-200" />
               <div className="text-sm space-y-2">
-                <div className="flex justify-between text-gray-400">
+                <div className="flex justify-between gap-3 text-slate-600">
                   <span>Nhận xe:</span>
-                  <span className="text-white font-medium">{startDate} | {startTime}</span>
+                  <span className="font-medium text-slate-950">{startDate} | {startTime}</span>
                 </div>
-                <div className="flex justify-between text-gray-400">
+                <div className="flex justify-between gap-3 text-slate-600">
                   <span>Trả xe:</span>
-                  <span className="text-white font-medium">{endDate} | {endTime}</span>
+                  <span className="font-medium text-slate-950">{endDate} | {endTime}</span>
                 </div>
-                <div className="flex justify-between text-gray-400">
+                <div className="flex justify-between gap-3 text-slate-600">
                   <span>Điểm giao nhận:</span>
-                  <span className="text-white font-medium text-right max-w-[180px] truncate">{pickupLoc}</span>
+                  <span className="max-w-[180px] truncate text-right font-medium text-slate-950">{pickupLoc}</span>
                 </div>
               </div>
-              <hr className="border-white/5" />
+              <hr className="border-slate-200" />
               <div className="text-sm space-y-2">
-                <div className="flex justify-between text-gray-400">
+                <div className="flex justify-between text-slate-600">
                   <span>Tổng ngày thuê:</span>
-                  <span className="text-white font-bold">{getDaysCount()} Ngày</span>
+                  <span className="font-bold text-slate-950">{getDaysCount()} Ngày</span>
                 </div>
-                <div className="flex justify-between text-gray-400">
+                <div className="flex justify-between text-slate-600">
                   <span>Giá thuê:</span>
-                  <span className="text-white">{(getSubTotal()).toLocaleString()}đ</span>
+                  <span className="text-slate-950">{(getSubTotal()).toLocaleString()}đ</span>
                 </div>
-                <div className="flex justify-between text-gray-400">
+                <div className="flex justify-between text-slate-600">
                   <span>Phí bảo hiểm:</span>
-                  <span className="text-white">{(getInsuranceFee() * getDaysCount()).toLocaleString()}đ</span>
+                  <span className="text-slate-950">{(getInsuranceFee() * getDaysCount()).toLocaleString()}đ</span>
                 </div>
-                <div className="flex justify-between text-gray-500 font-bold border-t border-white/5 pt-2">
+                <div className="flex justify-between border-t border-slate-200 pt-2 font-bold text-slate-700">
                   <span>Tổng tiền thanh toán:</span>
-                  <span className="text-emerald-400">{(getTotalPrice()).toLocaleString()}đ</span>
+                  <span className="text-emerald-700">{(getTotalPrice()).toLocaleString()}đ</span>
                 </div>
-                <div className="flex justify-between text-green-400 font-black text-base">
+                <div className="flex justify-between text-base font-black text-emerald-700">
                   <span>Tiền đặt cọc ({depositPercent}%):</span>
                   <span>{(getDepositAmount()).toLocaleString()}đ</span>
                 </div>
@@ -519,7 +530,7 @@ export default function BookingPage() {
               {currentUser && selectedVehicle.ownerId && (
                 <button
                   onClick={() => setShowChatModal(true)}
-                  className="w-full bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white py-2.5 rounded-lg text-sm font-semibold transition mt-2 flex items-center justify-center gap-2 cursor-pointer border border-emerald-500/20"
+                  className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-800 transition hover:border-emerald-600 hover:bg-emerald-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 cursor-pointer"
                 >
                   <MessageSquare className="h-4 w-4" />
                   <span>Chat trực tiếp với chủ xe</span>
@@ -528,14 +539,14 @@ export default function BookingPage() {
             </div>
 
             {/* 2. Bản đồ tọa độ (Map widget) */}
-            <div className="glass-panel p-6 rounded-xl border border-white/5 flex flex-col gap-4">
-              <h3 className="font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
-                <Map className="h-4.5 w-4.5 text-emerald-400" />
+            <div className={`${panelClassName} flex flex-col gap-4 p-6`}>
+              <h3 className="flex items-center gap-2 border-b border-slate-200 pb-2 font-bold text-slate-950">
+                <Map className="h-4.5 w-4.5 text-emerald-600" />
                 <span>Vị Trí Nhận Xe</span>
               </h3>
-              <p className="text-xs text-gray-400">Xe đặt tại tọa độ: Lat {selectedVehicle.latitude || '20.999'}, Lng {selectedVehicle.longitude || '105.798'}</p>
+              <p className="text-xs text-slate-600">Xe đặt tại tọa độ: Lat {selectedVehicle.latitude || '20.999'}, Lng {selectedVehicle.longitude || '105.798'}</p>
               
-              <div className="rounded-lg overflow-hidden border border-white/10 h-40 bg-gray-950 flex flex-col items-center justify-center relative">
+              <div className="relative flex h-40 flex-col items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
                 <iframe 
                   src={`https://maps.google.com/maps?q=${selectedVehicle.latitude || 20.9996},${selectedVehicle.longitude || 105.7981}&z=14&output=embed`}
                   width="100%" 
@@ -548,27 +559,27 @@ export default function BookingPage() {
             </div>
 
             {/* 3. Đánh Giá & Nhận Xét */}
-            <div className="glass-panel p-6 rounded-xl border border-white/5 flex flex-col gap-4">
-              <h3 className="font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
+            <div className={`${panelClassName} flex flex-col gap-4 p-6`}>
+              <h3 className="flex items-center gap-2 border-b border-slate-200 pb-2 font-bold text-slate-950">
                 <Star className="h-4.5 w-4.5 text-yellow-400 fill-current" />
                 <span>Nhận xét khách hàng ({reviewsList.length})</span>
               </h3>
               {reviewsList.length === 0 ? (
-                <p className="text-xs text-gray-500 text-center py-4">Chưa có đánh giá nào cho xe này.</p>
+                <p className="py-4 text-center text-xs text-slate-500">Chưa có đánh giá nào cho xe này.</p>
               ) : (
                 <div className="space-y-4 max-h-[220px] overflow-y-auto pr-1">
                   {reviewsList.map((rev) => (
-                    <div key={rev.id} className="p-3 rounded bg-white/2 border border-white/5 flex flex-col gap-1 text-xs">
-                      <div className="flex justify-between text-gray-400">
-                        <span className="font-bold text-white">{rev.customer?.fullName || 'Khách ẩn danh'}</span>
+                    <div key={rev.id} className="flex flex-col gap-1 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
+                      <div className="flex justify-between text-slate-600">
+                        <span className="font-bold text-slate-950">{rev.customer?.fullName || 'Khách ẩn danh'}</span>
                         <div className="flex gap-0.5 text-yellow-400">
                           {Array.from({ length: rev.rating }).map((_, idx) => (
                             <Star key={idx} className="h-3 w-3 fill-current" />
                           ))}
                         </div>
                       </div>
-                      <p className="text-gray-300 leading-relaxed">{rev.comment}</p>
-                      <span className="text-[10px] text-gray-500 block text-right mt-1">{new Date(rev.createdAt).toLocaleDateString()}</span>
+                      <p className="leading-relaxed text-slate-700">{rev.comment}</p>
+                      <span className="mt-1 block text-right text-[10px] text-slate-500">{new Date(rev.createdAt).toLocaleDateString()}</span>
                     </div>
                   ))}
                 </div>
@@ -578,39 +589,39 @@ export default function BookingPage() {
           </div>
 
           {/* Cột Phải: Form thông tin, Upload tài liệu, Insurance & Deposit */}
-          <div className="lg:col-span-2 glass-panel p-6 rounded-xl border border-white/5 flex flex-col gap-6">
-            <h2 className="text-lg font-bold text-white border-b border-white/5 pb-3">Thông Tin Đăng Ký Thuê Xe</h2>
+          <div className={`lg:col-span-2 ${panelClassName} flex flex-col gap-6 p-6`}>
+            <h2 className="border-b border-slate-200 pb-3 text-lg font-bold text-slate-950">Thông Tin Đăng Ký Thuê Xe</h2>
 
             <form onSubmit={handleBook} className="flex flex-col gap-6">
               
               {/* Form cá nhân */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1.5 font-medium">Họ và tên (CCCD)</label>
+                  <label className={fieldLabelClassName}>Họ và tên (CCCD)</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                    <User className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-500" />
                     <input 
                       type="text" 
                       required 
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Nguyễn Văn A"
-                      className="w-full bg-gray-950 border border-white/10 rounded-lg py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:border-emerald-500" 
+                      className={`${fieldClassName} pl-10`}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1.5 font-medium">Số điện thoại liên lạc</label>
+                  <label className={fieldLabelClassName}>Số điện thoại liên lạc</label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                    <Phone className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-500" />
                     <input 
                       type="tel" 
                       required 
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="0987654321"
-                      className="w-full bg-gray-950 border border-white/10 rounded-lg py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:border-emerald-500" 
+                      className={`${fieldClassName} pl-10`}
                     />
                   </div>
                 </div>
@@ -618,42 +629,42 @@ export default function BookingPage() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1.5 font-medium">Số Căn cước công dân (CCCD)</label>
+                  <label className={fieldLabelClassName}>Số Căn cước công dân (CCCD)</label>
                   <input 
                     type="text" 
                     required 
                     value={idCardNo}
                     onChange={(e) => setIdCardNo(e.target.value)}
                     placeholder="037200123456"
-                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-emerald-500" 
+                    className={fieldClassName}
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1.5 font-medium">Địa chỉ Email nhận hợp đồng</label>
+                  <label className={fieldLabelClassName}>Địa chỉ Email nhận hợp đồng</label>
                   <input 
                     type="email" 
                     required 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="nguyenvana@gmail.com"
-                    className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-emerald-500" 
+                    className={fieldClassName}
                   />
                 </div>
               </div>
 
               {/* 1. Chọn gói Bảo Hiểm */}
               <div>
-                <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-1.5">
-                  <Shield className="h-4.5 w-4.5 text-emerald-400" />
+                <h3 className="mb-3 flex items-center gap-1.5 text-sm font-bold text-slate-950">
+                  <Shield className="h-4.5 w-4.5 text-emerald-600" />
                   <span>Bảo Hiểm Thân Vỏ Tự Nguyện</span>
                 </h3>
                 <div className="grid md:grid-cols-3 gap-3">
                   
                   {/* None */}
-                  <label className={`border rounded-lg p-4 flex flex-col gap-1 cursor-pointer transition ${insuranceType === 'NONE' ? 'border-emerald-500 bg-emerald-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
+                  <label className={`${optionClassName} flex cursor-pointer flex-col gap-1 ${insuranceType === 'NONE' ? selectedOptionClassName : idleOptionClassName}`}>
                     <div className="flex justify-between items-center w-full">
-                      <span className="text-xs font-semibold text-white">Gói Tiêu chuẩn</span>
+                      <span className="text-xs font-semibold text-slate-950">Gói Tiêu chuẩn</span>
                       <input 
                         type="radio" 
                         name="insurance" 
@@ -662,14 +673,14 @@ export default function BookingPage() {
                         className="accent-emerald-500"
                       />
                     </div>
-                    <span className="text-[10px] text-gray-500">Khách tự chịu trách nhiệm va chạm</span>
-                    <strong className="text-xs text-emerald-400 mt-2">0đ / ngày</strong>
+                    <span className="text-xs text-slate-600">Khách tự chịu trách nhiệm va chạm</span>
+                    <strong className="mt-2 text-xs text-emerald-700">0đ / ngày</strong>
                   </label>
 
                   {/* Basic */}
-                  <label className={`border rounded-lg p-4 flex flex-col gap-1 cursor-pointer transition ${insuranceType === 'BASIC' ? 'border-emerald-500 bg-emerald-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
+                  <label className={`${optionClassName} flex cursor-pointer flex-col gap-1 ${insuranceType === 'BASIC' ? selectedOptionClassName : idleOptionClassName}`}>
                     <div className="flex justify-between items-center w-full">
-                      <span className="text-xs font-semibold text-white">Gói Cơ Bản</span>
+                      <span className="text-xs font-semibold text-slate-950">Gói Cơ Bản</span>
                       <input 
                         type="radio" 
                         name="insurance" 
@@ -678,14 +689,14 @@ export default function BookingPage() {
                         className="accent-emerald-500"
                       />
                     </div>
-                    <span className="text-[10px] text-gray-500">Bồi thường va chạm đến 80%</span>
-                    <strong className="text-xs text-emerald-400 mt-2">100,000đ / ngày</strong>
+                    <span className="text-xs text-slate-600">Bồi thường va chạm đến 80%</span>
+                    <strong className="mt-2 text-xs text-emerald-700">100,000đ / ngày</strong>
                   </label>
 
                   {/* Premium */}
-                  <label className={`border rounded-lg p-4 flex flex-col gap-1 cursor-pointer transition ${insuranceType === 'PREMIUM' ? 'border-emerald-500 bg-emerald-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
+                  <label className={`${optionClassName} flex cursor-pointer flex-col gap-1 ${insuranceType === 'PREMIUM' ? selectedOptionClassName : idleOptionClassName}`}>
                     <div className="flex justify-between items-center w-full">
-                      <span className="text-xs font-semibold text-white">Gói VIP Cao Cấp</span>
+                      <span className="text-xs font-semibold text-slate-950">Gói VIP Cao Cấp</span>
                       <input 
                         type="radio" 
                         name="insurance" 
@@ -694,24 +705,24 @@ export default function BookingPage() {
                         className="accent-emerald-500"
                       />
                     </div>
-                    <span className="text-[10px] text-gray-500">Bảo hiểm 100% không khấu hao</span>
-                    <strong className="text-xs text-emerald-400 mt-2">250,000đ / ngày</strong>
+                    <span className="text-xs text-slate-600">Bảo hiểm 100% không khấu hao</span>
+                    <strong className="mt-2 text-xs text-emerald-700">250,000đ / ngày</strong>
                   </label>
                 </div>
               </div>
 
               {/* 2. Chọn Tỷ Lệ Cọc */}
               <div>
-                <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-1.5">
-                  <CreditCard className="h-4.5 w-4.5 text-emerald-400" />
+                <h3 className="mb-3 flex items-center gap-1.5 text-sm font-bold text-slate-950">
+                  <CreditCard className="h-4.5 w-4.5 text-emerald-600" />
                   <span>Chọn Tỷ Lệ Đặt Cọc</span>
                 </h3>
                 <div className="flex gap-4">
                   <button 
                     type="button"
                     onClick={() => setDepositPercent(30)}
-                    className={`flex-1 text-center py-2.5 rounded-lg text-sm font-semibold transition border cursor-pointer ${
-                      depositPercent === 30 ? 'border-emerald-500 bg-emerald-500/10 text-white' : 'border-white/10 text-gray-400 bg-gray-950 hover:border-white/20'
+                    className={`min-h-11 flex-1 rounded-lg border px-4 py-2.5 text-center text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 cursor-pointer ${
+                      depositPercent === 30 ? 'border-emerald-600 bg-emerald-50 text-emerald-900 ring-1 ring-emerald-600/15' : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50'
                     }`}
                   >
                     Cọc trước 30%
@@ -719,8 +730,8 @@ export default function BookingPage() {
                   <button 
                     type="button"
                     onClick={() => setDepositPercent(50)}
-                    className={`flex-1 text-center py-2.5 rounded-lg text-sm font-semibold transition border cursor-pointer ${
-                      depositPercent === 50 ? 'border-emerald-500 bg-emerald-500/10 text-white' : 'border-white/10 text-gray-400 bg-gray-950 hover:border-white/20'
+                    className={`min-h-11 flex-1 rounded-lg border px-4 py-2.5 text-center text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 cursor-pointer ${
+                      depositPercent === 50 ? 'border-emerald-600 bg-emerald-50 text-emerald-900 ring-1 ring-emerald-600/15' : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50'
                     }`}
                   >
                     Cọc trước 50%
@@ -730,9 +741,9 @@ export default function BookingPage() {
 
               {/* Upload hồ sơ */}
               <div>
-                <h3 className="text-sm font-bold text-white mb-3">Tài Liệu Hồ Sơ Xác Thực (Bắt buộc)</h3>
+                <h3 className="mb-3 text-sm font-bold text-slate-950">Tài Liệu Hồ Sơ Xác Thực (Bắt buộc)</h3>
                 <div className="grid md:grid-cols-3 gap-4">
-                  <div className="border border-dashed border-white/10 rounded-lg p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-emerald-500/50 transition relative">
+                  <div className="relative flex min-h-32 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-center transition hover:border-emerald-600 hover:bg-emerald-50/40">
                     {idCardFront ? (
                       <div className="w-full h-24 relative rounded overflow-hidden">
                         <Image unoptimized fill sizes="200px" src={idCardFront} alt="CCCD mặt trước" className="object-cover" />
@@ -740,8 +751,8 @@ export default function BookingPage() {
                       </div>
                     ) : (
                       <>
-                        <Upload className="h-6 w-6 text-gray-500" />
-                        <span className="text-[11px] text-gray-400 font-medium">CCCD Mặt trước</span>
+                        <Upload className="h-6 w-6 text-slate-500" />
+                        <span className="text-xs font-medium text-slate-700">CCCD Mặt trước</span>
                       </>
                     )}
                     <input 
@@ -752,7 +763,7 @@ export default function BookingPage() {
                     />
                   </div>
 
-                  <div className="border border-dashed border-white/10 rounded-lg p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-emerald-500/50 transition relative">
+                  <div className="relative flex min-h-32 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-center transition hover:border-emerald-600 hover:bg-emerald-50/40">
                     {idCardBack ? (
                       <div className="w-full h-24 relative rounded overflow-hidden">
                         <Image unoptimized fill sizes="200px" src={idCardBack} alt="CCCD mặt sau" className="object-cover" />
@@ -760,8 +771,8 @@ export default function BookingPage() {
                       </div>
                     ) : (
                       <>
-                        <Upload className="h-6 w-6 text-gray-500" />
-                        <span className="text-[11px] text-gray-400 font-medium">CCCD Mặt sau</span>
+                        <Upload className="h-6 w-6 text-slate-500" />
+                        <span className="text-xs font-medium text-slate-700">CCCD Mặt sau</span>
                       </>
                     )}
                     <input 
@@ -772,7 +783,7 @@ export default function BookingPage() {
                     />
                   </div>
 
-                  <div className="border border-dashed border-white/10 rounded-lg p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-emerald-500/50 transition relative">
+                  <div className="relative flex min-h-32 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-center transition hover:border-emerald-600 hover:bg-emerald-50/40">
                     {driverLicense ? (
                       <div className="w-full h-24 relative rounded overflow-hidden">
                         <Image unoptimized fill sizes="200px" src={driverLicense} alt="Giấy phép lái xe" className="object-cover" />
@@ -780,8 +791,8 @@ export default function BookingPage() {
                       </div>
                     ) : (
                       <>
-                        <Upload className="h-6 w-6 text-gray-500" />
-                        <span className="text-[11px] text-gray-400 font-medium">Giấy phép lái xe (GPLX)</span>
+                        <Upload className="h-6 w-6 text-slate-500" />
+                        <span className="text-xs font-medium text-slate-700">Giấy phép lái xe (GPLX)</span>
                       </>
                     )}
                     <input 
@@ -797,53 +808,53 @@ export default function BookingPage() {
               {/* Coupon, Affiliate & Ghi chú */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1.5 font-medium">Mã giảm giá (Coupon)</label>
+                  <label className={fieldLabelClassName}>Mã giảm giá (Coupon)</label>
                   <div className="relative">
-                    <Tag className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                    <Tag className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-500" />
                     <input 
                       type="text" 
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
                       placeholder="GIAM50K, CHAOHE2026..."
-                      className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-emerald-500" 
+                      className={`${fieldClassName} pl-10`}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1.5 font-medium">Mã người giới thiệu (Affiliate)</label>
+                  <label className={fieldLabelClassName}>Mã người giới thiệu (Affiliate)</label>
                   <div className="relative">
-                    <Sparkles className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                    <Sparkles className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-500" />
                     <input 
                       type="text" 
                       value={affiliateCode}
                       onChange={(e) => setAffiliateCode(e.target.value)}
                       placeholder="CTV999..."
-                      className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-emerald-500" 
+                      className={`${fieldClassName} pl-10`}
                     />
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs text-gray-400 block mb-1.5 font-medium">Ghi chú thêm cho chủ xe</label>
+                <label className={fieldLabelClassName}>Ghi chú thêm cho chủ xe</label>
                 <textarea 
                   rows={2}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Yêu cầu giao xe tại cơ quan, vệ sinh sạch sẽ trước khi giao..."
-                  className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-emerald-500" 
+                  className={`${fieldClassName} min-h-24 resize-y`}
                 />
               </div>
 
               {/* Chọn phương thức thanh toán */}
               <div>
-                <h3 className="text-sm font-bold text-white mb-3">Hình Thức Đặt Cọc</h3>
+                <h3 className="mb-3 text-sm font-bold text-slate-950">Hình Thức Đặt Cọc</h3>
                 <div className="grid md:grid-cols-3 gap-3">
-                  <label className={`border rounded-lg p-4 flex items-center justify-between cursor-pointer transition ${paymentMethod === 'BANK_TRANSFER' ? 'border-emerald-500 bg-emerald-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
+                  <label className={`${optionClassName} flex min-h-20 cursor-pointer items-center justify-between gap-3 ${paymentMethod === 'BANK_TRANSFER' ? selectedOptionClassName : idleOptionClassName}`}>
                     <div className="flex items-center gap-3">
-                      <CreditCard className="h-5 w-5 text-emerald-400" />
-                      <span className="text-sm font-semibold text-white">VietQR / Ngân Hàng</span>
+                      <CreditCard className="h-5 w-5 shrink-0 text-emerald-700" />
+                      <span className="text-sm font-semibold text-slate-950">VietQR / Ngân Hàng</span>
                     </div>
                     <input 
                       type="radio" 
@@ -855,10 +866,10 @@ export default function BookingPage() {
                     />
                   </label>
 
-                  <label className={`border rounded-lg p-4 flex items-center justify-between cursor-pointer transition ${paymentMethod === 'MOMO' ? 'border-emerald-500 bg-emerald-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
+                  <label className={`${optionClassName} flex min-h-20 cursor-pointer items-center justify-between gap-3 ${paymentMethod === 'MOMO' ? selectedOptionClassName : idleOptionClassName}`}>
                     <div className="flex items-center gap-3">
                       <div className="h-5 w-5 rounded bg-pink-600 text-white font-bold text-[10px] flex items-center justify-center">M</div>
-                      <span className="text-sm font-semibold text-white">Ví MoMo</span>
+                      <span className="text-sm font-semibold text-slate-950">Ví MoMo</span>
                     </div>
                     <input 
                       type="radio" 
@@ -870,10 +881,10 @@ export default function BookingPage() {
                     />
                   </label>
 
-                  <label className={`border rounded-lg p-4 flex items-center justify-between cursor-pointer transition ${paymentMethod === 'CASH' ? 'border-emerald-500 bg-emerald-500/5' : 'border-white/10 hover:border-white/20 bg-gray-950'}`}>
+                  <label className={`${optionClassName} flex min-h-20 cursor-pointer items-center justify-between gap-3 ${paymentMethod === 'CASH' ? selectedOptionClassName : idleOptionClassName}`}>
                     <div className="flex items-center gap-3">
-                      <User className="h-5 w-5 text-green-400" />
-                      <span className="text-sm font-semibold text-white">Tiền mặt tại showroom</span>
+                      <User className="h-5 w-5 shrink-0 text-emerald-700" />
+                      <span className="text-sm font-semibold text-slate-950">Tiền mặt tại showroom</span>
                     </div>
                     <input 
                       type="radio" 
@@ -890,7 +901,7 @@ export default function BookingPage() {
               <button 
                 type="submit"
                 disabled={bookingLoading}
-                className="w-full gradient-btn text-white font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 mt-4 cursor-pointer text-lg disabled:opacity-50"
+                className="gradient-btn mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-lg px-4 py-3.5 text-lg font-semibold text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               >
                 {bookingLoading && <Loader2 className="h-5 w-5 animate-spin" />}
                 <span>{bookingLoading ? 'Đang khởi tạo đơn hàng...' : 'Xác Nhận Đặt Xe & Cọc'}</span>
@@ -903,13 +914,14 @@ export default function BookingPage() {
       {/* CHAT MODAL CHO KHÁCH HÀNG CHAT VỚI CHỦ XE */}
       {showChatModal && selectedVehicle && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-[#0b0f19] border border-white/10 rounded-2xl overflow-hidden flex flex-col h-[500px]">
+          <div className="flex h-[min(500px,calc(100vh-2rem))] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
             {/* Header */}
-            <div className="p-4 border-b border-white/5 bg-gray-950 flex justify-between items-center text-white font-bold">
+            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 p-4 font-bold text-slate-950">
               <span>Chat với Chủ xe</span>
               <button 
                 onClick={() => setShowChatModal(false)}
-                className="text-gray-400 hover:text-white transition cursor-pointer"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-200 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 cursor-pointer"
+                aria-label="Đóng cửa sổ chat"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -918,7 +930,7 @@ export default function BookingPage() {
             {/* Messages */}
             <div className="flex-grow overflow-y-auto p-4 flex flex-col gap-3">
               {chatMessages.length === 0 ? (
-                <div className="text-xs text-gray-500 text-center my-auto">Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện.</div>
+                <div className="my-auto text-center text-xs text-slate-500">Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện.</div>
               ) : (
                 chatMessages.map((chat, idx) => (
                   <div 
@@ -926,11 +938,11 @@ export default function BookingPage() {
                     className={`max-w-[75%] p-3 rounded-xl text-sm ${
                       chat.senderId === currentUser?.id 
                         ? 'bg-emerald-600 text-white self-end rounded-br-none' 
-                        : 'bg-white/5 text-gray-300 self-start rounded-bl-none border border-white/5'
+                        : 'self-start rounded-bl-none border border-slate-200 bg-slate-100 text-slate-800'
                     }`}
                   >
                     <p>{chat.message}</p>
-                    <span className="text-[8px] text-gray-400 block mt-1 text-right">
+                    <span className={`mt-1 block text-right text-[10px] ${chat.senderId === currentUser?.id ? 'text-emerald-100' : 'text-slate-500'}`}>
                       {new Date(chat.createdAt).toLocaleTimeString()}
                     </span>
                   </div>
@@ -939,17 +951,18 @@ export default function BookingPage() {
             </div>
 
             {/* Input Form */}
-            <form onSubmit={handleSendChatMessage} className="p-4 border-t border-white/5 flex gap-2 bg-gray-950/40">
+            <form onSubmit={handleSendChatMessage} className="flex gap-2 border-t border-slate-200 bg-slate-50 p-4">
               <input 
                 type="text" 
                 value={newChatMessage}
                 onChange={(e) => setNewChatMessage(e.target.value)}
                 placeholder="Nhập tin nhắn..."
-                className="flex-grow bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-emerald-500 text-white" 
+                className={`${fieldClassName} flex-grow`}
               />
               <button 
                 type="submit"
-                className="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-lg transition cursor-pointer"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-emerald-600 p-2 text-white transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 cursor-pointer"
+                aria-label="Gửi tin nhắn"
               >
                 <Send className="h-4 w-4" />
               </button>
@@ -958,6 +971,7 @@ export default function BookingPage() {
         </div>
       )}
 
-    </div>
+      </div>
+    </main>
   );
 }
