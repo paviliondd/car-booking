@@ -30,7 +30,10 @@ rollback() {
 
 docker compose -f "$COMPOSE_FILE" config >/dev/null
 docker compose -f "$COMPOSE_FILE" pull
-docker compose -f "$COMPOSE_FILE" up -d --wait db redis minio
+mkdir -p "${UPLOAD_HOST_DIR:-./data/uploads}"
+docker compose -f "$COMPOSE_FILE" up -d --wait db redis
+docker compose -f "$COMPOSE_FILE" run --rm --user root --entrypoint sh backend -c \
+  'mkdir -p /app/uploads/public /app/uploads/private && chown -R 1001:1001 /app/uploads'
 docker compose -f "$COMPOSE_FILE" run --rm backend npx prisma migrate deploy
 docker compose -f "$COMPOSE_FILE" up -d --wait --remove-orphans
 

@@ -100,56 +100,6 @@ spec:
             - containerPort: 6379
 
 ---
-# MinIO (S3 Compatible) Service & Deployment
-apiVersion: v1
-kind: Service
-metadata:
-  name: minio
-  namespace: car-rental-system
-spec:
-  ports:
-    - name: api
-      port: 9000
-      targetPort: 9000
-    - name: console
-      port: 9001
-      targetPort: 9001
-  selector:
-    app: minio
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: minio-deployment
-  namespace: car-rental-system
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: minio
-  template:
-    metadata:
-      labels:
-        app: minio
-    spec:
-      containers:
-        - name: minio
-          image: minio/minio:latest
-          args:
-            - server
-            - /data
-            - --console-address
-            - :9001
-          ports:
-            - containerPort: 9000
-            - containerPort: 9001
-          env:
-            - name: MINIO_ROOT_USER
-              value: minioadmin
-            - name: MINIO_ROOT_PASSWORD
-              value: minioadminpassword123
-
----
 # Backend (NestJS API) Service & Deployment
 apiVersion: v1
 kind: Service
@@ -168,7 +118,8 @@ metadata:
   name: backend-deployment
   namespace: car-rental-system
 spec:
-  replicas: 2
+  # Local file storage requires one replica on one VPS. Move to shared S3 before scaling horizontally.
+  replicas: 1
   selector:
     matchLabels:
       app: backend
@@ -191,24 +142,26 @@ spec:
               value: supersecretjwtkey987654321!
             - name: PORT
               value: "5000"
-            - name: S3_ENDPOINT
-              value: http://minio:9000
-            - name: S3_BUCKET_NAME
-              value: car-rental-bucket
-            - name: AWS_ACCESS_KEY_ID
-              value: minioadmin
-            - name: AWS_SECRET_ACCESS_KEY
-              value: minioadminpassword123
-            - name: AWS_REGION
-              value: us-east-1
+            - name: UPLOAD_DIR
+              value: /app/uploads
+            - name: FILE_PUBLIC_BASE_URL
+              value: https://datxe.linuxunity.com
             - name: AWS_SES_EMAIL_SENDER
               value: noreply@datxe.linuxunity.com
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
           readinessProbe:
             httpGet:
               path: /api/vehicles
               port: 5000
             initialDelaySeconds: 15
             periodSeconds: 10
+      volumes:
+        - name: uploads
+          hostPath:
+            path: /opt/datxe/data/uploads
+            type: DirectoryOrCreate
 
 ---
 # Frontend (Next.js 15) Service & Deployment

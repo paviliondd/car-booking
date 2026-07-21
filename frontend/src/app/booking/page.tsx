@@ -75,6 +75,9 @@ export default function BookingPage() {
   const [idCardFront, setIdCardFront] = useState<string | null>(null);
   const [idCardBack, setIdCardBack] = useState<string | null>(null);
   const [driverLicense, setDriverLicense] = useState<string | null>(null);
+  const [idCardFrontFile, setIdCardFrontFile] = useState<File | null>(null);
+  const [idCardBackFile, setIdCardBackFile] = useState<File | null>(null);
+  const [driverLicenseFile, setDriverLicenseFile] = useState<File | null>(null);
 
   const [bookingLoading, setBookingLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -171,9 +174,16 @@ export default function BookingPage() {
     }
   };
 
-  const handleFileUploadMock = (field: string, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (field: 'front' | 'back' | 'license', e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 8 * 1024 * 1024) {
+        setErrorMsg('Mỗi tệp hồ sơ không được vượt quá 8 MB.');
+        return;
+      }
+      if (field === 'front') setIdCardFrontFile(file);
+      if (field === 'back') setIdCardBackFile(file);
+      if (field === 'license') setDriverLicenseFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         if (field === 'front') setIdCardFront(reader.result as string);
@@ -192,6 +202,20 @@ export default function BookingPage() {
     setErrorMsg('');
 
     try {
+      if (!localStorage.getItem('token')) {
+        setErrorMsg('Vui lòng đăng nhập tài khoản khách hàng trước khi đặt xe.');
+        return;
+      }
+      if (!idCardFrontFile || !idCardBackFile || !driverLicenseFile) {
+        setErrorMsg('Vui lòng tải đủ ảnh CCCD mặt trước, mặt sau và giấy phép lái xe.');
+        return;
+      }
+
+      const documentKeys = await api.storage.uploadCustomerDocuments({
+        idCardFront: idCardFrontFile,
+        idCardBack: idCardBackFile,
+        driverLicense: driverLicenseFile,
+      });
       const startDateTime = `${startDate}T${startTime}:00.000Z`;
       const endDateTime = `${endDate}T${endTime}:00.000Z`;
 
@@ -211,6 +235,9 @@ export default function BookingPage() {
         affiliateCode: affiliateCode || undefined,
         insuranceType,
         depositPercent: Number(depositPercent),
+        idCardFront: documentKeys.idCardFront || undefined,
+        idCardBack: documentKeys.idCardBack || undefined,
+        driverLicense: documentKeys.driverLicense || undefined,
       };
 
       const result = await api.bookings.create(bookingPayload);
@@ -757,8 +784,8 @@ export default function BookingPage() {
                     )}
                     <input 
                       type="file" 
-                      accept="image/*" 
-                      onChange={(e) => handleFileUploadMock('front', e)}
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => handleFileUpload('front', e)}
                       className="absolute inset-0 opacity-0 cursor-pointer" 
                     />
                   </div>
@@ -777,8 +804,8 @@ export default function BookingPage() {
                     )}
                     <input 
                       type="file" 
-                      accept="image/*" 
-                      onChange={(e) => handleFileUploadMock('back', e)}
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => handleFileUpload('back', e)}
                       className="absolute inset-0 opacity-0 cursor-pointer" 
                     />
                   </div>
@@ -797,8 +824,8 @@ export default function BookingPage() {
                     )}
                     <input 
                       type="file" 
-                      accept="image/*" 
-                      onChange={(e) => handleFileUploadMock('license', e)}
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => handleFileUpload('license', e)}
                       className="absolute inset-0 opacity-0 cursor-pointer" 
                     />
                   </div>

@@ -21,10 +21,15 @@ import type { AuthenticatedRequest } from '../auth/types/authenticated-user';
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
-  // 1. Tạo đặt xe mới (Public)
+  // 1. Tạo đặt xe mới (Khách hàng đã đăng nhập)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.CUSTOMER)
   @Post()
-  async create(@Body() dto: CreateBookingDto) {
-    return await this.bookingsService.createBooking(dto);
+  async create(
+    @Body() dto: CreateBookingDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return await this.bookingsService.createBooking(dto, req.user);
   }
 
   // 2. Tra cứu đơn hàng theo SĐT (Public)

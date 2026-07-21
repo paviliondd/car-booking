@@ -55,6 +55,11 @@ export type ChatPartner = { id: string; name: string; email: string };
 type JsonObject = Record<string, unknown>;
 export type ContractData = { id: string; terms: string; renterSignature?: string | null };
 export type ContractResponse = { contract: ContractData; booking: Booking & { vehicle: Vehicle; customer: NonNullable<Booking['customer']> } };
+export type CustomerDocumentKeys = {
+  idCardFront: string | null;
+  idCardBack: string | null;
+  driverLicense: string | null;
+};
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${BASE_URL}${endpoint}`;
@@ -122,6 +127,21 @@ export const api = {
     update: (id: string, dto: unknown) => request<Vehicle>(`/vehicles/${id}`, { method: 'PUT', body: JSON.stringify(dto) }),
     updateStatus: (id: string, status: string) => request<Vehicle>(`/vehicles/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
     delete: (id: string) => request<JsonObject>(`/vehicles/${id}`, { method: 'DELETE' }),
+  },
+
+  storage: {
+    uploadVehicleImage: (file: File) => {
+      const body = new FormData();
+      body.append('file', file);
+      return request<{ key: string; url: string }>('/storage/vehicle-image', { method: 'POST', body });
+    },
+    uploadCustomerDocuments: (files: { idCardFront: File; idCardBack: File; driverLicense: File }) => {
+      const body = new FormData();
+      body.append('idCardFront', files.idCardFront);
+      body.append('idCardBack', files.idCardBack);
+      body.append('driverLicense', files.driverLicense);
+      return request<CustomerDocumentKeys>('/storage/customer-documents', { method: 'POST', body });
+    },
   },
 
   // Bookings

@@ -17,6 +17,7 @@ import {
   VehicleStatus,
 } from '@prisma/client';
 import { AuthenticatedUser } from '../auth/types/authenticated-user';
+import { LocalStorageService } from '../storage/local-storage.service';
 
 type BookingDetails = Prisma.BookingGetPayload<{
   include: {
@@ -36,9 +37,10 @@ export class BookingsService {
     private vehiclesService: VehiclesService,
     private paymentsService: PaymentsService,
     private notificationService: NotificationService,
+    private localStorage: LocalStorageService,
   ) {}
 
-  async createBooking(dto: CreateBookingDto) {
+  async createBooking(dto: CreateBookingDto, actor: AuthenticatedUser) {
     const lockKey = `vehicle:${dto.vehicleId}`;
     this.logger.log(`Acquiring lock for ${lockKey}`);
 
@@ -85,8 +87,21 @@ export class BookingsService {
       }
 
       // 4. Find or Create Customer Profile (CRM & Segmentation)
-      let customer = await this.prisma.customer.findUnique({
-        where: { phone: dto.phone },
+      const documentKeys = [
+        dto.idCardFront,
+        dto.idCardBack,
+        dto.driverLicense,
+      ].filter((key): key is string => Boolean(key));
+      for (const key of documentKeys) {
+        if (!(await this.localStorage.privateKeyExists(key, actor.id))) {
+          throw new BadRequestException(
+            'Tệp hồ sơ không tồn tại hoặc không hợp lệ',
+          );
+        }
+      }
+
+      let customer = await this.prisma.customer.findFirst({
+        where: { OR: [{ userId: actor.id }, { phone: dto.phone }] },
       });
 
       if (!customer) {
@@ -96,10 +111,19 @@ export class BookingsService {
             fullName: dto.fullName,
             phone: dto.phone,
             idCardNo: dto.idCardNo,
+            userId: actor.id,
+            idCardFront: dto.idCardFront,
+            idCardBack: dto.idCardBack,
+            driverLicense: dto.driverLicense,
             segment: 'REGULAR',
           },
         });
       } else {
+        if (customer.userId && customer.userId !== actor.id) {
+          throw new BadRequestException(
+            'Số điện thoại này đã thuộc về một tài khoản khác',
+          );
+        }
         if (customer.segment === 'BLACKLIST') {
           throw new BadRequestException(
             'Tài khoản của bạn nằm trong danh sách đen (Blacklist). Vui lòng liên hệ Hotline.',
@@ -111,6 +135,10 @@ export class BookingsService {
           data: {
             fullName: dto.fullName,
             idCardNo: dto.idCardNo,
+            userId: actor.id,
+            ...(dto.idCardFront ? { idCardFront: dto.idCardFront } : {}),
+            ...(dto.idCardBack ? { idCardBack: dto.idCardBack } : {}),
+            ...(dto.driverLicense ? { driverLicense: dto.driverLicense } : {}),
           },
         });
       }

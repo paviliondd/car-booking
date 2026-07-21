@@ -26,7 +26,7 @@ Browser
        -> NestJS 11 REST /api + Socket.IO :5000
             -> Prisma 7 + PostgreSQL 15
             -> Redis 7
-            -> MinIO/S3-compatible storage
+            -> Local VPS filesystem (`UPLOAD_HOST_DIR` bind mount)
             -> Google Identity Services, PayOS, MoMo, SES/SNS
 ```
 
@@ -72,6 +72,7 @@ Backend domains: `auth`, `vehicles`, `bookings`, `payments`, `contracts`, `revie
 Roles: `ADMIN`, `STAFF`, `CUSTOMER`, `OWNER`.
 
 - Client không bao giờ được chọn role khi đăng ký; đăng ký mới luôn là `CUSTOMER`.
+- Tìm xe là public; tạo booking và upload CCCD/GPLX yêu cầu JWT `CUSTOMER`, đồng thời liên kết hồ sơ Customer với user hiện tại.
 - OWNER chỉ truy cập vehicle, booking, dashboard thuộc xe có `ownerId` của chính họ.
 - Duyệt yêu cầu owner chỉ dành cho ADMIN/STAFF.
 - JWT phải kiểm tra user/role hiện tại trong DB và fail closed khi DB lỗi.
@@ -106,7 +107,7 @@ Tạo `/opt/datxe/.env` từ `.env.production.example`, permission hạn chế. 
 
 - Core: `POSTGRES_*`, `DATABASE_URL` (Compose tự dựng), `JWT_SECRET` dài/ngẫu nhiên, `CORS_ORIGINS`.
 - Google: `GOOGLE_CLIENT_ID`; GitHub Actions variable `NEXT_PUBLIC_GOOGLE_CLIENT_ID` để bake vào frontend image.
-- Storage/notification: `MINIO_ROOT_*`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `S3_*`, sender SES.
+- Storage: `UPLOAD_HOST_DIR`, `UPLOAD_DIR`, `FILE_PUBLIC_BASE_URL`. Ảnh xe public qua API; CCCD/GPLX private và cần JWT. AWS credentials chỉ dành cho SES/SNS notification hiện tại.
 - PayOS: `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY`.
 - MoMo: `MOMO_PARTNER_CODE`, `MOMO_ACCESS_KEY`, `MOMO_SECRET_KEY`, `MOMO_API_URL`, `MOMO_REDIRECT_URL`, `MOMO_IPN_URL`.
 
@@ -185,13 +186,13 @@ Task chỉ hoàn tất khi authorization/ownership/validation đúng, API/UI typ
 ## Nợ kỹ thuật còn lại (không che giấu)
 
 - Tra cứu booking công khai bằng số điện thoại vẫn có rủi ro PII/enumeration; cần OTP hoặc booking code + phone và rate limit riêng.
-- Upload CCCD/GPLX hiện preview base64 phía client, chưa có signed upload, MIME/size scanning và protected object access.
+- Upload local đã giới hạn MIME/size và protected object access, nhưng chưa có malware scanning, retention job hoặc quota theo user.
 - Contract PDF được tạo phía client, font tiếng Việt chưa hoàn chỉnh và chưa có immutable signed-document storage/audit trail.
 - Một số dashboard phụ (notifications/violations/feedback/rating/long-term booking/forgot password/logout) vẫn là prototype hoặc chưa persistent; không quảng bá như tính năng hoàn chỉnh.
 - Dashboard client còn tách khỏi API client chính; test coverage business/payment/auth còn thấp.
 - `docker-compose.yml`, `nginx.conf` và Kubernetes manifest là legacy/dev, còn credential mẫu/hard-code; không dùng cho production trước khi harden.
 - `backend/dist/` và `backend/backend-dev.out.log` đang bị Git track từ lịch sử. Đây là artifacts, không phải source of truth; không chỉnh tay hoặc dựa vào chúng. Cần một cleanup riêng được người dùng duyệt để untrack.
-- Cần chạy smoke test production thật với PostgreSQL/Redis/MinIO và sandbox credentials PayOS/MoMo/Google trước go-live.
+- Cần chạy smoke test production thật với PostgreSQL/Redis, bind mount upload trên VPS và sandbox credentials PayOS/MoMo/Google trước go-live.
 
 ## Git và vệ sinh workspace
 

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Key, Car, CalendarClock, Search, Loader2 } from 'lucide-react';
+import { Key, CalendarClock, Search, Loader2 } from 'lucide-react';
 import LocationDropdown from './LocationDropdown';
 import DateTimePicker from './DateTimePicker';
 import LongTermForm from './LongTermForm';
@@ -12,7 +12,7 @@ export default function SearchBar() {
   const router = useRouter();
   const toast = useToast();
 
-  const [activeTab, setActiveTab] = useState<'self-drive' | 'with-driver' | 'long-term'>('self-drive');
+  const [activeTab, setActiveTab] = useState<'self-drive' | 'long-term'>('self-drive');
   const [location, setLocation] = useState('TP. Hồ Chí Minh');
   
   // Default values: 21:00 T5, 25/06 - 20:00 T6, 26/06
@@ -80,24 +80,7 @@ export default function SearchBar() {
           <span>Xe tự lái</span>
         </button>
 
-        {/* Tab 2: Xe có tài xế */}
-        <button
-          type="button"
-          onClick={() => {
-            setActiveTab('with-driver');
-            toast.warning('Dịch vụ xe có tài xế đang được hoàn thiện!');
-          }}
-          className={`flex items-center gap-2 px-6 py-3 text-xs md:text-sm font-bold rounded-t-xl transition cursor-pointer ${
-            activeTab === 'with-driver'
-              ? 'bg-white dark:bg-[#0b0f19] text-[#008F5A] border-t border-x border-gray-100 dark:border-white/5 shadow-xs border-b-2 border-b-[#008F5A]'
-              : 'bg-gray-100/50 dark:bg-gray-900/40 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-white/5 border-t border-x border-transparent'
-          }`}
-        >
-          <Car className={`h-4.5 w-4.5 ${activeTab === 'with-driver' ? 'text-[#008F5A]' : 'text-gray-400'}`} />
-          <span>Xe có tài xế</span>
-        </button>
-
-        {/* Tab 3: Thuê dài hạn */}
+        {/* Tab 2: Thuê dài hạn */}
         <button
           type="button"
           onClick={() => setActiveTab('long-term')}

@@ -71,6 +71,18 @@ export class CreateBookingDto {
   @IsOptional()
   @Type(() => Number)
   depositPercent?: number;
+
+  @IsString()
+  @IsOptional()
+  idCardFront?: string;
+
+  @IsString()
+  @IsOptional()
+  idCardBack?: string;
+
+  @IsString()
+  @IsOptional()
+  driverLicense?: string;
 }
 
 export class TrackBookingDto {

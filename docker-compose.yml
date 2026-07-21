@@ -1,101 +1,63 @@
-version: '3.8'
+name: datxe-dev
 
 services:
   db:
     image: postgres:15-alpine
-    container_name: car-rental-db
-    restart: always
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: supersecurepassword123
-      POSTGRES_DB: car_rental
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+      POSTGRES_USER: ${POSTGRES_USER:-datxe}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-datxe}
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7-alpine
-    container_name: car-rental-redis
-    restart: always
-    ports:
-      - "6379:6379"
-    volumes:
-      - redisdata:/data
-
-  minio:
-    image: minio/minio:latest
-    container_name: car-rental-minio
-    restart: always
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadminpassword123
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - miniodata:/data
-    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports: ["6379:6379"]
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
-    container_name: car-rental-backend
-    restart: always
+    restart: unless-stopped
+    env_file: .env
     environment:
-      - DATABASE_URL=postgresql://postgres:supersecurepassword123@db:5432/car_rental?schema=public
-      - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=supersecretjwtkey987654321!
-      - AWS_ACCESS_KEY_ID=minioadmin
-      - AWS_SECRET_ACCESS_KEY=minioadminpassword123
-      - AWS_REGION=us-east-1
-      - S3_ENDPOINT=http://minio:9000
-      - S3_BUCKET_NAME=car-rental-bucket
-      - AWS_SES_EMAIL_SENDER=noreply@datxe.linuxunity.com
-      - MOMO_PARTNER_CODE=MOMO_MOCK_PARTNER
-      - MOMO_ACCESS_KEY=MOMO_MOCK_ACCESS
-      - MOMO_SECRET_KEY=MOMO_MOCK_SECRET
-      - MOMO_API_URL=https://test-payment.momo.vn/v2/gateway/api/create
-      - PAYOS_CLIENT_ID=mock_payos_client_id
-      - PAYOS_API_KEY=mock_payos_api_key
-      - PAYOS_CHECKSUM_KEY=mock_payos_checksum_key
-      - PORT=5000
-    ports:
-      - "5000:5000"
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-datxe}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-datxe}?schema=public
+      REDIS_URL: redis://redis:6379
+      UPLOAD_DIR: /app/uploads
+      FILE_PUBLIC_BASE_URL: http://localhost:5000
+    ports: ["5000:5000"]
+    volumes: [uploads:/app/uploads]
     depends_on:
-      - db
-      - redis
-      - minio
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-    container_name: car-rental-frontend
-    restart: always
-    environment:
-      - NEXT_PUBLIC_API_URL=https://datxe.linuxunity.com/api
-      - PORT=3000
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-
-  nginx:
-    image: nginx:alpine
-    container_name: car-rental-nginx
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - backend
-      - frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:5000/api
+        NEXT_PUBLIC_WS_URL: http://localhost:5000
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
+    restart: unless-stopped
+    ports: ["3000:3000"]
+    depends_on: [backend]
 
 volumes:
   pgdata:
   redisdata:
-  miniodata:
+  uploads:

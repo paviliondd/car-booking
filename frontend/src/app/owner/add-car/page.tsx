@@ -35,10 +35,8 @@ export default function AddCarPage() {
   const [terms, setTerms] = useState('Không hút thuốc lá trên xe. Không chở động vật/hàng cấm.');
   
   // Images (multi image inputs)
-  const [images, setImages] = useState<string[]>([
-    'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80'
-  ]);
-  const [newImageUrl, setNewImageUrl] = useState('');
+  const [images, setImages] = useState<string[]>([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     const verifyOwner = async () => {
@@ -56,11 +54,19 @@ export default function AddCarPage() {
     void verifyOwner();
   }, [router]);
 
-  const handleAddImage = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (newImageUrl.trim()) {
-      setImages([...images, newImageUrl.trim()]);
-      setNewImageUrl('');
+  const handleAddImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImage(true);
+    setErrorMsg('');
+    try {
+      const uploaded = await api.storage.uploadVehicleImage(file);
+      setImages((current) => [...current, uploaded.url]);
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Không thể tải ảnh xe lên VPS.');
+    } finally {
+      setUploadingImage(false);
+      e.target.value = '';
     }
   };
 
@@ -73,6 +79,10 @@ export default function AddCarPage() {
     setLoading(true);
     setErrorMsg('');
     try {
+      if (images.length === 0) {
+        setErrorMsg('Vui lòng tải ít nhất một ảnh xe trước khi đăng.');
+        return;
+      }
       const payload = {
         brand,
         model,
@@ -271,20 +281,19 @@ export default function AddCarPage() {
             <span>Hình Ảnh Phương Tiện ({images.length})</span>
           </h2>
 
-          <div className="flex gap-2">
-            <input 
-              type="text" 
-              value={newImageUrl} 
-              onChange={(e) => setNewImageUrl(e.target.value)} 
-              placeholder="Nhập đường dẫn URL ảnh xe trực tuyến..." 
-              className="flex-grow bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-green-500 text-white" 
-            />
-            <button 
-              onClick={handleAddImage}
-              className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer"
-            >
-              Thêm URL
-            </button>
+          <div className="flex flex-col gap-2">
+            <label className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-500 focus-within:ring-2 focus-within:ring-green-300">
+              {uploadingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              <span>{uploadingImage ? 'Đang tải ảnh...' : 'Tải ảnh từ thiết bị'}</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                disabled={uploadingImage}
+                onChange={(event) => void handleAddImage(event)}
+                className="sr-only"
+              />
+            </label>
+            <p className="text-xs text-gray-400">JPG, PNG hoặc WebP; tối đa 8 MB mỗi ảnh. Tệp được lưu trên VPS.</p>
           </div>
 
           <div className="grid grid-cols-4 gap-4 mt-2">
