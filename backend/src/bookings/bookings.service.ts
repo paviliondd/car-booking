@@ -18,6 +18,7 @@ import {
 } from '@prisma/client';
 import { AuthenticatedUser } from '../auth/types/authenticated-user';
 import { LocalStorageService } from '../storage/local-storage.service';
+import { canTransitionBooking } from './booking-status';
 
 type BookingDetails = Prisma.BookingGetPayload<{
   include: {
@@ -363,6 +364,14 @@ export class BookingsService {
   ) {
     const currentBooking = await this.findOne(id);
 
+    if (currentBooking.status === status) return currentBooking;
+
+    if (!canTransitionBooking(currentBooking.status, status)) {
+      throw new BadRequestException(
+        `Không thể chuyển đơn từ ${currentBooking.status} sang ${status}.`,
+      );
+    }
+
     // Nếu người thực hiện là OWNER, kiểm tra xem họ có sở hữu xe của đơn đặt này hay không
     if (user.role === 'OWNER') {
       if (currentBooking.vehicle.ownerId !== user.id) {
@@ -383,20 +392,34 @@ export class BookingsService {
       });
 
       // 2. Cập nhật trạng thái xe tương ứng
-      let vehicleStatus: VehicleStatus = VehicleStatus.AVAILABLE;
       if (status === BookingStatus.RENTING) {
-        vehicleStatus = VehicleStatus.RENTED;
+        await tx.vehicle.update({
+          where: { id: currentBooking.vehicleId },
+          data: { status: VehicleStatus.RENTED },
+        });
       } else if (
         status === BookingStatus.COMPLETED ||
         status === BookingStatus.CANCELLED
       ) {
-        vehicleStatus = VehicleStatus.AVAILABLE;
+        const otherActiveRental = await tx.booking.count({
+          where: {
+            id: { not: id },
+            vehicleId: currentBooking.vehicleId,
+            status: BookingStatus.RENTING,
+          },
+        });
+        if (otherActiveRental === 0) {
+          const vehicle = await tx.vehicle.findUnique({
+            where: { id: currentBooking.vehicleId },
+          });
+          if (vehicle?.status === VehicleStatus.RENTED) {
+            await tx.vehicle.update({
+              where: { id: currentBooking.vehicleId },
+              data: { status: VehicleStatus.AVAILABLE },
+            });
+          }
+        }
       }
-
-      await tx.vehicle.update({
-        where: { id: currentBooking.vehicleId },
-        data: { status: vehicleStatus },
-      });
 
       // 3. Xử lý Affiliate Commission nếu booking hoàn thành
       if (

@@ -21,7 +21,7 @@ export default function TopCarsTable({ cars }: TopCarsTableProps) {
   };
 
   return (
-    <div className="flex h-full min-h-[300px] min-w-0 flex-col gap-4 overflow-hidden rounded-2xl border border-gray-150 bg-white p-4 shadow-xs select-none dark:border-white/5 dark:bg-gray-900 sm:p-6">
+    <div className="flex h-full min-h-[300px] min-w-0 flex-col gap-4 overflow-hidden rounded-2xl border border-gray-150 bg-white p-4 shadow-xs dark:border-white/5 dark:bg-gray-900 sm:p-6">
       <h3 className="text-base font-bold text-gray-950 dark:text-white">Top xe thuê</h3>
       
       <div className="flex-1 overflow-x-auto">

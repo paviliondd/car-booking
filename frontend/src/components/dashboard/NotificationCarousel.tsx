@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BellRing, ArrowRight } from 'lucide-react';
-import { useToast } from '@/providers/ToastProvider';
+import Link from 'next/link';
 
 interface NoticeItem {
   id: string;
@@ -16,19 +16,9 @@ interface NotificationCarouselProps {
 }
 
 export default function NotificationCarousel({ notices }: NotificationCarouselProps) {
-  const toast = useToast();
   const [activeIndex, setActiveIndex] = useState(0);
 
   const list = notices || [];
-
-  // Auto-play interval 2.5s
-  useEffect(() => {
-    if (list.length <= 1) return;
-    const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % list.length);
-    }, 2500);
-    return () => clearInterval(interval);
-  }, [list.length]);
 
   if (list.length === 0) {
     return (
@@ -41,7 +31,7 @@ export default function NotificationCarousel({ notices }: NotificationCarouselPr
   const current = list[activeIndex];
 
   return (
-    <div className="bg-[#1e1e2d] border border-[#2b2b40] rounded-2xl p-6 shadow-md relative flex flex-col gap-4 text-white select-none h-full overflow-hidden">
+    <div className="bg-[#1e1e2d] border border-[#2b2b40] rounded-2xl p-6 shadow-md relative flex flex-col gap-4 text-white h-full overflow-hidden">
       {/* Header and Dots indicators */}
       <div className="flex justify-between items-center z-10">
         <div className="flex items-center gap-2">
@@ -54,8 +44,11 @@ export default function NotificationCarousel({ notices }: NotificationCarouselPr
           {list.map((_, i) => (
             <button
               key={i}
+              type="button"
+              aria-label={`Xem thông báo ${i + 1}`}
+              aria-current={i === activeIndex ? 'true' : undefined}
               onClick={() => setActiveIndex(i)}
-              className={`h-1.5 rounded-full transition-all cursor-pointer ${
+              className={`min-h-11 min-w-11 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
                 i === activeIndex ? 'w-4 bg-[#008F5A]' : 'w-1.5 bg-gray-600'
               }`}
             />
@@ -72,13 +65,13 @@ export default function NotificationCarousel({ notices }: NotificationCarouselPr
 
         <div className="flex justify-between items-center border-t border-[#2b2b40] pt-4 mt-2">
           <span className="text-[10px] text-gray-500 font-bold">{current.date}</span>
-          <button
-            onClick={() => toast.success(`Mở xem chi tiết: ${current.title}`)}
-            className="text-xs text-[#008F5A] font-bold flex items-center gap-1 hover:underline cursor-pointer"
+          <Link
+            href="/dashboard/audit"
+            className="flex min-h-11 items-center gap-1 rounded-lg px-2 text-xs font-bold text-[#008F5A] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
           >
             <span>Chi tiết</span>
             <ArrowRight className="h-3 w-3" />
-          </button>
+          </Link>
         </div>
       </div>
     </div>

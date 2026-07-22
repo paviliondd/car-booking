@@ -1,13 +1,16 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { api } from '@/lib/api';
 import { Car, ChevronLeft, Upload, Loader2, DollarSign, MapPin, Sliders, X } from 'lucide-react';
 
 export default function AddCarPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const adminMode = pathname.startsWith('/dashboard');
+  const returnPath = adminMode ? '/dashboard/vehicles' : '/owner';
   const [authorized, setAuthorized] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -42,8 +45,10 @@ export default function AddCarPage() {
     const verifyOwner = async () => {
       try {
         const me = await api.auth.me();
-        if (me.role !== 'OWNER' || !me.isVerifiedOwner) {
-          router.replace('/owner');
+        const ownerAllowed = me.role === 'OWNER' && me.isVerifiedOwner;
+        const adminAllowed = adminMode && (me.role === 'ADMIN' || me.role === 'STAFF');
+        if (!ownerAllowed && !adminAllowed) {
+          router.replace(me.role === 'OWNER' ? '/owner' : '/dashboard');
           return;
         }
         setAuthorized(true);
@@ -52,7 +57,7 @@ export default function AddCarPage() {
       }
     };
     void verifyOwner();
-  }, [router]);
+  }, [adminMode, router]);
 
   const handleAddImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -106,7 +111,7 @@ export default function AddCarPage() {
       };
 
       await api.vehicles.create(payload);
-      router.push('/owner');
+      router.push(returnPath);
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : 'Lỗi thêm xe mới. Hãy kiểm tra lại biển số hoặc dữ liệu nhập.');
     } finally {
@@ -127,11 +132,11 @@ export default function AddCarPage() {
       {/* Header Back */}
       <div className="flex justify-between items-center border-b border-white/5 pb-6">
         <button 
-          onClick={() => router.push('/owner')}
+          onClick={() => router.push(returnPath)}
           className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition bg-gray-900/50 px-4 py-2 rounded-lg border border-white/5 cursor-pointer"
         >
           <ChevronLeft className="h-4 w-4" />
-          <span>Về Dashboard</span>
+          <span>{adminMode ? 'Về danh sách xe' : 'Về Dashboard'}</span>
         </button>
 
         <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">

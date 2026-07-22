@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { BookingStatus, Role, VehicleStatus } from '@prisma/client';
+import {
+  BookingStatus,
+  PaymentStatus,
+  Role,
+  VehicleStatus,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -104,6 +109,7 @@ export class DashboardService {
         select: {
           totalPrice: true,
           status: true,
+          payment: { select: { amount: true, status: true } },
         },
       });
 
@@ -125,7 +131,17 @@ export class DashboardService {
         (sum, booking) => sum + booking.totalPrice,
         0,
       );
-      const totalMoneyForward = Math.round(totalMoneyContract * 0.12);
+      const recognizedPaymentStatuses: PaymentStatus[] = [
+        PaymentStatus.DEPOSITED,
+        PaymentStatus.PAID,
+      ];
+      const totalMoneyForward = bookings
+        .filter(
+          (booking) =>
+            booking.payment &&
+            recognizedPaymentStatuses.includes(booking.payment.status),
+        )
+        .reduce((sum, booking) => sum + (booking.payment?.amount || 0), 0);
       const collectibleStatuses: BookingStatus[] = [
         BookingStatus.CONFIRMED,
         BookingStatus.RENTING,
@@ -275,7 +291,6 @@ export class DashboardService {
     try {
       const vehicles = await this.prisma.vehicle.findMany({
         where: { ownerId: this.ownerId(actor) },
-        take: limit,
         include: {
           bookings: {
             where: { status: BookingStatus.COMPLETED },
@@ -328,39 +343,19 @@ export class DashboardService {
     }
   }
 
-  getNotifications(limit: number) {
-    return [
-      {
-        id: '1',
-        title: 'Hợp đồng mới chờ duyệt',
-        desc: 'Khách hàng Nguyễn Văn Khách vừa đặt xe VinFast VF8 30A-999.99.',
-        date: '2026-06-24',
-      },
-      {
-        id: '2',
-        title: 'Yêu cầu bảo dưỡng định kỳ',
-        desc: 'Xe Toyota Vios 30A-888.88 đến hạn thay dầu động cơ.',
-        date: '2026-06-23',
-      },
-      {
-        id: '3',
-        title: 'Cập nhật chính sách mới',
-        desc: 'Áp dụng bảo hiểm tự nguyện mở rộng cho tất cả xe từ tháng 7.',
-        date: '2026-06-22',
-      },
-      {
-        id: '4',
-        title: 'Phản hồi khiếu nại',
-        desc: 'Nhân viên đã trả lời ticket hỗ trợ mã TK-90123.',
-        date: '2026-06-21',
-      },
-      {
-        id: '5',
-        title: 'Đăng ký chủ xe đối tác mới',
-        desc: 'Chủ xe Trần Văn C vừa gửi yêu cầu duyệt thông tin xe.',
-        date: '2026-06-20',
-      },
-    ].slice(0, limit);
+  async getNotifications(limit: number, actor: { id: string; role: Role }) {
+    const logs = await this.prisma.auditLog.findMany({
+      where: actor.role === Role.OWNER ? { userId: actor.id } : undefined,
+      include: { user: { select: { name: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: Math.min(Math.max(limit, 1), 20),
+    });
+    return logs.map((log) => ({
+      id: log.id,
+      title: log.action.replaceAll('_', ' '),
+      desc: `${log.user?.name || 'Hệ thống'} · ${log.targetTable} ${log.targetId}`,
+      date: log.createdAt.toISOString(),
+    }));
   }
 
   async getCarNotifyList() {

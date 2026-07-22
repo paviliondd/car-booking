@@ -18,8 +18,8 @@ export default function TopServicesChart({ data }: TopServicesChartProps) {
   const list = data || [];
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-150 dark:border-white/5 rounded-2xl p-6 shadow-xs flex flex-col gap-4 select-none h-full min-h-[300px]">
-      <h3 className="text-base font-bold text-gray-950 dark:text-white">Top dịch vụ</h3>
+    <div className="bg-white dark:bg-gray-900 border border-gray-150 dark:border-white/5 rounded-2xl p-6 shadow-xs flex flex-col gap-4 h-full min-h-[300px]">
+      <h3 className="text-base font-bold text-gray-950 dark:text-white">Cơ cấu nhiên liệu</h3>
       
       <div className="flex-1 w-full relative min-h-[220px]">
         {list.length === 0 ? (

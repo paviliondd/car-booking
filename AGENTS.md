@@ -42,7 +42,7 @@ frontend/
     payment/                  chuyển tiếp sang cổng thanh toán thật
     contract/[bookingId]/     hợp đồng và chữ ký
     owner/, owner/add-car/    portal chủ xe
-    (dashboard)/dashboard/    dashboard OWNER/ADMIN/STAFF
+    (dashboard)/dashboard/    khu quản trị ADMIN/STAFF: đơn, xe, CRM, bảo dưỡng, tài chính, ticket, audit
   src/components/             layout, auth, search, owner, dashboard
   src/lib/api.ts              API client/type chính
   src/lib/api/dashboard.ts    dashboard client (cần hợp nhất dần)
@@ -174,12 +174,12 @@ npm run build
 docker compose up --build
 ```
 
-Baseline xác nhận ngày 2026-07-19:
+Baseline xác nhận ngày 2026-07-22:
 
 - Backend lint check: 0 lỗi; build pass.
 - Backend unit: 2 suites, 8 tests pass.
 - Backend e2e: 1 suite, 2 tests pass, không cần DB thật vì health/root test override Prisma.
-- Frontend lint: 0 lỗi, 0 warning; production build pass 14 routes.
+- Frontend lint: 0 lỗi, 0 warning; production build pass 22 routes.
 
 Task chỉ hoàn tất khi authorization/ownership/validation đúng, API/UI typed, không thêm mock ẩn, lint/build/test liên quan pass và giới hạn còn lại được báo rõ.
 
@@ -188,7 +188,7 @@ Task chỉ hoàn tất khi authorization/ownership/validation đúng, API/UI typ
 - Tra cứu booking công khai bằng số điện thoại vẫn có rủi ro PII/enumeration; cần OTP hoặc booking code + phone và rate limit riêng.
 - Upload local đã giới hạn MIME/size và protected object access, nhưng chưa có malware scanning, retention job hoặc quota theo user.
 - Contract PDF được tạo phía client, font tiếng Việt chưa hoàn chỉnh và chưa có immutable signed-document storage/audit trail.
-- Một số dashboard phụ (notifications/violations/feedback/rating/long-term booking/forgot password/logout) vẫn là prototype hoặc chưa persistent; không quảng bá như tính năng hoàn chỉnh.
+- Dashboard quản trị đã bỏ các modal feedback/rating/phạt nguội và dữ liệu giả. Thông báo hiện lấy từ audit log; chưa có inbox thông báo persistent riêng hoặc trạng thái đã đọc.
 - Dashboard client còn tách khỏi API client chính; test coverage business/payment/auth còn thấp.
 - `docker-compose.yml`, `nginx.conf` và Kubernetes manifest là legacy/dev, còn credential mẫu/hard-code; không dùng cho production trước khi harden.
 - `backend/dist/` và `backend/backend-dev.out.log` đang bị Git track từ lịch sử. Đây là artifacts, không phải source of truth; không chỉnh tay hoặc dựa vào chúng. Cần một cleanup riêng được người dùng duyệt để untrack.

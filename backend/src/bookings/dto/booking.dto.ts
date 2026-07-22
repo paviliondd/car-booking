@@ -6,7 +6,7 @@ import {
   IsEnum,
   IsNumber,
 } from 'class-validator';
-import { PaymentMethod } from '@prisma/client';
+import { BookingStatus, PaymentMethod } from '@prisma/client';
 import { Type } from 'class-transformer';
 
 export class CreateBookingDto {
@@ -89,4 +89,9 @@ export class TrackBookingDto {
   @IsString()
   @IsNotEmpty()
   phone: string;
+}
+
+export class UpdateBookingStatusDto {
+  @IsEnum(BookingStatus)
+  status: BookingStatus;
 }

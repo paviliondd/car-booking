@@ -30,7 +30,7 @@ export default function OverviewCards({ today, thisMonth, lastMonth }: OverviewC
     const totalExpense = data?.totalExpense ?? 0;
 
     return (
-      <div className="flex flex-col relative w-full h-[320px] rounded-2xl overflow-hidden shadow-lg select-none">
+      <div className="flex flex-col relative w-full h-[320px] rounded-2xl overflow-hidden shadow-lg">
         {/* Top Segment: Primary Color Block with Wave Pattern */}
         <div className={`h-[150px] ${bgClass} p-5 text-white relative flex flex-col justify-between`}>
           {/* Background SVG Wave Pattern */}

@@ -43,7 +43,7 @@ export default function RevenueChart({ data, selectedMonth, onMonthChange }: Rev
   }) ?? [];
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-150 dark:border-white/5 rounded-2xl p-6 shadow-xs flex flex-col gap-4 select-none h-full">
+    <div className="bg-white dark:bg-gray-900 border border-gray-150 dark:border-white/5 rounded-2xl p-6 shadow-xs flex flex-col gap-4 h-full">
       {/* Header with selector */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div className="flex flex-col gap-1.5">
@@ -57,7 +57,7 @@ export default function RevenueChart({ data, selectedMonth, onMonthChange }: Rev
         <select
           value={selectedMonth}
           onChange={(e) => onMonthChange(e.target.value)}
-          className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 p-2 rounded-lg text-xs font-bold text-gray-700 dark:text-white focus:outline-none"
+          className="min-h-11 rounded-lg border border-gray-200 bg-gray-50 p-2 text-xs font-bold text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 dark:border-white/5 dark:bg-white/5 dark:text-white"
         >
           {[0, 1, 2].map((offset) => {
             const date = new Date();

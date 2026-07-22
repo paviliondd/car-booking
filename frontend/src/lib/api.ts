@@ -52,6 +52,11 @@ export type ChatMessage = {
   createdAt: string;
 };
 export type ChatPartner = { id: string; name: string; email: string };
+export type CustomerRecord = { id: string; fullName: string; phone: string; idCardNo: string; segment: 'REGULAR' | 'VIP' | 'BLACKLIST'; notes?: string | null; user?: AuthUser | null; bookings?: Booking[] };
+export type MaintenanceRecord = { id: string; vehicleId: string; type: string; scheduledDate: string; completedDate?: string | null; cost: number; description?: string | null; vehicle?: Vehicle };
+export type FinancialRecord = { vehicleId: string; plateNumber: string; brand: string; model: string; revenue: number; maintenanceCost: number; otherExpense: number; totalCost: number; netProfit: number; occupancyRate: number };
+export type AuditRecord = { id: string; action: string; targetTable: string; targetId: string; oldValue?: unknown; newValue?: unknown; createdAt: string; user?: Pick<AuthUser, 'id' | 'email' | 'name' | 'role'> | null };
+export type TicketRecord = { id: string; subject: string; message: string; status: string; reply?: string | null; repliedAt?: string | null; createdAt: string; user?: Pick<AuthUser, 'id' | 'email' | 'name'> };
 type JsonObject = Record<string, unknown>;
 export type ContractData = { id: string; terms: string; renterSignature?: string | null };
 export type ContractResponse = { contract: ContractData; booking: Booking & { vehicle: Vehicle; customer: NonNullable<Booking['customer']> } };
@@ -168,9 +173,9 @@ export const api = {
 
   // Support Tickets
   tickets: {
-    create: (dto: { subject: string; message: string }) => request<JsonObject>('/tickets', { method: 'POST', body: JSON.stringify(dto) }),
-    findAll: () => request<JsonObject[]>('/tickets'),
-    reply: (id: string, reply: string) => request<JsonObject>(`/tickets/${id}/reply`, { method: 'PUT', body: JSON.stringify({ reply }) }),
+    create: (dto: { subject: string; message: string }) => request<TicketRecord>('/tickets', { method: 'POST', body: JSON.stringify(dto) }),
+    findAll: () => request<TicketRecord[]>('/tickets'),
+    reply: (id: string, reply: string) => request<TicketRecord>(`/tickets/${id}/reply`, { method: 'PUT', body: JSON.stringify({ reply }) }),
   },
 
   // Chat
@@ -183,27 +188,27 @@ export const api = {
   // Analytics (Admin/Staff only)
   analytics: {
     dashboard: () => request<JsonObject>('/analytics/dashboard'),
-    financial: () => request<JsonObject>('/analytics/financial'),
+    financial: () => request<FinancialRecord[]>('/analytics/financial'),
     topVehicles: () => request<JsonObject[]>('/analytics/top-vehicles'),
   },
 
   // Maintenance (Admin/Staff only)
   maintenance: {
-    findAll: () => request<JsonObject[]>('/maintenance'),
-    create: (dto: unknown) => request<JsonObject>('/maintenance', { method: 'POST', body: JSON.stringify(dto) }),
-    complete: (id: string, cost: number) => request<JsonObject>(`/maintenance/${id}/complete`, { method: 'PATCH', body: JSON.stringify({ cost }) }),
-    getAlerts: () => request<JsonObject[]>('/maintenance/alerts'),
+    findAll: () => request<MaintenanceRecord[]>('/maintenance'),
+    create: (dto: unknown) => request<MaintenanceRecord>('/maintenance', { method: 'POST', body: JSON.stringify(dto) }),
+    complete: (id: string, cost: number) => request<MaintenanceRecord>(`/maintenance/${id}/complete`, { method: 'PATCH', body: JSON.stringify({ cost }) }),
+    getAlerts: () => request<MaintenanceRecord[]>('/maintenance/alerts'),
   },
 
   // Customers (Admin/Staff only)
   customers: {
-    findAll: () => request<JsonObject[]>('/customers'),
-    findOne: (id: string) => request<JsonObject>(`/customers/${id}`),
-    update: (id: string, segment: string, notes?: string) => request<JsonObject>(`/customers/${id}`, { method: 'PATCH', body: JSON.stringify({ segment, notes }) }),
+    findAll: () => request<CustomerRecord[]>('/customers'),
+    findOne: (id: string) => request<CustomerRecord>(`/customers/${id}`),
+    update: (id: string, segment: string, notes?: string) => request<CustomerRecord>(`/customers/${id}`, { method: 'PATCH', body: JSON.stringify({ segment, notes }) }),
   },
 
   // Audit Logs (Admin only)
   auditLogs: {
-    findAll: () => request<JsonObject[]>('/audit-logs'),
+    findAll: () => request<AuditRecord[]>('/audit-logs'),
   }
 };

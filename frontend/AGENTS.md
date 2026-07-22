@@ -10,7 +10,7 @@
 - Dùng `src/lib/api.ts` hoặc helper typed dùng chung; không nhân bản request/auth/error logic mới.
 - Không thêm `any`, effect chỉ để mirror state, raw `<img>` hoặc hard-coded color mới nếu có thể dùng type, derived state, `next/image` và semantic token.
 - Với mọi thay đổi UI/UX, dùng global Codex skill `ui-ux-pro-max` theo workflow ghi trong root `AGENTS.md`; giữ Lucide làm icon family của repo.
-- Trước khi bàn giao chạy `npm run lint:check` và `npm run build`. Baseline 2026-07-19 là lint 0 lỗi/0 warning và build pass 14 routes; không làm baseline thoái lui hoặc tắt rule hàng loạt.
+- Trước khi bàn giao chạy `npm run lint:check` và `npm run build`. Baseline 2026-07-22 là lint 0 lỗi/0 warning và build pass 22 routes; không làm baseline thoái lui hoặc tắt rule hàng loạt.
 
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know

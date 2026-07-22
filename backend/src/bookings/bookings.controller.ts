@@ -10,11 +10,11 @@ import {
   Req,
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
-import { CreateBookingDto } from './dto/booking.dto';
+import { CreateBookingDto, UpdateBookingStatusDto } from './dto/booking.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { Role, BookingStatus } from '@prisma/client';
+import { Role } from '@prisma/client';
 import type { AuthenticatedRequest } from '../auth/types/authenticated-user';
 
 @Controller('bookings')
@@ -68,9 +68,9 @@ export class BookingsController {
   @Patch(':id/status')
   async updateStatus(
     @Param('id') id: string,
-    @Body('status') status: BookingStatus,
+    @Body() dto: UpdateBookingStatusDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    return await this.bookingsService.updateStatus(id, status, req.user);
+    return await this.bookingsService.updateStatus(id, dto.status, req.user);
   }
 }

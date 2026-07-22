@@ -38,19 +38,4 @@ export const dashboardApi = {
   
   // Alerts & Notifications
   getNotifications: (limit: number = 5) => request(`/notifications?limit=${limit}`),
-  getCarNotifyList: () => request('/cars/notify-list'),
-  getCarViolateList: () => request('/cars/violate-list'),
-  
-  // Additional Features
-  submitFeedback: (category: string, message: string) => 
-    request('/feedback', { method: 'POST', body: JSON.stringify({ category, message }) }),
-  submitRating: (stars: number, comment: string) => 
-    request('/rating', { method: 'POST', body: JSON.stringify({ stars, comment }) }),
-  submitLongTermBooking: (data: unknown) =>
-    request('/booking/long-term', { method: 'POST', body: JSON.stringify(data) }),
-  
-  // Extra Auth
-  logout: () => request('/auth/logout', { method: 'POST' }),
-  forgotPassword: (phone: string) => 
-    request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ phone }) }),
 };

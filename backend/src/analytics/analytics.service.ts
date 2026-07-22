@@ -89,6 +89,10 @@ export class AnalyticsService {
         revenues: true,
         expenses: true,
         maintenances: true,
+        bookings: {
+          where: { status: 'COMPLETED' },
+          select: { totalDays: true },
+        },
       },
     });
 
@@ -108,7 +112,10 @@ export class AnalyticsService {
       const netProfit = totalRevenue - totalCost;
 
       // Tính occupancy rate riêng cho xe này (số ngày hoạt động / 30 ngày)
-      const totalRentedDays = v.revenues.length * 3; // Giả lập trung bình 3 ngày mỗi booking
+      const totalRentedDays = v.bookings.reduce(
+        (sum, booking) => sum + booking.totalDays,
+        0,
+      );
       const occupancyRate = (totalRentedDays / 30) * 100;
 
       return {

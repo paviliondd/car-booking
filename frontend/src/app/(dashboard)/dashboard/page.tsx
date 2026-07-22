@@ -1,6 +1,6 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Calendar, ChevronRight, ShieldAlert, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { dashboardApi } from '@/lib/api/dashboard';
 import OverviewCards from '@/components/dashboard/OverviewCards';
 import StatusCards from '@/components/dashboard/StatusCards';
@@ -8,9 +8,8 @@ import RevenueChart from '@/components/dashboard/RevenueChart';
 import NotificationCarousel from '@/components/dashboard/NotificationCarousel';
 import TopServicesChart from '@/components/dashboard/TopServicesChart';
 import TopCarsTable from '@/components/dashboard/TopCarsTable';
-import RatingModal from '@/components/dashboard/modals/RatingModal';
-import CarStatusModal from '@/components/dashboard/modals/CarStatusModal';
 import { useToast } from '@/providers/ToastProvider';
+import { AdminError } from '@/components/dashboard/AdminState';
 
 type Overview = {
   totalContract: number;
@@ -54,7 +53,7 @@ type Notice = {
 };
 
 export default function DashboardHome() {
-  const { error: showError, warning: showWarning } = useToast();
+  const { error: showError } = useToast();
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [overviewToday, setOverviewToday] = useState<Overview | null>(null);
   const [overviewThisMonth, setOverviewThisMonth] = useState<Overview | null>(null);
@@ -64,16 +63,13 @@ export default function DashboardHome() {
   const [topServicesData, setTopServicesData] = useState<TopService[]>([]);
   const [topCarsData, setTopCarsData] = useState<TopCar[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
-  const [isRatingOpen, setIsRatingOpen] = useState(false);
-  const [isCarStatusOpen, setIsCarStatusOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
-  const expiringCarsCount = 2;
-  const totalCarsCount = 10;
-  const solvedFines = 12;
-  const totalFines = 14;
 
   const loadDashboardData = useCallback(async () => {
+    setLoading(true);
+    setLoadError('');
     try {
       const [
         today,
@@ -105,7 +101,9 @@ export default function DashboardHome() {
       setNotices(noticesList);
     } catch (err) {
       console.error('Lỗi tải dữ liệu dashboard', err);
-      showError('Không thể đồng bộ dữ liệu thống kê từ máy chủ.');
+      const message = 'Không thể đồng bộ dữ liệu thống kê từ máy chủ.';
+      setLoadError(message);
+      showError(message);
     } finally {
       setLoading(false);
     }
@@ -116,13 +114,8 @@ export default function DashboardHome() {
     return () => window.clearTimeout(loadTimer);
   }, [loadDashboardData]);
 
-  const getPercentage = (value: number, total: number) => {
-    if (total === 0) return '0%';
-    return `${Math.round((value / total) * 100)}%`;
-  };
-
   return (
-    <div className="flex flex-col gap-6 select-none pb-10">
+    <div className="flex flex-col gap-6 pb-10">
       <div className="flex justify-between items-center bg-[#1e1e2d] border border-[#2b2b40] p-6 rounded-2xl text-white">
         <div className="flex flex-col gap-1.5">
           <h2 className="text-lg md:text-xl font-black flex items-center gap-2">
@@ -133,13 +126,6 @@ export default function DashboardHome() {
             Bảng điều khiển quản trị hạm đội xe datxe. Tất cả thống kê được đồng bộ theo thời gian thực.
           </span>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsRatingOpen(true)}
-          className="hidden md:flex items-center gap-1.5 bg-[#008F5A] hover:bg-[#007A4D] text-white px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer shadow-sm"
-        >
-          <span>Đánh giá dịch vụ</span>
-        </button>
       </div>
 
       {loading ? (
@@ -147,7 +133,7 @@ export default function DashboardHome() {
           <span className="h-8 w-8 rounded-full border-4 border-gray-300 border-t-[#008F5A] animate-spin" />
           <span className="text-xs font-semibold uppercase tracking-wider">Đang cập nhật chỉ số...</span>
         </div>
-      ) : (
+      ) : loadError ? <AdminError message={loadError} onRetry={() => void loadDashboardData()} /> : (
         <>
           <OverviewCards today={overviewToday} thisMonth={overviewThisMonth} lastMonth={overviewLastMonth} />
           <StatusCards counts={carStatusSummary} />
@@ -161,53 +147,9 @@ export default function DashboardHome() {
               />
             </div>
 
-            <div className="lg:col-span-4 flex flex-col gap-6">
+            <div className="lg:col-span-4">
               <div className="flex-1 min-h-[150px]">
                 <NotificationCarousel notices={notices} />
-              </div>
-
-              <div
-                onClick={() => setIsCarStatusOpen(true)}
-                className="bg-white dark:bg-gray-900 border border-red-200/40 dark:border-white/5 hover:border-red-400 p-5 rounded-2xl shadow-xs flex items-center gap-4 transition duration-200 cursor-pointer hover:scale-[1.01]"
-              >
-                <div className="p-3 bg-red-500/10 rounded-xl">
-                  <Calendar className="h-6 w-6 text-red-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-extrabold text-sm text-gray-900 dark:text-white">Xe đến hạn</h4>
-                  <span className="text-[10px] text-gray-400 font-bold block mt-0.5">Danh sách bảo hiểm/đăng kiểm</span>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-sm font-bold text-gray-700 dark:text-gray-200">
-                      {expiringCarsCount}/{totalCarsCount} xe
-                    </span>
-                    <span className="bg-red-500/10 text-red-500 font-extrabold text-[9px] px-1.5 py-0.5 rounded-sm">
-                      {getPercentage(expiringCarsCount, totalCarsCount)}
-                    </span>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-gray-400" />
-              </div>
-
-              <div
-                onClick={() => showWarning('Chi tiết phạt nguội đang đồng bộ từ Cục CSGT.')}
-                className="bg-white dark:bg-gray-900 border border-red-200/40 dark:border-white/5 hover:border-red-400 p-5 rounded-2xl shadow-xs flex items-center gap-4 transition duration-200 cursor-pointer hover:scale-[1.01]"
-              >
-                <div className="p-3 bg-red-500/10 rounded-xl">
-                  <ShieldAlert className="h-6 w-6 text-red-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-extrabold text-sm text-gray-900 dark:text-white">Phạt nguội</h4>
-                  <span className="text-[10px] text-gray-400 font-bold block mt-0.5">Danh sách lỗi chưa xử lý</span>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-sm font-bold text-gray-700 dark:text-gray-200">
-                      {solvedFines}/{totalFines} đã xong
-                    </span>
-                    <span className="bg-emerald-500/10 text-[#008F5A] font-extrabold text-[9px] px-1.5 py-0.5 rounded-sm">
-                      {getPercentage(solvedFines, totalFines)}
-                    </span>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-gray-400" />
               </div>
             </div>
           </div>
@@ -223,8 +165,6 @@ export default function DashboardHome() {
         </>
       )}
 
-      <RatingModal isOpen={isRatingOpen} onClose={() => setIsRatingOpen(false)} />
-      <CarStatusModal isOpen={isCarStatusOpen} onClose={() => setIsCarStatusOpen(false)} />
     </div>
   );
 }
