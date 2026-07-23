@@ -116,21 +116,21 @@ export default function DashboardHome() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 pb-10">
-      <div className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900 p-5 text-white shadow-sm sm:p-6">
+      <div className="flex items-center justify-between rounded-2xl border border-night-border bg-night-surface p-5 text-night-content shadow-sm sm:p-6">
         <div className="flex flex-col gap-1.5">
-          <h1 className="flex items-start gap-2 text-xl font-bold text-white sm:items-center sm:text-2xl">
+          <h1 className="flex items-start gap-2 text-xl font-bold text-night-content sm:items-center sm:text-2xl">
             <span>Chào mừng quay trở lại</span>
-            <Sparkles className="mt-1 h-5 w-5 shrink-0 fill-current text-amber-400 sm:mt-0" />
+            <Sparkles className="mt-1 h-5 w-5 shrink-0 fill-current text-warning sm:mt-0" />
           </h1>
-          <p className="max-w-3xl text-sm leading-6 text-slate-300">
+          <p className="max-w-3xl text-sm leading-6 text-night-secondary">
             Bảng điều khiển quản trị hạm đội xe datxe. Tất cả thống kê được đồng bộ theo thời gian thực.
           </p>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center gap-3 py-20 text-slate-500">
-          <span className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-emerald-600" />
+        <div className="flex flex-col items-center justify-center gap-3 py-20 text-content-secondary">
+          <span className="h-8 w-8 animate-spin rounded-full border-4 border-app-border/40 border-t-brand" />
           <span className="text-sm font-semibold">Đang cập nhật chỉ số...</span>
         </div>
       ) : loadError ? <AdminError message={loadError} onRetry={() => void loadDashboardData()} /> : (

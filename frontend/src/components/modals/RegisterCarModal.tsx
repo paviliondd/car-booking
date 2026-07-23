@@ -89,25 +89,25 @@ export default function RegisterCarModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Background Overlay */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300"
+        className="absolute inset-0 bg-night-surface/70 backdrop-blur-xs transition-opacity duration-300"
         onClick={onClose}
       />
 
       {/* Modal Box */}
-      <div className="relative bg-white text-gray-900 w-full max-w-[480px] rounded-2xl shadow-2xl p-8 z-10 animate-scale-up-center overflow-y-auto max-h-[90vh]">
+      <div className="relative bg-app-surface text-content w-full max-w-[480px] rounded-2xl shadow-2xl p-8 z-10 animate-scale-up-center overflow-y-auto max-h-[90vh]">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition cursor-pointer"
+          className="absolute top-4 right-4 p-2 text-content-secondary hover:text-content-secondary rounded-full hover:bg-app-muted transition cursor-pointer"
         >
           <X className="h-5 w-5" />
         </button>
 
         {/* Title */}
-        <h2 className="text-xl font-bold text-center text-[#008F5A] mb-1">
+        <h2 className="text-xl font-bold text-center text-brand mb-1">
           Đăng ký xe cho thuê
         </h2>
-        <p className="text-xs text-gray-500 text-center mb-6 max-w-sm mx-auto leading-relaxed">
+        <p className="text-xs text-content-secondary text-center mb-6 max-w-sm mx-auto leading-relaxed">
           Bạn vui lòng điền đầy đủ thông tin, datxe sẽ liên hệ với bạn trong
           vòng một ngày làm việc.
         </p>
@@ -116,10 +116,10 @@ export default function RegisterCarModal({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* Fixed service area */}
           <div>
-            <p className="text-xs font-semibold text-gray-700 block mb-1">
+            <p className="text-xs font-semibold text-content-secondary block mb-1">
               Khu vực cho thuê
             </p>
-            <div className="flex min-h-11 items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-900">
+            <div className="flex min-h-11 items-center gap-3 rounded-lg border border-brand/30 bg-utility px-3 text-sm font-semibold text-brand">
               <MapPin className="h-4.5 w-4.5" />
               {storeInfo.serviceArea}
             </div>
@@ -127,22 +127,22 @@ export default function RegisterCarModal({
 
           {/* Owner Name Field */}
           <div>
-            <label className="text-xs font-semibold text-gray-700 block mb-1">
+            <label className="text-xs font-semibold text-content-secondary block mb-1">
               Tên chủ xe *
             </label>
             <div className="relative">
-              <User className="absolute left-3 top-3 h-4.5 w-4.5 text-gray-400" />
+              <User className="absolute left-3 top-3 h-4.5 w-4.5 text-content-secondary" />
               <input
                 type="text"
                 value={ownerName}
                 onChange={(e) => setOwnerName(e.target.value)}
                 placeholder="Tên của bạn"
                 disabled={loading}
-                className={`w-full bg-gray-50 border ${errors.ownerName ? "border-red-500" : "border-gray-200"} rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-900 focus:outline-none focus:border-[#008F5A]`}
+                className={`w-full bg-app-muted border ${errors.ownerName ? "border-danger" : "border-app-border/35"} rounded-lg py-2.5 pl-10 pr-4 text-sm text-content focus:outline-none focus:border-brand`}
               />
             </div>
             {errors.ownerName && (
-              <p className="text-red-500 text-xs mt-1 font-medium">
+              <p className="text-danger text-xs mt-1 font-medium">
                 {errors.ownerName}
               </p>
             )}
@@ -150,42 +150,42 @@ export default function RegisterCarModal({
 
           {/* Phone Field */}
           <div>
-            <label className="text-xs font-semibold text-gray-700 block mb-1">
+            <label className="text-xs font-semibold text-content-secondary block mb-1">
               Số di động *
             </label>
             <div className="relative">
-              <Phone className="absolute left-3 top-3 h-4.5 w-4.5 text-gray-400" />
+              <Phone className="absolute left-3 top-3 h-4.5 w-4.5 text-content-secondary" />
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Số của bạn"
                 disabled={loading}
-                className={`w-full bg-gray-50 border ${errors.phone ? "border-red-500" : "border-gray-200"} rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-900 focus:outline-none focus:border-[#008F5A]`}
+                className={`w-full bg-app-muted border ${errors.phone ? "border-danger" : "border-app-border/35"} rounded-lg py-2.5 pl-10 pr-4 text-sm text-content focus:outline-none focus:border-brand`}
               />
             </div>
             {errors.phone && (
-              <p className="text-red-500 text-xs mt-1 font-medium">
+              <p className="text-danger text-xs mt-1 font-medium">
                 {errors.phone}
               </p>
             )}
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-gray-700 block mb-1">
+            <label className="text-xs font-semibold text-content-secondary block mb-1">
               Email *
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4.5 w-4.5 text-gray-500" />
+              <Mail className="absolute left-3 top-3 h-4.5 w-4.5 text-content-secondary" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={`w-full rounded-lg border bg-gray-50 py-2.5 pl-10 pr-4 text-sm ${errors.email ? "border-red-500" : "border-gray-300"}`}
+                className={`w-full rounded-lg border bg-app-muted py-2.5 pl-10 pr-4 text-sm ${errors.email ? "border-danger" : "border-app-border"}`}
               />
             </div>
             {errors.email && (
-              <p className="mt-1 text-xs font-medium text-red-700">
+              <p className="mt-1 text-xs font-medium text-danger">
                 {errors.email}
               </p>
             )}
@@ -193,22 +193,22 @@ export default function RegisterCarModal({
 
           {/* Car Name Field */}
           <div>
-            <label className="text-xs font-semibold text-gray-700 block mb-1 font-medium">
+            <label className="text-xs font-semibold text-content-secondary block mb-1 font-medium">
               Xe cho thuê *
             </label>
             <div className="relative">
-              <Car className="absolute left-3 top-3 h-4.5 w-4.5 text-gray-400" />
+              <Car className="absolute left-3 top-3 h-4.5 w-4.5 text-content-secondary" />
               <input
                 type="text"
                 value={carName}
                 onChange={(e) => setCarName(e.target.value)}
                 placeholder="Loại xe của bạn"
                 disabled={loading}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-900 focus:outline-none focus:border-[#008F5A]"
+                className="w-full bg-app-muted border border-app-border/35 rounded-lg py-2.5 pl-10 pr-4 text-sm text-content focus:outline-none focus:border-brand"
               />
             </div>
             {errors.carName && (
-              <p className="mt-1 text-xs font-medium text-red-700">
+              <p className="mt-1 text-xs font-medium text-danger">
                 {errors.carName}
               </p>
             )}
@@ -218,7 +218,7 @@ export default function RegisterCarModal({
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#008F5A] hover:bg-[#007A4D] text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition disabled:opacity-50 mt-4 shadow-sm"
+            className="w-full bg-brand hover:bg-brand-hover text-on-brand font-bold py-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition disabled:opacity-50 mt-4 shadow-sm"
           >
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
             <span>Gửi thông tin đến datxe</span>

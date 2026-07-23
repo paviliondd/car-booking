@@ -56,11 +56,11 @@ export default function SearchBar() {
           onClick={() => setActiveTab('self-drive')}
           className={`flex items-center gap-2 px-6 py-3 text-xs md:text-sm font-bold rounded-t-xl transition cursor-pointer ${
             activeTab === 'self-drive'
-              ? 'bg-white dark:bg-[#0b0f19] text-[#008F5A] border-t border-x border-gray-100 dark:border-white/5 shadow-xs border-b-2 border-b-[#008F5A]'
-              : 'bg-gray-100/50 dark:bg-gray-900/40 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-white/5 border-t border-x border-transparent'
+              ? 'bg-app-surface dark:bg-app-surface text-brand border-t border-x border-app-border/25 dark:border-app-border/30 shadow-xs border-b-2 border-b-brand'
+              : 'bg-app-muted text-content-secondary hover:text-content hover:bg-utility border-t border-x border-transparent'
           }`}
         >
-          <Key className={`h-4.5 w-4.5 ${activeTab === 'self-drive' ? 'text-[#008F5A]' : 'text-gray-400'}`} />
+          <Key className={`h-4.5 w-4.5 ${activeTab === 'self-drive' ? 'text-brand' : 'text-content-secondary'}`} />
           <span>Xe tự lái</span>
         </button>
 
@@ -70,11 +70,11 @@ export default function SearchBar() {
           onClick={() => setActiveTab('long-term')}
           className={`flex items-center gap-2 px-6 py-3 text-xs md:text-sm font-bold rounded-t-xl transition cursor-pointer ${
             activeTab === 'long-term'
-              ? 'bg-white dark:bg-[#0b0f19] text-[#008F5A] border-t border-x border-gray-100 dark:border-white/5 shadow-xs border-b-2 border-b-[#008F5A]'
-              : 'bg-gray-100/50 dark:bg-gray-900/40 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-white/5 border-t border-x border-transparent'
+              ? 'bg-app-surface dark:bg-app-surface text-brand border-t border-x border-app-border/25 dark:border-app-border/30 shadow-xs border-b-2 border-b-brand'
+              : 'bg-app-muted text-content-secondary hover:text-content hover:bg-utility border-t border-x border-transparent'
           }`}
         >
-          <CalendarClock className={`h-4.5 w-4.5 ${activeTab === 'long-term' ? 'text-[#008F5A]' : 'text-gray-400'}`} />
+          <CalendarClock className={`h-4.5 w-4.5 ${activeTab === 'long-term' ? 'text-brand' : 'text-content-secondary'}`} />
           <span>Thuê xe dài hạn</span>
         </button>
       </div>
@@ -85,7 +85,7 @@ export default function SearchBar() {
       ) : (
         <form 
           onSubmit={handleSearchSubmit}
-          className="bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-white/5 rounded-b-2xl rounded-tr-2xl shadow-xl p-3 flex flex-col md:flex-row gap-3 items-stretch md:items-center relative"
+          className="bg-app-surface dark:bg-app-surface border border-app-border/25 dark:border-app-border/30 rounded-b-2xl rounded-tr-2xl shadow-xl p-3 flex flex-col md:flex-row gap-3 items-stretch md:items-center relative"
         >
           <DateTimePicker 
             startDate={startDate} 
@@ -100,7 +100,7 @@ export default function SearchBar() {
           <div className="px-4 flex items-center">
             <button
               type="submit"
-              className="w-full md:w-auto bg-[#008F5A] hover:bg-[#007A4D] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition shadow-sm hover:scale-[1.02] active:scale-[0.98] duration-200 disabled:opacity-50"
+              className="w-full md:w-auto bg-brand hover:bg-brand-hover text-on-brand font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition shadow-sm hover:scale-[1.02] active:scale-[0.98] duration-200 disabled:opacity-50"
             >
               <Search className="h-5 w-5" />
               <span>Tìm Xe</span>

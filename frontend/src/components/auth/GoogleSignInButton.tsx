@@ -78,7 +78,7 @@ export default function GoogleSignInButton({
 
   if (!clientId) {
     return (
-      <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm text-amber-800" role="status">
+      <p className="rounded-xl border border-warning/30 bg-warning-muted px-4 py-3 text-center text-sm text-warning" role="status">
         Đăng nhập Google sẽ hoạt động sau khi cấu hình Client ID.
       </p>
     );

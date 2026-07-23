@@ -18,10 +18,10 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusTone: Record<string, string> = {
-  AVAILABLE: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  RENTED: 'bg-blue-50 text-blue-700 ring-blue-200',
-  MAINTENANCE: 'bg-amber-50 text-amber-800 ring-amber-200',
-  LOCKED: 'bg-slate-100 text-slate-700 ring-slate-200',
+  AVAILABLE: 'bg-utility text-utility-foreground ring-brand/25',
+  RENTED: 'bg-info-muted text-info ring-info/25',
+  MAINTENANCE: 'bg-warning-muted text-warning ring-warning/25',
+  LOCKED: 'bg-app-muted text-content-secondary ring-app-border/40',
 };
 
 const nextStatuses = ['AVAILABLE', 'MAINTENANCE', 'LOCKED'];
@@ -99,15 +99,15 @@ function AdminVehiclesContent() {
         action={{ href: '/dashboard/vehicles/new', label: 'Thêm xe mới' }}
       />
 
-      <div className="mb-4 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 sm:grid-cols-[1fr_220px]">
+      <div className="mb-4 grid gap-3 rounded-xl border border-app-border/40 bg-app-surface p-4 dark:border-app-border/50 dark:bg-app-surface sm:grid-cols-[1fr_220px]">
         <label className="relative">
           <span className="sr-only">Tìm xe</span>
-          <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
+          <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-content-secondary" />
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Tìm theo hãng, mẫu, biển số, điểm nhận"
-            className="min-h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            className="min-h-11 w-full rounded-lg border border-app-border bg-app-surface pl-10 pr-3 text-sm text-content outline-none transition focus:border-brand focus:ring-4 focus:ring-brand/20 dark:border-app-border/70 dark:bg-app-surface dark:text-content"
           />
         </label>
         <label>
@@ -115,7 +115,7 @@ function AdminVehiclesContent() {
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value)}
-            className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            className="min-h-11 w-full rounded-lg border border-app-border bg-app-surface px-3 text-sm text-content outline-none transition focus:border-brand focus:ring-4 focus:ring-brand/20 dark:border-app-border/70 dark:bg-app-surface dark:text-content"
           >
             <option value="ALL">Tất cả trạng thái</option>
             {Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
@@ -124,10 +124,10 @@ function AdminVehiclesContent() {
       </div>
 
       {loading ? <AdminLoading /> : error ? <AdminError message={error} onRetry={() => void load()} /> : filtered.length === 0 ? <AdminEmpty message="Không có xe phù hợp với bộ lọc." /> : (
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <div className="overflow-hidden rounded-xl border border-app-border/40 bg-app-surface dark:border-app-border/50 dark:bg-app-surface">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[980px] text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+              <thead className="bg-app-muted text-xs uppercase text-content-secondary dark:bg-app-muted dark:text-content-secondary">
                 <tr>
                   <th className="p-4">Phương tiện</th>
                   <th className="p-4">Thông tin thuê</th>
@@ -138,23 +138,23 @@ function AdminVehiclesContent() {
               </thead>
               <tbody>
                 {filtered.map((vehicle) => (
-                  <tr key={vehicle.id} className="border-t border-slate-100 align-top dark:border-slate-800">
+                  <tr key={vehicle.id} className="border-t border-app-border/30 align-top dark:border-app-border/50">
                     <td className="p-4">
                       <div className="flex gap-3">
-                        <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-slate-100 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
-                          {vehicle.images[0] ? <Image src={vehicle.images[0]} alt={`${vehicle.brand} ${vehicle.model}`} fill sizes="96px" className="object-cover" /> : <div className="flex h-full items-center justify-center"><Car className="h-6 w-6 text-slate-400" /></div>}
+                        <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-app-muted ring-1 ring-app-border/40 dark:bg-app-muted dark:ring-app-border/70">
+                          {vehicle.images[0] ? <Image src={vehicle.images[0]} alt={`${vehicle.brand} ${vehicle.model}`} fill sizes="96px" className="object-cover" /> : <div className="flex h-full items-center justify-center"><Car className="h-6 w-6 text-content-secondary" /></div>}
                         </div>
                         <div>
-                          <p className="font-black text-slate-950 dark:text-white">{vehicle.brand} {vehicle.model}</p>
-                          <p className="mt-1 text-xs text-slate-500">{vehicle.plateNumber} · {vehicle.year} · {vehicle.seats} chỗ</p>
-                          <p className="mt-1 text-xs text-slate-500">{vehicle.owner?.name || 'Xe hệ thống'}</p>
+                          <p className="font-black text-content dark:text-content">{vehicle.brand} {vehicle.model}</p>
+                          <p className="mt-1 text-xs text-content-secondary">{vehicle.plateNumber} · {vehicle.year} · {vehicle.seats} chỗ</p>
+                          <p className="mt-1 text-xs text-content-secondary">{vehicle.owner?.name || 'Xe hệ thống'}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="p-4 text-slate-700 dark:text-slate-300">
+                    <td className="p-4 text-content-secondary dark:text-content-secondary">
                       <p className="font-bold">{vehicle.dailyPrice.toLocaleString('vi-VN')} đ/ngày</p>
-                      <p className="mt-1 text-xs text-slate-500">{vehicle.pickupLocation || 'Chưa cập nhật điểm nhận'}</p>
-                      <p className={`mt-1 text-xs font-semibold ${vehicle.images.length > 0 ? 'text-emerald-700' : 'text-red-700'}`}>{vehicle.images.length > 0 ? `${vehicle.images.length} ảnh` : 'Thiếu ảnh xe'}</p>
+                      <p className="mt-1 text-xs text-content-secondary">{vehicle.pickupLocation || 'Chưa cập nhật điểm nhận'}</p>
+                      <p className={`mt-1 text-xs font-semibold ${vehicle.images.length > 0 ? 'text-brand' : 'text-danger'}`}>{vehicle.images.length > 0 ? `${vehicle.images.length} ảnh` : 'Thiếu ảnh xe'}</p>
                     </td>
                     <td className="p-4">
                       <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ring-1 ${statusTone[vehicle.status] || statusTone.LOCKED}`}>
@@ -163,7 +163,7 @@ function AdminVehiclesContent() {
                     </td>
                     <td className="p-4">
                       {vehicle.status === 'RENTED' ? (
-                        <p className="max-w-56 text-xs leading-5 text-slate-500">Xe đang thuê được cập nhật theo vòng đời đơn thuê, không đổi thủ công tại bảng.</p>
+                        <p className="max-w-56 text-xs leading-5 text-content-secondary">Xe đang thuê được cập nhật theo vòng đời đơn thuê, không đổi thủ công tại bảng.</p>
                       ) : (
                         <div className="flex flex-wrap gap-2">
                           {nextStatuses.map((nextStatus) => (
@@ -174,8 +174,8 @@ function AdminVehiclesContent() {
                               onClick={() => void updateStatus(vehicle, nextStatus)}
                               className={`min-h-10 rounded-lg border px-3 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${
                                 vehicle.status === nextStatus
-                                  ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
-                                  : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800'
+                                  ? 'border-brand bg-utility text-brand'
+                                  : 'border-app-border bg-app-surface text-content-secondary hover:bg-app-muted dark:border-app-border/70 dark:bg-app-surface dark:text-content dark:hover:bg-app-muted'
                               }`}
                             >
                               {statusLabels[nextStatus]}
@@ -186,9 +186,9 @@ function AdminVehiclesContent() {
                     </td>
                     <td className="p-4">
                       <div className="flex justify-end gap-2">
-                        <Link href={`/dashboard/vehicles/${vehicle.id}`} aria-label="Xem chi tiết xe" className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"><Eye className="h-4 w-4" /></Link>
-                        <Link href={`/dashboard/vehicles/${vehicle.id}/edit`} aria-label="Chỉnh sửa xe" className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"><Edit3 className="h-4 w-4" /></Link>
-                        <button type="button" disabled={busyId === vehicle.id || vehicle.status === 'RENTED'} onClick={() => void deleteVehicle(vehicle)} aria-label="Xóa xe" className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-red-500/10"><Trash2 className="h-4 w-4" /></button>
+                        <Link href={`/dashboard/vehicles/${vehicle.id}`} aria-label="Xem chi tiết xe" className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg text-brand hover:bg-utility dark:hover:bg-utility"><Eye className="h-4 w-4" /></Link>
+                        <Link href={`/dashboard/vehicles/${vehicle.id}/edit`} aria-label="Chỉnh sửa xe" className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg text-content-secondary hover:bg-app-muted dark:text-content dark:hover:bg-app-muted"><Edit3 className="h-4 w-4" /></Link>
+                        <button type="button" disabled={busyId === vehicle.id || vehicle.status === 'RENTED'} onClick={() => void deleteVehicle(vehicle)} aria-label="Xóa xe" className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg text-danger hover:bg-danger-muted disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-danger-muted"><Trash2 className="h-4 w-4" /></button>
                       </div>
                     </td>
                   </tr>

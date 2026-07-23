@@ -58,15 +58,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (loading || !user) {
     return (
-      <main className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-slate-950 text-white">
-        <Loader2 className="h-10 w-10 animate-spin text-emerald-400" />
-        <span className="text-sm font-semibold text-slate-400">Đang xác thực thông tin...</span>
+      <main className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-night-surface text-night-content">
+        <Loader2 className="h-10 w-10 animate-spin text-night-accent" />
+        <span className="text-sm font-semibold text-night-secondary">Đang xác thực thông tin...</span>
       </main>
     );
   }
 
   return (
-    <div className="admin-shell flex min-h-dvh max-w-full overflow-x-hidden bg-slate-50 text-slate-900 transition-colors duration-300">
+    <div className="admin-shell flex min-h-dvh max-w-full overflow-x-hidden bg-app-muted text-content transition-colors duration-300">
       <div className="hidden md:block">
         <DashboardSidebar user={user} />
       </div>
@@ -76,7 +76,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <button
             type="button"
             aria-label="Đóng menu quản trị"
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+            className="fixed inset-0 bg-night-surface/70 backdrop-blur-xs"
             onClick={() => setMobileMenuOpen(false)}
           />
           <div className="relative animate-slide-right-custom">

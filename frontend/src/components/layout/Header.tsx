@@ -69,34 +69,34 @@ export default function Header() {
     setMobileMenuOpen(false);
   };
 
-  const navLinkClass = 'inline-flex min-h-11 items-center hover:text-[#008F5A] transition font-medium';
+  const navLinkClass = 'inline-flex min-h-11 items-center hover:text-brand transition font-medium';
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-emerald-100 py-4 px-6 md:px-12 flex justify-between items-center text-slate-800 shadow-sm">
-      <Link href="/" className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-[#008F5A]">
-        <Car className="h-8 w-8 text-[#008F5A]" />
-        <span>dat<span className="text-slate-950">xe</span></span>
+    <header className="sticky top-0 z-50 bg-app-surface/95 backdrop-blur border-b border-brand/25 py-4 px-6 md:px-12 flex justify-between items-center text-content shadow-sm">
+      <Link href="/" className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-brand">
+        <Car className="h-8 w-8 text-brand" />
+        <span>dat<span className="text-content">xe</span></span>
       </Link>
 
-      <nav className="hidden md:flex items-center gap-6 text-sm text-slate-700">
+      <nav className="hidden md:flex items-center gap-6 text-sm text-content-secondary">
         {navItems.map((item) => (
           <Link key={item.href} href={item.href} className={navLinkClass}>
             {item.label}
           </Link>
         ))}
 
-        <div className="h-5 border-r border-emerald-100" />
+        <div className="h-5 border-r border-brand/25" />
 
         {user ? (
           <>
-            <Link href={user.role === 'OWNER' ? '/owner' : user.role === 'ADMIN' || user.role === 'STAFF' ? '/dashboard' : '/account'} className="flex items-center gap-2 text-slate-700 hover:text-emerald-700 transition">
+            <Link href={user.role === 'OWNER' ? '/owner' : user.role === 'ADMIN' || user.role === 'STAFF' ? '/dashboard' : '/account'} className="flex items-center gap-2 text-content-secondary hover:text-brand transition">
               <UserCircle className="h-5 w-5" />
               <span className="max-w-36 truncate">{user.name || user.email}</span>
             </Link>
             <button
               type="button"
               onClick={handleLogout}
-              className="border border-slate-300 hover:border-[#008F5A] hover:text-[#008F5A] hover:bg-emerald-50 transition px-4 py-2 rounded-lg font-semibold cursor-pointer flex items-center gap-2"
+              className="border border-app-border hover:border-brand hover:text-brand hover:bg-utility transition px-4 py-2 rounded-lg font-semibold cursor-pointer flex items-center gap-2"
             >
               <LogOut className="h-4 w-4" />
               Thoát
@@ -107,14 +107,14 @@ export default function Header() {
             <button
               type="button"
               onClick={() => openAuth('register')}
-              className="min-h-11 px-2 hover:text-[#008F5A] transition font-semibold cursor-pointer"
+              className="min-h-11 px-2 hover:text-brand transition font-semibold cursor-pointer"
             >
               Đăng ký
             </button>
             <button
               type="button"
               onClick={() => openAuth('login')}
-              className="min-h-11 border border-slate-800 hover:border-[#008F5A] hover:text-[#008F5A] hover:bg-emerald-50 transition px-4 py-2 rounded-lg font-semibold cursor-pointer"
+              className="min-h-11 border border-app-border hover:border-brand hover:text-brand hover:bg-utility transition px-4 py-2 rounded-lg font-semibold cursor-pointer"
             >
               Đăng nhập
             </button>
@@ -124,7 +124,7 @@ export default function Header() {
 
       <button
         type="button"
-        className="md:hidden inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+        className="md:hidden inline-flex h-11 w-11 items-center justify-center rounded-lg text-content-secondary hover:bg-app-muted hover:text-content"
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         aria-label={mobileMenuOpen ? 'Đóng menu' : 'Mở menu'}
       >
@@ -132,22 +132,22 @@ export default function Header() {
       </button>
 
       {mobileMenuOpen && (
-        <div className="md:hidden fixed top-[69px] right-0 bottom-0 w-72 z-40 bg-white border-l border-emerald-100 p-6 flex flex-col gap-6 shadow-2xl">
+        <div className="md:hidden fixed top-[69px] right-0 bottom-0 w-72 z-40 bg-app-surface border-l border-brand/25 p-6 flex flex-col gap-6 shadow-2xl">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)} className="text-base text-slate-700 hover:text-[#008F5A] font-medium">
+            <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)} className="text-base text-content-secondary hover:text-brand font-medium">
               {item.label}
             </Link>
           ))}
-          <hr className="border-emerald-100" />
+          <hr className="border-brand/25" />
           {user ? (
             <>
-              <Link href={user.role === 'OWNER' ? '/owner' : user.role === 'ADMIN' || user.role === 'STAFF' ? '/dashboard' : '/account'} onClick={() => setMobileMenuOpen(false)} className="text-base text-slate-700 hover:text-emerald-700 font-semibold">
+              <Link href={user.role === 'OWNER' ? '/owner' : user.role === 'ADMIN' || user.role === 'STAFF' ? '/dashboard' : '/account'} onClick={() => setMobileMenuOpen(false)} className="text-base text-content-secondary hover:text-brand font-semibold">
                 Tài khoản của tôi
               </Link>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="w-full text-center border border-slate-800 hover:border-[#008F5A] hover:text-[#008F5A] hover:bg-emerald-50 py-2.5 rounded-lg font-semibold transition cursor-pointer"
+                className="w-full text-center border border-app-border hover:border-brand hover:text-brand hover:bg-utility py-2.5 rounded-lg font-semibold transition cursor-pointer"
               >
                 Đăng xuất
               </button>
@@ -157,14 +157,14 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => openAuth('register')}
-                className="text-left text-base text-slate-700 hover:text-[#008F5A] font-semibold cursor-pointer"
+                className="text-left text-base text-content-secondary hover:text-brand font-semibold cursor-pointer"
               >
                 Đăng ký
               </button>
               <button
                 type="button"
                 onClick={() => openAuth('login')}
-                className="w-full text-center border border-slate-800 hover:border-[#008F5A] hover:text-[#008F5A] hover:bg-emerald-50 py-2.5 rounded-lg font-semibold transition cursor-pointer"
+                className="w-full text-center border border-app-border hover:border-brand hover:text-brand hover:bg-utility py-2.5 rounded-lg font-semibold transition cursor-pointer"
               >
                 Đăng nhập
               </button>

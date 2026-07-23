@@ -12,18 +12,24 @@ interface TopServicesChartProps {
   data: ServiceItem[] | null;
 }
 
-const COLORS = ['#008F5A', '#3699FF', '#F64E60', '#1BC5BD', '#8950FC'];
+const COLORS = [
+  'var(--color-chart-1)',
+  'var(--color-chart-2)',
+  'var(--color-chart-3)',
+  'var(--color-chart-4)',
+  'var(--color-chart-5)',
+];
 
 export default function TopServicesChart({ data }: TopServicesChartProps) {
   const list = data || [];
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-150 dark:border-white/5 rounded-2xl p-6 shadow-xs flex flex-col gap-4 h-full min-h-[300px]">
-      <h3 className="text-base font-bold text-gray-950 dark:text-white">Cơ cấu nhiên liệu</h3>
+    <div className="bg-app-surface border border-app-border/40 rounded-2xl p-6 shadow-xs flex flex-col gap-4 h-full min-h-[300px]">
+      <h3 className="text-base font-bold text-content">Cơ cấu nhiên liệu</h3>
       
       <div className="flex-1 w-full relative min-h-[220px]">
         {list.length === 0 ? (
-          <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-gray-400">
+          <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-content-secondary">
             Không có dữ liệu
           </div>
         ) : (
@@ -43,14 +49,14 @@ export default function TopServicesChart({ data }: TopServicesChartProps) {
                 ))}
               </Pie>
               <Tooltip 
-                contentStyle={{ background: '#1F2937', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
+                contentStyle={{ background: 'var(--color-tooltip-bg)', border: 'none', borderRadius: '8px', color: 'var(--color-tooltip-fg)', fontSize: '11px' }}
                 formatter={(value: unknown) => [`${Number(value || 0)} xe`, 'Số lượng']}
               />
               <Legend 
                 verticalAlign="bottom" 
                 height={36} 
                 iconType="circle"
-                wrapperStyle={{ fontSize: '11px', fontWeight: 600, color: '#9CA3AF' }}
+                wrapperStyle={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-text-secondary)' }}
               />
             </PieChart>
           </ResponsiveContainer>

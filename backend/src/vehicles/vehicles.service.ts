@@ -172,11 +172,13 @@ export class VehiclesService {
       where: {
         status: VehicleStatus.AVAILABLE, // Chỉ lấy các xe đang hoạt động tốt (không bảo dưỡng, khóa)
         id: { notIn: bookedIds },
+        images: { isEmpty: false },
         ...(filters.brand
           ? { brand: { contains: filters.brand, mode: 'insensitive' } }
           : {}),
         ...(filters.seats ? { seats: filters.seats } : {}),
       },
+      orderBy: [{ updatedAt: 'desc' }],
     });
   }
 

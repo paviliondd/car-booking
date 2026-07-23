@@ -118,4 +118,28 @@ describe('VehiclesService Unit Tests', () => {
       ).toThrow();
     });
   });
+
+  describe('findAvailable', () => {
+    it('uses the same public catalogue rules for dated searches', async () => {
+      prismaMock.booking.findMany.mockResolvedValue([
+        { vehicleId: 'busy-vehicle' },
+      ]);
+      prismaMock.vehicle.findMany.mockResolvedValue([]);
+
+      await service.findAvailable(
+        '2026-07-24T09:00:00.000Z',
+        '2026-07-25T08:00:00.000Z',
+        {},
+      );
+
+      expect(prismaMock.vehicle.findMany).toHaveBeenCalledWith({
+        where: {
+          status: VehicleStatus.AVAILABLE,
+          id: { notIn: ['busy-vehicle'] },
+          images: { isEmpty: false },
+        },
+        orderBy: [{ updatedAt: 'desc' }],
+      });
+    });
+  });
 });

@@ -12,6 +12,12 @@
 - Với mọi thay đổi UI/UX, dùng global Codex skill `ui-ux-pro-max` theo workflow ghi trong root `AGENTS.md`; giữ Lucide làm icon family của repo.
 - Trước khi bàn giao chạy `npm run lint:check` và `npm run build`. Baseline 2026-07-22 là lint 0 lỗi/0 warning và build pass 22 routes; không làm baseline thoái lui hoặc tắt rule hàng loạt.
 
+## Semantic color system
+
+- Palette chuẩn là “Forest Premium” trong `src/app/globals.css`; mọi màu component phải đi qua semantic utility (`brand`, `on-brand`, `app-surface`, `app-muted`, `content`, `content-secondary`, `discount`, `on-discount`, `utility`, `utility-foreground`, `rental-price`, `app-border`, các token trạng thái và nhóm `night-*`).
+- Không dùng trực tiếp màu Tailwind theo tên màu, mã hex/rgb hoặc gradient trong component. Màu tích hợp có nhận diện riêng (ví dụ MoMo) cũng phải có token tập trung.
+- Cặp màu chữ/nền mới phải đạt WCAG AA: 4.5:1 cho chữ thường và 3:1 cho chữ lớn hoặc icon.
+
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 

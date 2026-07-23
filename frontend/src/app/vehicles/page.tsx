@@ -6,11 +6,9 @@ import {
   AlertTriangle,
   Car,
   Fuel,
-  Heart,
   MapPin,
   Search,
   Settings2,
-  ShieldCheck,
   Users,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
@@ -18,6 +16,10 @@ import Footer from "@/components/layout/Footer";
 import VehicleDetailModal from "@/components/vehicles/VehicleDetailModal";
 import { api, type Vehicle } from "@/lib/api";
 import { storeInfo } from "@/lib/store";
+import {
+  vehicleFuelLabel,
+  vehicleTransmissionLabel,
+} from "@/lib/vehicle-labels";
 
 function VehiclesContent() {
   const params = useSearchParams();
@@ -83,34 +85,34 @@ function VehiclesContent() {
     router.replace(`/vehicles?${p}`, { scroll: false });
   };
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-950">
+    <div className="flex min-h-screen flex-col bg-app-muted text-content">
       <Header />
       <main className="flex-1">
-        <section className="border-b bg-white">
+        <section className="border-b bg-app-surface">
           <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             <h1 className="text-3xl font-black">Xe sẵn sàng cho thuê</h1>
             {startDate && endDate && (
-              <p className="mt-2 text-sm font-semibold text-emerald-800">
+              <p className="mt-2 text-sm font-semibold text-brand">
                 Đã kiểm tra lịch {new Date(startDate).toLocaleString("vi-VN")} →{" "}
                 {new Date(endDate).toLocaleString("vi-VN")}
               </p>
             )}
-            <div className="mt-6 grid gap-3 rounded-2xl bg-slate-100 p-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="mt-6 grid gap-3 rounded-2xl bg-app-muted p-4 sm:grid-cols-2 lg:grid-cols-5">
               <label className="relative">
-                <Search className="absolute left-3 top-3.5 h-4 w-4 text-slate-500" />
+                <Search className="absolute left-3 top-3.5 h-4 w-4 text-content-secondary" />
                 <input
                   aria-label="Tìm xe"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Tìm hãng, dòng xe"
-                  className="min-h-11 w-full rounded-xl border bg-white pl-10 pr-3"
+                  className="min-h-11 w-full rounded-xl border bg-app-surface pl-10 pr-3"
                 />
               </label>
               <select
                 aria-label="Hãng xe"
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
-                className="min-h-11 rounded-xl border bg-white px-3"
+                className="min-h-11 rounded-xl border bg-app-surface px-3"
               >
                 <option value="ALL">Tất cả hãng</option>
                 {brands.map((x) => (
@@ -121,7 +123,7 @@ function VehiclesContent() {
                 aria-label="Số chỗ"
                 value={seats}
                 onChange={(e) => setSeats(e.target.value)}
-                className="min-h-11 rounded-xl border bg-white px-3"
+                className="min-h-11 rounded-xl border bg-app-surface px-3"
               >
                 <option value="ALL">Tất cả số chỗ</option>
                 {[4, 5, 7, 9].map((x) => (
@@ -132,12 +134,12 @@ function VehiclesContent() {
                 aria-label="Nhiên liệu"
                 value={fuel}
                 onChange={(e) => setFuel(e.target.value)}
-                className="min-h-11 rounded-xl border bg-white px-3"
+                className="min-h-11 rounded-xl border bg-app-surface px-3"
               >
                 <option value="ALL">Tất cả nhiên liệu</option>
                 <option value="GASOLINE">Xăng</option>
                 <option value="DIESEL">Dầu</option>
-                <option value="ELECTRIC">Điện</option>
+                <option value="ELECTRIC">Xe điện</option>
               </select>
               <input
                 aria-label="Giá tối đa"
@@ -145,7 +147,7 @@ function VehiclesContent() {
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
                 placeholder="Giá tối đa/ngày"
-                className="min-h-11 rounded-xl border bg-white px-3"
+                className="min-h-11 rounded-xl border bg-app-surface px-3"
               />
             </div>
           </div>
@@ -156,30 +158,30 @@ function VehiclesContent() {
               {[1, 2, 3, 4].map((x) => (
                 <div
                   key={x}
-                  className="h-96 animate-pulse rounded-2xl bg-slate-200"
+                  className="h-96 animate-pulse rounded-2xl bg-app-muted"
                 />
               ))}
             </div>
           ) : error ? (
             <div
               role="alert"
-              className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-900"
+              className="rounded-2xl border border-danger/30 bg-danger-muted p-6 text-danger"
             >
               <AlertTriangle className="h-5 w-5" />
               <p className="font-bold">Không thể tải dữ liệu xe</p>
               <p>{error}</p>
               <button
                 onClick={() => void load()}
-                className="mt-3 min-h-11 rounded-xl bg-red-700 px-4 font-bold text-white"
+                className="mt-3 min-h-11 rounded-xl bg-danger px-4 font-bold text-on-danger"
               >
                 Thử lại
               </button>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="rounded-2xl border border-dashed bg-white p-12 text-center">
-              <Car className="mx-auto h-12 w-12 text-slate-500" />
+            <div className="rounded-2xl border border-dashed bg-app-surface p-12 text-center">
+              <Car className="mx-auto h-12 w-12 text-content-secondary" />
               <h2 className="mt-3 text-xl font-bold">Không có xe phù hợp</h2>
-              <p className="text-slate-600">
+              <p className="text-content-secondary">
                 Hãy đổi bộ lọc hoặc khung giờ thuê.
               </p>
             </div>
@@ -188,13 +190,13 @@ function VehiclesContent() {
               {filtered.map((v) => (
                 <article
                   key={v.id}
-                  className="overflow-hidden rounded-2xl border bg-white shadow-sm"
+                  className="overflow-hidden rounded-2xl border bg-app-surface shadow-sm"
                 >
                   <button
                     onClick={() => open(v)}
                     className="block w-full text-left"
                   >
-                    <div className="relative aspect-video bg-slate-100">
+                    <div className="relative aspect-video bg-app-muted">
                       {v.images[0] ? (
                         <Image
                           src={v.images[0]}
@@ -204,48 +206,36 @@ function VehiclesContent() {
                           sizes="(min-width:1280px)25vw,50vw"
                         />
                       ) : (
-                        <Car className="m-auto h-full w-12 text-slate-400" />
+                        <Car className="m-auto h-full w-12 text-content-secondary" />
                       )}
-                      <span className="absolute left-3 top-3 rounded-full bg-orange-700 px-2 py-1 text-xs font-bold text-white">
-                        Ưu đãi chuyến đầu
-                      </span>
-                      <span className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full bg-slate-950/70 text-white">
-                        <Heart className="h-5 w-5" />
+                      <span className="absolute right-3 top-3 rounded-full bg-brand px-3 py-1 text-xs font-bold text-on-brand">
+                        Sẵn sàng
                       </span>
                     </div>
                     <div className="p-4">
-                      <div className="flex gap-2">
-                        <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-800">
-                          <ShieldCheck className="mr-1 inline h-3 w-3" />
-                          Miễn thế chấp
-                        </span>
-                        <span className="rounded-full bg-orange-50 px-2 py-1 text-xs font-bold text-orange-900">
-                          <MapPin className="mr-1 inline h-3 w-3" />
-                          Giao xe tận nơi
-                        </span>
-                      </div>
-                      <h2 className="mt-3 text-lg font-black">
+                      <h2 className="text-lg font-black">
                         {v.brand} {v.model}
                       </h2>
-                      <div className="mt-3 grid grid-cols-3 gap-2 text-xs font-semibold text-slate-700">
+                      <div className="mt-3 grid grid-cols-3 gap-2 text-xs font-semibold text-content-secondary">
                         <span>
                           <Settings2 className="inline h-4 w-4" />{" "}
-                          {v.transmission === "AUTO" ? "Tự động" : "Số sàn"}
+                          {vehicleTransmissionLabel(v.transmission)}
                         </span>
                         <span>
                           <Users className="inline h-4 w-4" /> {v.seats} chỗ
                         </span>
                         <span>
-                          <Fuel className="inline h-4 w-4" /> {v.fuel}
+                          <Fuel className="inline h-4 w-4" />{" "}
+                          {vehicleFuelLabel(v.fuel)}
                         </span>
                       </div>
-                      <p className="mt-3 flex gap-1 text-xs font-medium text-slate-700">
-                        <MapPin className="h-4 w-4 text-emerald-800" />
+                      <p className="mt-3 flex gap-1 text-xs font-medium text-content-secondary">
+                        <MapPin className="h-4 w-4 text-brand" />
                         {storeInfo.address}
                       </p>
-                      <div className="mt-4 border-t pt-3 text-right text-xl font-black text-emerald-800">
+                      <div className="mt-4 border-t pt-3 text-right text-xl font-black text-rental-price">
                         {v.dailyPrice.toLocaleString("vi-VN")} đ
-                        <span className="text-xs font-semibold text-slate-600">
+                        <span className="text-xs font-semibold text-content-secondary">
                           /ngày
                         </span>
                       </div>
@@ -270,7 +260,7 @@ function VehiclesContent() {
 }
 export default function VehiclesPage() {
   return (
-    <Suspense fallback={<div className="min-h-dvh bg-slate-50" />}>
+    <Suspense fallback={<div className="min-h-dvh bg-app-muted" />}>
       <VehiclesContent />
     </Suspense>
   );

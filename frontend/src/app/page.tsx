@@ -7,12 +7,12 @@ import { Award, CalendarClock, Car, ChevronRight, Clock, Fuel, HelpCircle, MapPi
 import SearchBar from '@/components/search/SearchBar';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import VehicleDetailModal from '@/components/vehicles/VehicleDetailModal';
 import { api, type Vehicle } from '@/lib/api';
 import { storeInfo } from '@/lib/store';
+import { vehicleFuelLabel, vehicleTransmissionLabel } from '@/lib/vehicle-labels';
 
 const money = (value: number) => `${value.toLocaleString('vi-VN')} đ`;
-const fuelLabel: Record<string, string> = { GASOLINE: 'Xăng', DIESEL: 'Dầu', ELECTRIC: 'Điện' };
-const transmissionLabel: Record<string, string> = { AUTO: 'Số tự động', MANUAL: 'Số sàn' };
 
 const faqs = [
   {
@@ -21,17 +21,18 @@ const faqs = [
   },
   {
     q: 'Hệ thống kiểm tra xe rảnh như thế nào?',
-    a: 'Xe chỉ được hiển thị khi admin đặt trạng thái Sẵn sàng, xe có hình ảnh cơ bản và không có booking đang phủ khoảng thời gian khách muốn thuê.',
+    a: 'Danh sách chỉ hiển thị những xe đang sẵn sàng và không trùng với thời gian bạn muốn thuê.',
   },
   {
     q: 'Giá thuê cuối cùng được tính ở đâu?',
-    a: 'Backend tính giá theo ngày thường, cuối tuần, ngày lễ, bảo hiểm, đặt cọc và mã giảm giá trước khi khách xác nhận đơn.',
+    a: 'Giá được tính theo ngày thường, cuối tuần, ngày lễ, bảo hiểm và ưu đãi. Bạn sẽ thấy đầy đủ báo giá trước khi xác nhận đơn.',
   },
 ];
 
 export default function HomePage() {
   const [featuredCars, setFeaturedCars] = useState<Vehicle[]>([]);
   const [loadingCars, setLoadingCars] = useState(true);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
 
   const loadFeaturedCars = useCallback(async () => {
@@ -52,37 +53,37 @@ export default function HomePage() {
   }, [loadFeaturedCars]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-950">
+    <div className="flex min-h-screen flex-col bg-app-muted text-content">
       <Header />
       <main>
         <section className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
           <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_520px]">
             <div className="flex flex-col gap-6">
-              <p className="inline-flex w-fit min-h-8 items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 text-xs font-bold uppercase tracking-wide text-emerald-700">
+              <p className="inline-flex w-fit min-h-8 items-center gap-2 rounded-full border border-brand/30 bg-utility px-3 text-xs font-bold uppercase tracking-wide text-brand">
                 <Award className="h-4 w-4" />
-                Nền tảng thuê xe tự lái đồng bộ dữ liệu vận hành
+                Thuê xe tự lái tại La Gi · Phục vụ 24/7
               </p>
               <div>
                 <h1 className="text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
                   Chọn xe thật, kiểm tra lịch thật, đặt thuê rõ ràng.
                 </h1>
-                <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600">
-                  datxe hiển thị đội xe đang được admin quản lý trực tiếp. Khách hàng xem thông tin, hình ảnh, điểm nhận xe và kiểm tra lịch trống trước khi đặt cọc.
+                <p className="mt-5 max-w-2xl text-base leading-7 text-content-secondary">
+                  Dễ dàng xem thông tin xe, hình ảnh, giá thuê, điểm nhận xe và kiểm tra lịch trống trước khi đặt cọc.
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Link href="/vehicles" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-6 text-base font-bold text-white transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
+                <Link href="/vehicles" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-brand px-6 text-base font-bold text-on-brand transition hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/25">
                   Xem xe sẵn sàng
                   <ChevronRight className="h-5 w-5" />
                 </Link>
-                <Link href="/booking" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-6 text-base font-bold text-slate-800 transition hover:bg-slate-50">
+                <Link href="/booking" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-app-border bg-app-surface px-6 text-base font-bold text-content transition hover:bg-app-muted">
                   <CalendarClock className="h-5 w-5" />
                   Kiểm tra theo lịch
                 </Link>
               </div>
             </div>
 
-            <div className="relative min-h-[340px] overflow-hidden rounded-xl border border-slate-200 bg-slate-200 shadow-sm">
+            <div className="relative min-h-[340px] overflow-hidden rounded-xl border border-app-border/35 bg-app-muted shadow-sm">
               <Image
                 src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80"
                 alt="Xe tự lái tại showroom"
@@ -91,70 +92,69 @@ export default function HomePage() {
                 sizes="(min-width: 1024px) 520px, 100vw"
                 className="object-cover"
               />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 to-transparent p-5 text-white">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-lg bg-white/15 p-3 backdrop-blur">
-                    <p className="text-xs text-white/70">Nguồn dữ liệu</p>
-                    <p className="font-bold">API quản trị xe</p>
-                  </div>
-                  <div className="rounded-lg bg-white/15 p-3 backdrop-blur">
-                    <p className="text-xs text-white/70">Trạng thái thuê</p>
-                    <p className="font-bold">Kiểm tra booking</p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
           <SearchBar />
         </section>
 
-        <section id="featured" className="border-y border-slate-200 bg-white py-14">
+        <section id="featured" className="border-y border-app-border/35 bg-app-surface py-14">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
                 <h2 className="text-3xl font-black">Xe đang sẵn sàng cho thuê</h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                  Không còn dữ liệu dòng xe hardcode: danh sách bên dưới lấy từ cùng API mà admin đang cập nhật trong dashboard.
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-content-secondary">
+                  Chọn xe phù hợp, xem đầy đủ thông tin và kiểm tra lịch thuê ngay trên từng xe.
                 </p>
               </div>
-              <Link href="/vehicles" className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-bold text-slate-700 hover:bg-slate-50">
+              <Link href="/vehicles" className="inline-flex min-h-11 items-center justify-center rounded-lg border border-app-border px-4 text-sm font-bold text-content-secondary hover:bg-app-muted">
                 Xem toàn bộ xe
               </Link>
             </div>
 
             {loadingCars ? (
-              <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-600">Đang tải xe từ hệ thống…</div>
+              <div className="mt-8 rounded-xl border border-app-border/35 bg-app-muted p-8 text-center text-sm text-content-secondary">Đang cập nhật danh sách xe…</div>
             ) : featuredCars.length === 0 ? (
-              <div className="mt-8 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-                <Car className="mx-auto h-10 w-10 text-slate-300" />
-                <h3 className="mt-4 text-lg font-bold">Chưa có xe sẵn sàng</h3>
-                <p className="mt-2 text-sm text-slate-600">Admin cần thêm xe trong dashboard, tải ảnh và đặt trạng thái Sẵn sàng để xe xuất hiện tại đây.</p>
+              <div className="mt-8 rounded-xl border border-dashed border-app-border bg-app-muted p-8 text-center">
+                <Car className="mx-auto h-10 w-10 text-content-secondary" />
+                <h3 className="mt-4 text-lg font-bold">Hiện chưa có xe sẵn sàng</h3>
+                <p className="mt-2 text-sm text-content-secondary">Vui lòng quay lại sau hoặc chọn lịch thuê để kiểm tra xe phù hợp.</p>
               </div>
             ) : (
               <div className="mt-8 grid gap-6 md:grid-cols-3">
                 {featuredCars.map((car) => (
-                  <article key={car.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                    <Link href={`/vehicles/${car.id}`} className="block">
-                      <div className="relative aspect-[16/10] bg-slate-100">
+                  <article key={car.id} className="overflow-hidden rounded-xl border border-app-border/35 bg-app-surface shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedVehicle(car)}
+                      aria-label={`Xem thông tin ${car.brand} ${car.model}`}
+                      className="block w-full text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/25"
+                    >
+                      <div className="relative aspect-[16/10] bg-app-muted">
                         {car.images[0] ? (
                           <Image src={car.images[0]} alt={`${car.brand} ${car.model}`} fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover" />
                         ) : (
-                          <div className="flex h-full items-center justify-center"><Car className="h-12 w-12 text-slate-300" /></div>
+                          <div className="flex h-full items-center justify-center"><Car className="h-12 w-12 text-content-secondary" /></div>
                         )}
-                        <span className="absolute right-3 top-3 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white">Sẵn sàng</span>
+                        <span className="absolute right-3 top-3 rounded-full bg-brand px-3 py-1 text-xs font-bold text-on-brand">Sẵn sàng</span>
                       </div>
-                    </Link>
+                    </button>
                     <div className="p-5">
-                      <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{car.brand}</p>
+                      <p className="text-xs font-bold uppercase tracking-wide text-content-secondary">{car.brand}</p>
                       <h3 className="mt-1 text-xl font-black">{car.model}</h3>
-                      <p className="mt-3 text-lg font-black text-emerald-700">{money(car.dailyPrice)}<span className="text-xs font-medium text-slate-500"> / ngày</span></p>
-                      <div className="mt-4 grid grid-cols-3 gap-2 text-xs font-semibold text-slate-700">
-                        <span className="rounded-lg bg-slate-50 p-2"><Users className="mb-1 h-4 w-4 text-emerald-700" />{car.seats} chỗ</span>
-                        <span className="rounded-lg bg-slate-50 p-2"><Fuel className="mb-1 h-4 w-4 text-emerald-700" />{fuelLabel[car.fuel] || car.fuel}</span>
-                        <span className="rounded-lg bg-slate-50 p-2"><Car className="mb-1 h-4 w-4 text-emerald-700" />{transmissionLabel[car.transmission] || car.transmission}</span>
+                      <p className="mt-3 text-lg font-black text-rental-price">{money(car.dailyPrice)}<span className="text-xs font-medium text-content-secondary"> / ngày</span></p>
+                      <div className="mt-4 grid grid-cols-3 gap-2 text-xs font-semibold text-content-secondary">
+                        <span className="rounded-lg bg-app-muted p-2"><Users className="mb-1 h-4 w-4 text-brand" />{car.seats} chỗ</span>
+                        <span className="rounded-lg bg-app-muted p-2"><Fuel className="mb-1 h-4 w-4 text-brand" />{vehicleFuelLabel(car.fuel)}</span>
+                        <span className="rounded-lg bg-app-muted p-2"><Car className="mb-1 h-4 w-4 text-brand" />{vehicleTransmissionLabel(car.transmission)}</span>
                       </div>
-                      <Link href={`/vehicles/${car.id}`} className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-emerald-700 text-sm font-bold text-white hover:bg-emerald-800">Xem giới thiệu xe</Link>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedVehicle(car)}
+                        className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-brand text-sm font-bold text-on-brand hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/25"
+                      >
+                        Xem thông tin xe
+                      </button>
                     </div>
                   </article>
                 ))}
@@ -165,14 +165,14 @@ export default function HomePage() {
 
         <section id="showroom" className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:px-8">
           <div>
-            <h2 className="flex items-center gap-2 text-3xl font-black"><MapPin className="h-7 w-7 text-emerald-700" />Showroom và hỗ trợ</h2>
-            <div className="mt-6 space-y-4 text-sm leading-6 text-slate-600">
-              <p className="flex gap-3"><MapPin className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" /><span><strong>Địa chỉ:</strong> {storeInfo.address}</span></p>
-              <p className="flex gap-3"><Phone className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" /><span><strong>Hotline:</strong> 1900 8888</span></p>
-              <p className="flex gap-3"><Clock className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" /><span><strong>Giờ làm việc:</strong> {storeInfo.hours}</span></p>
+            <h2 className="flex items-center gap-2 text-3xl font-black"><MapPin className="h-7 w-7 text-brand" />Showroom và hỗ trợ</h2>
+            <div className="mt-6 space-y-4 text-sm leading-6 text-content-secondary">
+              <p className="flex gap-3"><MapPin className="mt-0.5 h-5 w-5 shrink-0 text-brand" /><span><strong>Địa chỉ:</strong> {storeInfo.address}</span></p>
+              <p className="flex gap-3"><Phone className="mt-0.5 h-5 w-5 shrink-0 text-brand" /><span><strong>Hotline:</strong> 1900 8888</span></p>
+              <p className="flex gap-3"><Clock className="mt-0.5 h-5 w-5 shrink-0 text-brand" /><span><strong>Giờ làm việc:</strong> {storeInfo.hours}</span></p>
             </div>
           </div>
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div className="overflow-hidden rounded-xl border border-app-border/35 bg-app-surface">
             <iframe
               src={`https://www.google.com/maps?q=${encodeURIComponent(storeInfo.address)}&z=17&output=embed`}
               width="100%"
@@ -185,13 +185,13 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="policy" className="border-y border-slate-200 bg-white py-14">
+        <section id="policy" className="border-y border-app-border/35 bg-app-surface py-14">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <h2 className="flex items-center justify-center gap-2 text-center text-3xl font-black"><ShieldCheck className="h-7 w-7 text-emerald-700" />Quy trình thuê xe</h2>
+            <h2 className="flex items-center justify-center gap-2 text-center text-3xl font-black"><ShieldCheck className="h-7 w-7 text-brand" />Quy trình thuê xe</h2>
             <div className="mt-8 grid gap-4 md:grid-cols-4">
               {['Chọn lịch thuê', 'Kiểm tra xe rảnh', 'Đặt cọc và gửi hồ sơ', 'Nhận xe và ký hợp đồng'].map((item, index) => (
-                <div key={item} className="rounded-xl border border-slate-200 bg-slate-50 p-5 text-center">
-                  <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-700 font-black text-white">{index + 1}</span>
+                <div key={item} className="rounded-xl border border-app-border/35 bg-app-muted p-5 text-center">
+                  <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-brand font-black text-on-brand">{index + 1}</span>
                   <h3 className="mt-4 font-bold">{item}</h3>
                 </div>
               ))}
@@ -200,21 +200,28 @@ export default function HomePage() {
         </section>
 
         <section id="faq" className="mx-auto max-w-4xl px-4 py-14 sm:px-6 lg:px-8">
-          <h2 className="flex items-center justify-center gap-2 text-center text-3xl font-black"><HelpCircle className="h-7 w-7 text-emerald-700" />Câu hỏi thường gặp</h2>
+          <h2 className="flex items-center justify-center gap-2 text-center text-3xl font-black"><HelpCircle className="h-7 w-7 text-brand" />Câu hỏi thường gặp</h2>
           <div className="mt-8 space-y-3">
             {faqs.map((faq, index) => (
-              <div key={faq.q} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                <button type="button" onClick={() => setFaqOpen(faqOpen === index ? null : index)} className="flex min-h-14 w-full items-center justify-between gap-4 px-5 text-left font-bold hover:bg-slate-50">
+              <div key={faq.q} className="overflow-hidden rounded-xl border border-app-border/35 bg-app-surface">
+                <button type="button" onClick={() => setFaqOpen(faqOpen === index ? null : index)} className="flex min-h-14 w-full items-center justify-between gap-4 px-5 text-left font-bold hover:bg-app-muted">
                   <span>{faq.q}</span>
-                  <span className="text-xl text-emerald-700">{faqOpen === index ? '-' : '+'}</span>
+                  <span className="text-xl text-brand">{faqOpen === index ? '-' : '+'}</span>
                 </button>
-                {faqOpen === index && <p className="border-t border-slate-200 px-5 py-4 text-sm leading-6 text-slate-600">{faq.a}</p>}
+                {faqOpen === index && <p className="border-t border-app-border/35 px-5 py-4 text-sm leading-6 text-content-secondary">{faq.a}</p>}
               </div>
             ))}
           </div>
         </section>
       </main>
       <Footer />
+      {selectedVehicle && (
+        <VehicleDetailModal
+          vehicle={selectedVehicle}
+          dates={{}}
+          onClose={() => setSelectedVehicle(null)}
+        />
+      )}
     </div>
   );
 }

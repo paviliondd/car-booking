@@ -1,53 +1,118 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-brand: var(--color-primary);
+  --color-brand-hover: var(--color-primary-hover);
+  --color-on-brand: var(--color-primary-foreground);
+  --color-app-surface: var(--color-surface);
+  --color-app-muted: var(--color-surface-muted);
+  --color-content: var(--color-text);
+  --color-content-secondary: var(--color-text-secondary);
+  --color-discount: var(--color-badge-discount-bg);
+  --color-on-discount: var(--color-badge-discount-fg);
+  --color-utility: var(--color-badge-utility-bg);
+  --color-utility-foreground: var(--color-badge-utility-fg);
+  --color-rental-price: var(--color-price);
+  --color-app-border: var(--color-border);
+  --color-danger: var(--color-danger-fg);
+  --color-danger-muted: var(--color-danger-bg);
+  --color-on-danger: var(--color-danger-foreground);
+  --color-warning: var(--color-warning-fg);
+  --color-warning-muted: var(--color-warning-bg);
+  --color-info: var(--color-info-fg);
+  --color-info-muted: var(--color-info-bg);
+  --color-payment-momo: var(--color-payment-momo-bg);
+  --color-night-surface: var(--color-dark-surface);
+  --color-night-muted: var(--color-dark-surface-muted);
+  --color-night-content: var(--color-dark-text);
+  --color-night-secondary: var(--color-dark-text-secondary);
+  --color-night-border: var(--color-dark-border);
+  --color-night-accent: var(--color-dark-accent);
+}
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
-    --surface: 0 0% 100%;
-    --surface-subtle: 210 40% 96%;
-    --primary: 160 84% 32%;
-    --primary-hover: 160 84% 26%;
-    --primary-foreground: 0 0% 100%;
-    --muted-foreground: 215 16% 40%;
-    --border: 214 32% 91%;
-    --destructive: 0 72% 51%;
-    --warning: 38 92% 42%;
-    --ring: 160 84% 32%;
+    --color-primary: #065f46;
+    --color-primary-hover: #064e3b;
+    --color-primary-foreground: #ffffff;
+    --color-surface: #ffffff;
+    --color-surface-muted: #f0fdf4;
+    --color-text: #052e2b;
+    --color-text-secondary: #334155;
+    --color-badge-discount-bg: #9a3412;
+    --color-badge-discount-fg: #ffffff;
+    --color-badge-utility-bg: #ecfdf5;
+    --color-badge-utility-fg: #065f46;
+    --color-price: #065f46;
+    --color-border: #64748b;
+    --color-danger-bg: #fef2f2;
+    --color-danger-fg: #991b1b;
+    --color-danger-foreground: #ffffff;
+    --color-warning-bg: #fffbeb;
+    --color-warning-fg: #92400e;
+    --color-info-bg: #eff6ff;
+    --color-info-fg: #1e40af;
+    --color-payment-momo-bg: #a50064;
+    --color-chart-1: #065f46;
+    --color-chart-2: #1e40af;
+    --color-chart-3: #991b1b;
+    --color-chart-4: #0f766e;
+    --color-chart-5: #92400e;
+    --color-tooltip-bg: #13201d;
+    --color-tooltip-fg: #f8fafc;
+    --color-dark-surface: #0b1412;
+    --color-dark-surface-muted: #13201d;
+    --color-dark-text: #f8fafc;
+    --color-dark-text-secondary: #e2e8f0;
+    --color-dark-border: #94a3b8;
+    --color-dark-accent: #a7f3d0;
     --radius: 0.875rem;
     --motion-fast: 160ms;
     --motion-base: 220ms;
     --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 10px 30px rgb(15 23 42 / 0.06);
-    --color-primary: #047857;
-    --color-primary-foreground: #ffffff;
-    --color-surface: #ffffff;
-    --color-surface-muted: #f1f5f9;
-    --color-text: #0f172a;
-    --color-text-muted: #475569;
-    --color-badge-success-bg: #d1fae5;
-    --color-badge-success-fg: #065f46;
-    --color-badge-discount-bg: #c2410c;
-    --color-badge-discount-fg: #ffffff;
-    --color-danger-bg: #fef2f2;
-    --color-danger-fg: #991b1b;
   }
 
   .dark {
-    --background: 222 47% 7%;
-    --foreground: 210 40% 98%;
-    --surface: 222 39% 11%;
-    --surface-subtle: 217 33% 17%;
-    --primary: 158 64% 52%;
-    --primary-hover: 158 64% 58%;
-    --primary-foreground: 222 47% 7%;
-    --muted-foreground: 215 20% 70%;
-    --border: 217 33% 20%;
-    --ring: 158 64% 52%;
+    --color-primary: #6ee7b7;
+    --color-primary-hover: #a7f3d0;
+    --color-primary-foreground: #052e2b;
+    --color-surface: #0b1412;
+    --color-surface-muted: #13201d;
+    --color-text: #f8fafc;
+    --color-text-secondary: #cbd5e1;
+    --color-badge-discount-bg: #fdba74;
+    --color-badge-discount-fg: #431407;
+    --color-badge-utility-bg: #143c31;
+    --color-badge-utility-fg: #a7f3d0;
+    --color-price: #6ee7b7;
+    --color-border: #94a3b8;
+    --color-danger-bg: #450a0a;
+    --color-danger-fg: #fecaca;
+    --color-danger-foreground: #450a0a;
+    --color-warning-bg: #451a03;
+    --color-warning-fg: #fde68a;
+    --color-info-bg: #172554;
+    --color-info-fg: #bfdbfe;
+    --color-payment-momo-bg: #a50064;
+    --color-chart-1: #6ee7b7;
+    --color-chart-2: #93c5fd;
+    --color-chart-3: #fecaca;
+    --color-chart-4: #99f6e4;
+    --color-chart-5: #fde68a;
+    --color-tooltip-bg: #f8fafc;
+    --color-tooltip-fg: #052e2b;
+    --color-dark-surface: #0b1412;
+    --color-dark-surface-muted: #13201d;
+    --color-dark-text: #f8fafc;
+    --color-dark-text-secondary: #e2e8f0;
+    --color-dark-border: #94a3b8;
+    --color-dark-accent: #a7f3d0;
   }
 
   * {
     min-width: 0;
-    border-color: hsl(var(--border));
+    border-color: color-mix(in srgb, var(--color-border) 38%, transparent);
   }
 
   html {
@@ -59,8 +124,8 @@
     min-width: 320px;
     min-height: 100dvh;
     overflow-x: hidden;
-    background: hsl(var(--background));
-    color: hsl(var(--foreground));
+    background: var(--color-surface-muted);
+    color: var(--color-text);
     font-family: var(--font-be-vietnam-pro), "Segoe UI", system-ui, sans-serif;
     font-size: 1rem;
     font-synthesis: none;
@@ -70,7 +135,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    color: hsl(var(--foreground));
+    color: var(--color-text);
     font-weight: 700;
     line-height: 1.25;
     text-wrap: balance;
@@ -123,7 +188,7 @@
   }
 
   :focus-visible {
-    outline: 3px solid hsl(var(--ring) / 0.35);
+    outline: 3px solid color-mix(in srgb, var(--color-primary) 46%, transparent);
     outline-offset: 2px;
   }
 }
@@ -135,44 +200,34 @@
   z-index: 1000;
   transform: translateY(-160%);
   border-radius: 0.75rem;
-  background: #059669;
+  background: var(--color-primary);
   padding: 0.75rem 1rem;
-  color: white;
+  color: var(--color-primary-foreground);
   font-weight: 700;
   transition: transform var(--motion-fast) ease-out;
 }
 .skip-link:focus { transform: translateY(0); }
 
 .glass-panel {
-  border: 1px solid hsl(var(--border) / 0.8);
-  background: hsl(var(--surface) / 0.92);
+  border: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
   box-shadow: var(--shadow-card);
   backdrop-filter: blur(16px);
 }
 
-.gradient-text { color: hsl(var(--primary)); }
+.gradient-text { color: var(--color-primary); }
 .gradient-btn {
-  background: hsl(var(--primary));
+  background: var(--color-primary);
   transition: background-color var(--motion-fast) ease-out, box-shadow var(--motion-fast) ease-out;
 }
 .gradient-btn:hover {
-  background: hsl(var(--primary-hover));
+  background: var(--color-primary-hover);
   box-shadow: 0 10px 24px rgb(5 150 105 / 0.2);
 }
 
-.admin-shell {
-  --background: 210 40% 98%;
-  --foreground: 222 47% 11%;
-  --surface: 0 0% 100%;
-  --surface-subtle: 210 40% 96%;
-  --muted-foreground: 215 16% 40%;
-  --border: 214 32% 91%;
-  --ring: 160 84% 32%;
-}
-
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: hsl(var(--surface-subtle)); }
-::-webkit-scrollbar-thumb { border-radius: 999px; background: #94a3b8; }
+::-webkit-scrollbar-track { background: var(--color-surface-muted); }
+::-webkit-scrollbar-thumb { border-radius: 999px; background: var(--color-border); }
 
 @media (max-width: 639px) {
   h1 { font-size: clamp(1.75rem, 8vw, 2.25rem); }

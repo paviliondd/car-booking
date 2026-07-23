@@ -44,7 +44,7 @@ export default function AccountPage() {
   const card = (b: Booking) => (
     <article
       key={b.id}
-      className="grid gap-4 rounded-2xl border bg-white p-4 sm:grid-cols-[160px_1fr]"
+      className="grid gap-4 rounded-2xl border bg-app-surface p-4 sm:grid-cols-[160px_1fr]"
     >
       {b.vehicle?.images[0] ? (
         <div className="relative aspect-video overflow-hidden rounded-xl">
@@ -57,7 +57,7 @@ export default function AccountPage() {
           />
         </div>
       ) : (
-        <div className="flex items-center justify-center rounded-xl bg-slate-100">
+        <div className="flex items-center justify-center rounded-xl bg-app-muted">
           <Car />
         </div>
       )}
@@ -66,16 +66,16 @@ export default function AccountPage() {
           <h3 className="font-black">
             {b.vehicle?.brand} {b.vehicle?.model} · {b.vehicle?.plateNumber}
           </h3>
-          <span className="h-fit rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-800">
+          <span className="h-fit rounded-full bg-utility px-2 py-1 text-xs font-bold text-brand">
             {labels[b.status] || b.status}
           </span>
         </div>
-        <p className="mt-2 text-sm text-slate-700">
+        <p className="mt-2 text-sm text-content-secondary">
           <CalendarDays className="mr-2 inline h-4 w-4" />
           {b.startDate && new Date(b.startDate).toLocaleString("vi-VN")} →{" "}
           {b.endDate && new Date(b.endDate).toLocaleString("vi-VN")}
         </p>
-        <p className="mt-1 text-sm text-slate-700">
+        <p className="mt-1 text-sm text-content-secondary">
           <MapPin className="mr-2 inline h-4 w-4" />
           {b.pickupLocation}
         </p>
@@ -84,37 +84,37 @@ export default function AccountPage() {
           {b.contract ? (
             b.contract.pdfUrl ? (
               <a
-                className="font-bold text-emerald-800 underline"
+                className="font-bold text-brand underline"
                 href={b.contract.pdfUrl}
               >
                 Xem hợp đồng
               </a>
             ) : (
               <Link
-                className="font-bold text-emerald-800 underline"
+                className="font-bold text-brand underline"
                 href={`/contract/${b.id}`}
               >
                 {b.contract.signedAt ? "Hợp đồng đã ký" : "Ký hợp đồng"}
               </Link>
             )
           ) : (
-            <span className="text-slate-600">Chưa có hợp đồng</span>
+            <span className="text-content-secondary">Chưa có hợp đồng</span>
           )}
         </div>
       </div>
     </article>
   );
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-app-muted">
       <Header />
       <main className="mx-auto max-w-5xl px-4 py-10">
         <h1 className="text-3xl font-black">Đơn thuê của tôi</h1>
         {loading ? (
-          <div className="mt-6 h-52 animate-pulse rounded-2xl bg-slate-200" />
+          <div className="mt-6 h-52 animate-pulse rounded-2xl bg-app-muted" />
         ) : error ? (
           <p
             role="alert"
-            className="mt-6 rounded-xl bg-red-50 p-4 text-red-800"
+            className="mt-6 rounded-xl bg-danger-muted p-4 text-danger"
           >
             {error}
           </p>
@@ -126,7 +126,7 @@ export default function AccountPage() {
                 {current.length ? (
                   current.map(card)
                 ) : (
-                  <p className="rounded-xl bg-white p-5 text-slate-600">
+                  <p className="rounded-xl bg-app-surface p-5 text-content-secondary">
                     Không có đơn thuê đang hoạt động.
                   </p>
                 )}
@@ -139,7 +139,7 @@ export default function AccountPage() {
                   aria-label="Lọc năm"
                   value={period}
                   onChange={(e) => setPeriod(e.target.value)}
-                  className="min-h-11 rounded-xl border bg-white px-3"
+                  className="min-h-11 rounded-xl border bg-app-surface px-3"
                 >
                   <option value="ALL">Tất cả</option>
                   {[2026, 2025, 2024].map((y) => (
@@ -151,7 +151,7 @@ export default function AccountPage() {
                 {history.length ? (
                   history.map(card)
                 ) : (
-                  <p className="rounded-xl bg-white p-5 text-slate-600">
+                  <p className="rounded-xl bg-app-surface p-5 text-content-secondary">
                     Chưa có lịch sử thuê xe.
                   </p>
                 )}
