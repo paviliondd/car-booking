@@ -4,8 +4,9 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateVehicleDto } from './dto/vehicle.dto';
-import { Vehicle, VehicleStatus } from '@prisma/client';
+import { CreateVehicleDto, UpdateVehicleDto } from './dto/vehicle.dto';
+import { Prisma, Role, Vehicle, VehicleStatus } from '@prisma/client';
+import { AuthenticatedUser } from '../auth/types/authenticated-user';
 
 @Injectable()
 export class VehiclesService {
@@ -189,24 +190,114 @@ export class VehiclesService {
     };
   }
 
-  async update(id: string, dto: Partial<CreateVehicleDto>): Promise<Vehicle> {
-    await this.findOne(id);
-    return await this.prisma.vehicle.update({
-      where: { id },
-      data: dto,
+  private assertCanManage(vehicle: Vehicle, actor: AuthenticatedUser) {
+    if (actor.role === Role.OWNER && vehicle.ownerId !== actor.id) {
+      throw new BadRequestException('Bạn không sở hữu phương tiện này');
+    }
+  }
+
+  async update(
+    id: string,
+    dto: UpdateVehicleDto,
+    actor: AuthenticatedUser,
+  ): Promise<Vehicle> {
+    const current = await this.findOne(id);
+    this.assertCanManage(current, actor);
+
+    const operationalFields: Array<keyof UpdateVehicleDto> = [
+      'plateNumber',
+      'brand',
+      'model',
+      'year',
+      'seats',
+      'transmission',
+      'fuel',
+      'dailyPrice',
+      'weekendPrice',
+      'holidayPrice',
+      'penaltyRate',
+      'limitKmPerDay',
+      'overLimitFee',
+      'pickupLocation',
+    ];
+    if (
+      current.status === VehicleStatus.RENTED &&
+      operationalFields.some((field) => dto[field] !== undefined)
+    ) {
+      throw new BadRequestException(
+        'Không thể đổi thông tin vận hành hoặc giá khi xe đang được thuê',
+      );
+    }
+
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const updated = await tx.vehicle.update({
+          where: { id },
+          data: dto,
+        });
+        await tx.auditLog.create({
+          data: {
+            userId: actor.id,
+            action: 'UPDATE_VEHICLE',
+            targetTable: 'Vehicle',
+            targetId: id,
+            oldValue: current,
+            newValue: { ...dto },
+          },
+        });
+        return updated;
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new BadRequestException('Biển số xe đã tồn tại');
+      }
+      throw error;
+    }
+  }
+
+  async updateStatus(
+    id: string,
+    status: VehicleStatus,
+    actor: AuthenticatedUser,
+  ): Promise<Vehicle> {
+    const current = await this.findOne(id);
+    this.assertCanManage(current, actor);
+    if (
+      current.status === VehicleStatus.RENTED &&
+      status !== VehicleStatus.RENTED
+    ) {
+      throw new BadRequestException(
+        'Trạng thái xe đang thuê được cập nhật theo vòng đời đơn thuê',
+      );
+    }
+    return await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.vehicle.update({
+        where: { id },
+        data: { status },
+      });
+      await tx.auditLog.create({
+        data: {
+          userId: actor.id,
+          action: 'UPDATE_VEHICLE_STATUS',
+          targetTable: 'Vehicle',
+          targetId: id,
+          oldValue: { status: current.status },
+          newValue: { status },
+        },
+      });
+      return updated;
     });
   }
 
-  async updateStatus(id: string, status: VehicleStatus): Promise<Vehicle> {
-    await this.findOne(id);
-    return await this.prisma.vehicle.update({
-      where: { id },
-      data: { status },
-    });
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.findOne(id);
+  async delete(id: string, actor: AuthenticatedUser): Promise<void> {
+    const current = await this.findOne(id);
+    this.assertCanManage(current, actor);
+    if (current.status === VehicleStatus.RENTED) {
+      throw new BadRequestException('Không thể xóa xe đang được thuê');
+    }
     await this.prisma.vehicle.delete({ where: { id } });
   }
 

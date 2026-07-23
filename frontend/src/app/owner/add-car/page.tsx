@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { api } from '@/lib/api';
+import { api, type VehicleInput } from '@/lib/api';
 import { Car, ChevronLeft, Upload, Loader2, DollarSign, MapPin, Sliders, X } from 'lucide-react';
 
 export default function AddCarPage() {
@@ -11,6 +11,7 @@ export default function AddCarPage() {
   const pathname = usePathname();
   const adminMode = pathname.startsWith('/dashboard');
   const returnPath = adminMode ? '/dashboard/vehicles' : '/owner';
+  const editingId = pathname.match(/\/vehicles\/([^/]+)\/edit$/)?.[1] || null;
   const [authorized, setAuthorized] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -59,6 +60,36 @@ export default function AddCarPage() {
     void verifyOwner();
   }, [adminMode, router]);
 
+  useEffect(() => {
+    if (!authorized || !editingId) return;
+    const timer = window.setTimeout(() => {
+      setLoading(true);
+      api.vehicles.findOne(editingId).then((vehicle) => {
+      setBrand(vehicle.brand);
+      setModel(vehicle.model);
+      setPlateNumber(vehicle.plateNumber);
+      setYear(vehicle.year);
+      setSeats(vehicle.seats);
+      setTransmission(vehicle.transmission);
+      setFuel(vehicle.fuel);
+      setColor(vehicle.color || '');
+      setDailyPrice(vehicle.dailyPrice);
+      setWeekendPrice(vehicle.weekendPrice);
+      setHolidayPrice(vehicle.holidayPrice);
+      setPenaltyRate(vehicle.penaltyRate);
+      setLimitKmPerDay(vehicle.limitKmPerDay || 0);
+      setOverLimitFee(vehicle.overLimitFee || 0);
+      setPickupLocation(vehicle.pickupLocation || '');
+      setLatitude(vehicle.latitude || 0);
+      setLongitude(vehicle.longitude || 0);
+      setTerms(vehicle.terms || '');
+      setImages(vehicle.images);
+      }).catch((err: unknown) => setErrorMsg(err instanceof Error ? err.message : 'Không thể tải thông tin xe.'))
+        .finally(() => setLoading(false));
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [authorized, editingId]);
+
   const handleAddImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -88,7 +119,7 @@ export default function AddCarPage() {
         setErrorMsg('Vui lòng tải ít nhất một ảnh xe trước khi đăng.');
         return;
       }
-      const payload = {
+      const payload: VehicleInput = {
         brand,
         model,
         plateNumber,
@@ -110,10 +141,11 @@ export default function AddCarPage() {
         images,
       };
 
-      await api.vehicles.create(payload);
+      if (editingId) await api.vehicles.update(editingId, payload);
+      else await api.vehicles.create(payload);
       router.push(returnPath);
     } catch (err: unknown) {
-      setErrorMsg(err instanceof Error ? err.message : 'Lỗi thêm xe mới. Hãy kiểm tra lại biển số hoặc dữ liệu nhập.');
+      setErrorMsg(err instanceof Error ? err.message : 'Không thể lưu xe. Hãy kiểm tra lại biển số hoặc dữ liệu nhập.');
     } finally {
       setLoading(false);
     }
@@ -141,7 +173,7 @@ export default function AddCarPage() {
 
         <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
           <Car className="h-6 w-6 text-green-500" />
-          <span>Đăng Ký Xe Cho Thuê</span>
+          <span>{editingId ? 'Chỉnh Sửa Thông Tin Xe' : 'Đăng Ký Xe Cho Thuê'}</span>
         </h1>
       </div>
 
@@ -323,7 +355,7 @@ export default function AddCarPage() {
           className="w-full gradient-btn text-white font-semibold py-3.5 rounded-lg flex items-center justify-center gap-2 cursor-pointer text-lg disabled:opacity-50"
         >
           {loading && <Loader2 className="h-5 w-5 animate-spin" />}
-          <span>{loading ? 'Đang tạo hồ sơ xe...' : 'Xác Nhận Đăng Xe'}</span>
+          <span>{loading ? 'Đang lưu hồ sơ xe...' : editingId ? 'Lưu Thay Đổi' : 'Xác Nhận Đăng Xe'}</span>
         </button>
       </form>
     </div>

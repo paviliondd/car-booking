@@ -1,9 +1,19 @@
-import { Controller, Get, Patch, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Body,
+  Param,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { Role, CustomerSegment } from '@prisma/client';
+import { Role } from '@prisma/client';
+import { UpdateCustomerDto } from './dto/customer.dto';
+import type { AuthenticatedRequest } from '../auth/types/authenticated-user';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN, Role.STAFF)
@@ -22,23 +32,11 @@ export class CustomersController {
   }
 
   @Patch(':id')
-  async updateSegment(
+  async update(
     @Param('id') id: string,
-    @Body('segment') segment: CustomerSegment,
-    @Body('notes') notes?: string,
+    @Body() dto: UpdateCustomerDto,
+    @Req() req: AuthenticatedRequest,
   ) {
-    return await this.prismaCustomerUpdate(id, segment, notes);
-  }
-
-  private async prismaCustomerUpdate(
-    id: string,
-    segment: CustomerSegment,
-    notes?: string,
-  ) {
-    return await this.customersService.updateSegmentAndNotes(
-      id,
-      segment,
-      notes,
-    );
+    return await this.customersService.update(id, dto, req.user.id);
   }
 }

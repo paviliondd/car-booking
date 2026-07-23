@@ -10,7 +10,11 @@ import {
   Req,
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
-import { CreateBookingDto, UpdateBookingStatusDto } from './dto/booking.dto';
+import {
+  BookingQuoteDto,
+  CreateBookingDto,
+  UpdateBookingStatusDto,
+} from './dto/booking.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -20,6 +24,11 @@ import type { AuthenticatedRequest } from '../auth/types/authenticated-user';
 @Controller('bookings')
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
+
+  @Post('quote')
+  async quote(@Body() dto: BookingQuoteDto) {
+    return await this.bookingsService.quote(dto);
+  }
 
   // 1. Tạo đặt xe mới (Khách hàng đã đăng nhập)
   @UseGuards(JwtAuthGuard, RolesGuard)

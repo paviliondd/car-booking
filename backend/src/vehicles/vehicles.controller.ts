@@ -10,14 +10,18 @@ import {
   UseGuards,
   Patch,
   Req,
-  BadRequestException,
 } from '@nestjs/common';
 import { VehiclesService } from './vehicles.service';
-import { CreateVehicleDto, SearchVehicleDto } from './dto/vehicle.dto';
+import {
+  CreateVehicleDto,
+  SearchVehicleDto,
+  UpdateVehicleDto,
+  UpdateVehicleStatusDto,
+} from './dto/vehicle.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { Role, VehicleStatus } from '@prisma/client';
+import { Role } from '@prisma/client';
 import type { AuthenticatedRequest } from '../auth/types/authenticated-user';
 
 @Controller('vehicles')
@@ -101,15 +105,9 @@ export class VehiclesController {
   async update(
     @Req() req: AuthenticatedRequest,
     @Param('id') id: string,
-    @Body() dto: Partial<CreateVehicleDto>,
+    @Body() dto: UpdateVehicleDto,
   ) {
-    if (req.user.role === Role.OWNER) {
-      const car = await this.vehiclesService.findOne(id);
-      if (car.ownerId !== req.user.id) {
-        throw new BadRequestException('Bạn không sở hữu phương tiện này');
-      }
-    }
-    return await this.vehiclesService.update(id, dto);
+    return await this.vehiclesService.update(id, dto, req.user);
   }
 
   // 8. Cập nhật trạng thái xe (Admin/Staff/Owner)
@@ -119,15 +117,9 @@ export class VehiclesController {
   async updateStatus(
     @Req() req: AuthenticatedRequest,
     @Param('id') id: string,
-    @Body('status') status: VehicleStatus,
+    @Body() dto: UpdateVehicleStatusDto,
   ) {
-    if (req.user.role === Role.OWNER) {
-      const car = await this.vehiclesService.findOne(id);
-      if (car.ownerId !== req.user.id) {
-        throw new BadRequestException('Bạn không sở hữu phương tiện này');
-      }
-    }
-    return await this.vehiclesService.updateStatus(id, status);
+    return await this.vehiclesService.updateStatus(id, dto.status, req.user);
   }
 
   // 9. Xóa xe (Admin/Owner)
@@ -135,12 +127,6 @@ export class VehiclesController {
   @Roles(Role.ADMIN, Role.OWNER)
   @Delete(':id')
   async delete(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
-    if (req.user.role === Role.OWNER) {
-      const car = await this.vehiclesService.findOne(id);
-      if (car.ownerId !== req.user.id) {
-        throw new BadRequestException('Bạn không sở hữu phương tiện này');
-      }
-    }
-    return await this.vehiclesService.delete(id);
+    return await this.vehiclesService.delete(id, req.user);
   }
 }

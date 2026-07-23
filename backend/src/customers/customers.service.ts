@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Customer, CustomerSegment } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { UpdateCustomerDto } from './dto/customer.dto';
 
 @Injectable()
 export class CustomersService {
@@ -9,6 +14,14 @@ export class CustomersService {
   async findAll() {
     const customers = await this.prisma.customer.findMany({
       include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+          },
+        },
         bookings: {
           where: { status: 'COMPLETED' },
           select: {
@@ -38,6 +51,7 @@ export class CustomersService {
         idCardNo: c.idCardNo,
         segment: c.segment,
         notes: c.notes,
+        user: c.user,
         totalBookings,
         totalRevenue,
         lastRentalDate,
@@ -64,18 +78,64 @@ export class CustomersService {
     return customer;
   }
 
-  async updateSegmentAndNotes(
-    id: string,
-    segment: CustomerSegment,
-    notes?: string,
-  ): Promise<Customer> {
-    await this.findOne(id);
-    return await this.prisma.customer.update({
-      where: { id },
-      data: {
-        segment,
-        ...(notes !== undefined ? { notes } : {}),
-      },
-    });
+  async update(id: string, dto: UpdateCustomerDto, actorId: string) {
+    const current = await this.findOne(id);
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const updated = await tx.customer.update({
+          where: { id },
+          data: dto,
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                name: true,
+                role: true,
+              },
+            },
+          },
+        });
+
+        if (current.userId && (dto.fullName || dto.phone)) {
+          await tx.user.update({
+            where: { id: current.userId },
+            data: {
+              ...(dto.fullName ? { name: dto.fullName } : {}),
+              ...(dto.phone ? { phone: dto.phone } : {}),
+            },
+          });
+        }
+
+        await tx.auditLog.create({
+          data: {
+            userId: actorId,
+            action: 'UPDATE_CUSTOMER',
+            targetTable: 'Customer',
+            targetId: id,
+            oldValue: {
+              fullName: current.fullName,
+              phone: current.phone,
+              idCardNo: current.idCardNo,
+              segment: current.segment,
+              notes: current.notes,
+            },
+            newValue: { ...dto },
+          },
+        });
+
+        return updated;
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new BadRequestException(
+          'Số điện thoại hoặc CCCD đã được sử dụng',
+        );
+      }
+      throw error;
+    }
   }
 }

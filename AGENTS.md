@@ -38,7 +38,8 @@ Production dùng `docker-compose.prod.yml`, `nginx.prod.conf`, image GHCR và `.
 frontend/
   src/app/                    Next.js App Router pages
     auth/                     email + Google Sign-In thật
-    booking/                  tìm xe, hồ sơ, cọc, chat
+    booking/                  tìm xe, báo giá backend, hồ sơ, quy định, cọc, chat
+    vehicles/[id]/            chi tiết xe public, cửa hàng, biểu phí và quy định
     payment/                  chuyển tiếp sang cổng thanh toán thật
     contract/[bookingId]/     hợp đồng và chữ ký
     owner/, owner/add-car/    portal chủ xe
@@ -81,6 +82,7 @@ Roles: `ADMIN`, `STAFF`, `CUSTOMER`, `OWNER`.
 - Webhook PayOS/MoMo phải xác minh chữ ký trước khi đổi payment/booking. Ghi nhận doanh thu phải idempotent.
 - Mock/demo chỉ được chạy khi flag explicit là `true`; production luôn đặt `ENABLE_DEMO_DATA=false` và `ENABLE_PAYMENT_MOCKS=false`.
 - Availability, giá, cọc và state transition phải được xác thực ở backend; không tin giá/status client gửi.
+- `POST /api/bookings/quote` là báo giá public, read-only trước khi đặt; lúc tạo booking backend vẫn phải kiểm tra lại availability và tự tính lại toàn bộ giá.
 
 Trạng thái chính:
 
@@ -142,6 +144,7 @@ Mọi task UI/UX phải dùng Codex skill `ui-ux-pro-max` tại `C:/Users/pavil/
 - Không trả/log password, JWT, credential thanh toán, CCCD/GPLX hoặc PII không cần thiết.
 - Integration ngoài phải có timeout, fail closed, chữ ký, idempotency và lỗi rõ ràng; không âm thầm trả demo khi production.
 - Khi đổi response/endpoint, cập nhật backend DTO/service, frontend types/callers và test trong cùng thay đổi.
+- Cập nhật hồ sơ khách và xe phải dùng DTO riêng, kiểm tra unique/ownership trong service và ghi audit log; không dựa vào `Partial<T>` TypeScript làm validation runtime.
 - Tiền hiện dùng number/Float legacy. Tính năng kế toán mới nên dùng integer VND hoặc Prisma Decimal qua migration có chủ đích.
 
 Khi đổi Prisma schema:
@@ -180,6 +183,7 @@ Baseline xác nhận ngày 2026-07-22:
 - Backend unit: 2 suites, 8 tests pass.
 - Backend e2e: 1 suite, 2 tests pass, không cần DB thật vì health/root test override Prisma.
 - Frontend lint: 0 lỗi, 0 warning; production build pass 22 routes.
+- Frontend hiện có thêm route động chi tiết xe và chỉnh sửa xe cho admin/owner; production build vẫn pass 22 trang tĩnh cùng các route động.
 
 Task chỉ hoàn tất khi authorization/ownership/validation đúng, API/UI typed, không thêm mock ẩn, lint/build/test liên quan pass và giới hạn còn lại được báo rõ.
 

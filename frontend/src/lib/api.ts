@@ -17,18 +17,47 @@ export type Vehicle = {
   model: string;
   plateNumber: string;
   dailyPrice: number;
+  weekendPrice: number;
+  holidayPrice: number;
+  penaltyRate: number;
   status: string;
   images: string[];
   seats: number;
-  year?: number;
+  year: number;
   transmission: string;
   fuel: string;
   color?: string;
   pickupLocation?: string;
+  videoUrl?: string | null;
+  limitKmPerDay?: number | null;
+  overLimitFee?: number | null;
+  terms?: string | null;
   latitude?: number;
   longitude?: number;
   owner?: { id: string; name: string } | null;
   [key: string]: unknown;
+};
+export type VehicleInput = {
+  plateNumber: string;
+  brand: string;
+  model: string;
+  year: number;
+  seats: number;
+  transmission: string;
+  fuel: string;
+  color: string;
+  dailyPrice: number;
+  weekendPrice: number;
+  holidayPrice: number;
+  penaltyRate: number;
+  images: string[];
+  videoUrl?: string;
+  limitKmPerDay?: number;
+  overLimitFee?: number;
+  pickupLocation?: string;
+  latitude?: number;
+  longitude?: number;
+  terms?: string;
 };
 export type Booking = {
   id: string;
@@ -53,6 +82,20 @@ export type ChatMessage = {
 };
 export type ChatPartner = { id: string; name: string; email: string };
 export type CustomerRecord = { id: string; fullName: string; phone: string; idCardNo: string; segment: 'REGULAR' | 'VIP' | 'BLACKLIST'; notes?: string | null; user?: AuthUser | null; bookings?: Booking[] };
+export type CustomerUpdateInput = Pick<CustomerRecord, 'fullName' | 'phone' | 'idCardNo' | 'segment'> & { notes?: string };
+export type BookingQuote = {
+  available: true;
+  vehicleId: string;
+  totalDays: number;
+  basePrice: number;
+  priceDetails: Array<{ date: string; price: number; type: string }>;
+  discountAmount: number;
+  insuranceFee: number;
+  totalPrice: number;
+  depositPercent: number;
+  depositAmount: number;
+  couponMessage?: string | null;
+};
 export type MaintenanceRecord = { id: string; vehicleId: string; type: string; scheduledDate: string; completedDate?: string | null; cost: number; description?: string | null; vehicle?: Vehicle };
 export type FinancialRecord = { vehicleId: string; plateNumber: string; brand: string; model: string; revenue: number; maintenanceCost: number; otherExpense: number; totalCost: number; netProfit: number; occupancyRate: number };
 export type AuditRecord = { id: string; action: string; targetTable: string; targetId: string; oldValue?: unknown; newValue?: unknown; createdAt: string; user?: Pick<AuthUser, 'id' | 'email' | 'name' | 'role'> | null };
@@ -128,8 +171,8 @@ export const api = {
       return request<Vehicle[]>(`/vehicles/suggestions?${params.toString()}`);
     },
     getMyCars: () => request<Vehicle[]>('/vehicles/owner/my-cars'),
-    create: (dto: unknown) => request<Vehicle>('/vehicles', { method: 'POST', body: JSON.stringify(dto) }),
-    update: (id: string, dto: unknown) => request<Vehicle>(`/vehicles/${id}`, { method: 'PUT', body: JSON.stringify(dto) }),
+    create: (dto: VehicleInput) => request<Vehicle>('/vehicles', { method: 'POST', body: JSON.stringify(dto) }),
+    update: (id: string, dto: Partial<VehicleInput>) => request<Vehicle>(`/vehicles/${id}`, { method: 'PUT', body: JSON.stringify(dto) }),
     updateStatus: (id: string, status: string) => request<Vehicle>(`/vehicles/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
     delete: (id: string) => request<JsonObject>(`/vehicles/${id}`, { method: 'DELETE' }),
   },
@@ -151,6 +194,7 @@ export const api = {
 
   // Bookings
   bookings: {
+    quote: (dto: { vehicleId: string; startDate: string; endDate: string; insuranceType: 'NONE' | 'BASIC' | 'PREMIUM'; depositPercent: 30 | 50; couponCode?: string }) => request<BookingQuote>('/bookings/quote', { method: 'POST', body: JSON.stringify(dto) }),
     create: (dto: unknown) => request<{ booking: Booking; paymentUrl: string; transactionId: string }>('/bookings', { method: 'POST', body: JSON.stringify(dto) }),
     track: (phone: string) => request<Booking[]>(`/bookings/track?phone=${encodeURIComponent(phone)}`),
     findAll: () => request<Booking[]>('/bookings'),
@@ -204,7 +248,7 @@ export const api = {
   customers: {
     findAll: () => request<CustomerRecord[]>('/customers'),
     findOne: (id: string) => request<CustomerRecord>(`/customers/${id}`),
-    update: (id: string, segment: string, notes?: string) => request<CustomerRecord>(`/customers/${id}`, { method: 'PATCH', body: JSON.stringify({ segment, notes }) }),
+    update: (id: string, dto: CustomerUpdateInput) => request<CustomerRecord>(`/customers/${id}`, { method: 'PATCH', body: JSON.stringify(dto) }),
   },
 
   // Audit Logs (Admin only)

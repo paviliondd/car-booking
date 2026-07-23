@@ -3,7 +3,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { api, type AuthUser, type ChatMessage, type Vehicle } from '@/lib/api';
+import Link from 'next/link';
+import { api, type AuthUser, type BookingQuote, type ChatMessage, type Vehicle } from '@/lib/api';
+import { rentalPolicies, storeInfo } from '@/lib/store';
 import { io, type Socket } from 'socket.io-client';
 import { 
   Car, Calendar, MapPin, User, Phone, 
@@ -50,6 +52,9 @@ export default function BookingPage() {
 
   // Booking details states
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [quote, setQuote] = useState<BookingQuote | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -88,6 +93,41 @@ export default function BookingPage() {
       api.auth.me().then(me => setCurrentUser(me)).catch(() => {});
     }
   }, []);
+
+  useEffect(() => {
+    const vehicleId = new URLSearchParams(window.location.search).get('vehicleId');
+    if (!vehicleId) return;
+    api.vehicles.findOne(vehicleId)
+      .then((vehicle) => {
+        setSelectedVehicle(vehicle);
+        setPickupLoc(vehicle.pickupLocation || storeInfo.address);
+        setDropoffLoc(vehicle.pickupLocation || storeInfo.address);
+      })
+      .catch((err: unknown) => setErrorMsg(errorMessage(err, 'Không thể tải xe đã chọn.')));
+  }, []);
+
+  useEffect(() => {
+    if (!selectedVehicle) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setQuoteLoading(true);
+      api.bookings.quote({
+        vehicleId: selectedVehicle.id,
+        startDate: `${startDate}T${startTime}:00+07:00`,
+        endDate: `${endDate}T${endTime}:00+07:00`,
+        insuranceType,
+        depositPercent,
+        couponCode: couponCode.trim() || undefined,
+      }).then(setQuote)
+        .catch((err: unknown) => {
+          setQuote(null);
+          setErrorMsg(errorMessage(err, 'Không thể cập nhật báo giá.'));
+        })
+        .finally(() => setQuoteLoading(false));
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [couponCode, depositPercent, endDate, endTime, insuranceType, selectedVehicle, startDate, startTime]);
 
   useEffect(() => {
     if (selectedVehicle) {
@@ -156,8 +196,8 @@ export default function BookingPage() {
     setSearching(true);
     setErrorMsg('');
     try {
-      const startDateTime = `${startDate}T${startTime}:00.000Z`;
-      const endDateTime = `${endDate}T${endTime}:00.000Z`;
+      const startDateTime = `${startDate}T${startTime}:00+07:00`;
+      const endDateTime = `${endDate}T${endTime}:00+07:00`;
 
       const availableCars = await api.vehicles.search(startDateTime, endDateTime);
       setVehicles(availableCars);
@@ -210,14 +250,22 @@ export default function BookingPage() {
         setErrorMsg('Vui lòng tải đủ ảnh CCCD mặt trước, mặt sau và giấy phép lái xe.');
         return;
       }
+      if (!acceptedPolicies) {
+        setErrorMsg('Vui lòng đọc và đồng ý với quy định thuê xe trước khi xác nhận.');
+        return;
+      }
+      if (!quote) {
+        setErrorMsg('Báo giá chưa sẵn sàng. Vui lòng kiểm tra lại lịch thuê.');
+        return;
+      }
 
       const documentKeys = await api.storage.uploadCustomerDocuments({
         idCardFront: idCardFrontFile,
         idCardBack: idCardBackFile,
         driverLicense: driverLicenseFile,
       });
-      const startDateTime = `${startDate}T${startTime}:00.000Z`;
-      const endDateTime = `${endDate}T${endTime}:00.000Z`;
+      const startDateTime = `${startDate}T${startTime}:00+07:00`;
+      const endDateTime = `${endDate}T${endTime}:00+07:00`;
 
       const bookingPayload = {
         vehicleId: selectedVehicle.id,
@@ -261,8 +309,8 @@ export default function BookingPage() {
   };
 
   const getDaysCount = () => {
-    const s = new Date(`${startDate}T${startTime}:00.000Z`);
-    const e = new Date(`${endDate}T${endTime}:00.000Z`);
+    const s = new Date(`${startDate}T${startTime}:00+07:00`);
+    const e = new Date(`${endDate}T${endTime}:00+07:00`);
     const diff = e.getTime() - s.getTime();
     if (diff <= 0) return 1;
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
@@ -272,16 +320,6 @@ export default function BookingPage() {
     if (!selectedVehicle) return 0;
     const days = getDaysCount();
     return selectedVehicle.dailyPrice * days;
-  };
-
-  const getTotalPrice = () => {
-    if (!selectedVehicle) return 0;
-    const days = getDaysCount();
-    return getSubTotal() + (getInsuranceFee() * days);
-  };
-
-  const getDepositAmount = () => {
-    return Math.round(getTotalPrice() * (depositPercent / 100));
   };
 
   return (
@@ -420,7 +458,7 @@ export default function BookingPage() {
                   {suggestions.map((car) => (
                     <div key={car.id} className={`${panelClassName} group flex flex-col overflow-hidden`}>
                       <div className="relative h-[160px]">
-                        <Image src={car.images[0]} alt={car.model} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
+                        {car.images[0] ? <Image src={car.images[0]} alt={car.model} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" /> : <div className="flex h-full items-center justify-center bg-slate-100"><Car className="h-12 w-12 text-slate-300" /></div>}
                       </div>
                       <div className="p-5 flex flex-col flex-grow gap-3">
                         <div className="flex justify-between items-start">
@@ -434,6 +472,7 @@ export default function BookingPage() {
                         >
                           Chọn xe gợi ý này
                         </button>
+                        <Link href={`/vehicles/${car.id}`} className="flex min-h-11 items-center justify-center rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50">Xem chi tiết và quy định</Link>
                       </div>
                     </div>
                   ))}
@@ -446,7 +485,7 @@ export default function BookingPage() {
                 {vehicles.map((car) => (
                   <div key={car.id} className={`${panelClassName} group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md motion-reduce:transform-none`}>
                     <div className="relative h-[180px]">
-                      <Image src={car.images[0]} alt={car.model} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
+                      {car.images[0] ? <Image src={car.images[0]} alt={car.model} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" /> : <div className="flex h-full items-center justify-center bg-slate-100"><Car className="h-12 w-12 text-slate-300" /></div>}
                       <span className="absolute bottom-3 left-3 bg-[#080b11]/80 text-[#f3f4f6] text-xs font-semibold px-2 py-1 rounded-md border border-white/10">
                         Biển số: {car.plateNumber}
                       </span>
@@ -484,6 +523,7 @@ export default function BookingPage() {
                       >
                         Chọn & Điền hồ sơ
                       </button>
+                      <Link href={`/vehicles/${car.id}`} className="flex min-h-11 items-center justify-center rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50">Xem chi tiết và quy định</Link>
                     </div>
                   </div>
                 ))}
@@ -503,13 +543,13 @@ export default function BookingPage() {
             <div className={`${panelClassName} flex flex-col gap-4 p-6`}>
               <h2 className="border-b border-slate-200 pb-3 text-lg font-bold text-slate-950">Tóm tắt chuyến đi</h2>
               <div className="flex gap-4 items-center">
-                <Image
-                  src={selectedVehicle.images[0]} 
-                  alt={selectedVehicle.model} 
+                {selectedVehicle.images[0] ? <Image
+                  src={selectedVehicle.images[0]}
+                  alt={selectedVehicle.model}
                   width={80}
                   height={64}
                   className="h-16 w-20 rounded-lg border border-slate-200 object-cover"
-                />
+                /> : <div className="flex h-16 w-20 items-center justify-center rounded-lg bg-slate-100"><Car className="h-8 w-8 text-slate-300" /></div>}
                 <div>
                   <h3 className="font-bold text-slate-950">{selectedVehicle.brand} {selectedVehicle.model}</h3>
                   <p className="text-xs text-slate-600">Biển số: {selectedVehicle.plateNumber}</p>
@@ -534,24 +574,26 @@ export default function BookingPage() {
               <div className="text-sm space-y-2">
                 <div className="flex justify-between text-slate-600">
                   <span>Tổng ngày thuê:</span>
-                  <span className="font-bold text-slate-950">{getDaysCount()} Ngày</span>
+                  <span className="font-bold text-slate-950">{quote?.totalDays ?? getDaysCount()} Ngày</span>
                 </div>
                 <div className="flex justify-between text-slate-600">
                   <span>Giá thuê:</span>
-                  <span className="text-slate-950">{(getSubTotal()).toLocaleString()}đ</span>
+                  <span className="text-slate-950">{(quote?.basePrice ?? getSubTotal()).toLocaleString()}đ</span>
                 </div>
                 <div className="flex justify-between text-slate-600">
                   <span>Phí bảo hiểm:</span>
-                  <span className="text-slate-950">{(getInsuranceFee() * getDaysCount()).toLocaleString()}đ</span>
+                  <span className="text-slate-950">{(quote?.insuranceFee ?? getInsuranceFee() * getDaysCount()).toLocaleString()}đ</span>
                 </div>
+                {quote && quote.discountAmount > 0 && <div className="flex justify-between text-emerald-700"><span>Giảm giá:</span><span>-{quote.discountAmount.toLocaleString()}đ</span></div>}
                 <div className="flex justify-between border-t border-slate-200 pt-2 font-bold text-slate-700">
                   <span>Tổng tiền thanh toán:</span>
-                  <span className="text-emerald-700">{(getTotalPrice()).toLocaleString()}đ</span>
+                  <span className="text-emerald-700">{quoteLoading ? 'Đang tính…' : quote ? `${quote.totalPrice.toLocaleString()}đ` : 'Chưa có báo giá'}</span>
                 </div>
                 <div className="flex justify-between text-base font-black text-emerald-700">
                   <span>Tiền đặt cọc ({depositPercent}%):</span>
-                  <span>{(getDepositAmount()).toLocaleString()}đ</span>
+                  <span>{quote ? `${quote.depositAmount.toLocaleString()}đ` : '—'}</span>
                 </div>
+                {quote?.couponMessage && <p className="text-xs text-amber-700">{quote.couponMessage}</p>}
               </div>
 
               {currentUser && selectedVehicle.ownerId && (
@@ -925,9 +967,32 @@ export default function BookingPage() {
                 </div>
               </div>
 
+              <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <h3 className="font-bold text-slate-950">Cửa hàng và quy định đặt xe</h3>
+                <div className="mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
+                  <p><strong>Địa chỉ:</strong> {selectedVehicle.pickupLocation || storeInfo.address}</p>
+                  <p><strong>Giờ hỗ trợ:</strong> {storeInfo.hours}</p>
+                  <p><strong>Hotline:</strong> {storeInfo.phone}</p>
+                  <p><strong>Email:</strong> {storeInfo.supportEmail}</p>
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {rentalPolicies.map((policy) => (
+                    <div key={policy.title} className="rounded-xl bg-white p-3">
+                      <p className="text-sm font-bold text-slate-900">{policy.title}</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-600">{policy.description}</p>
+                    </div>
+                  ))}
+                </div>
+                {selectedVehicle.terms && <p className="mt-4 whitespace-pre-line rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950"><strong>Quy định riêng của xe:</strong><br />{selectedVehicle.terms}</p>}
+                <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                  <input type="checkbox" checked={acceptedPolicies} onChange={(event) => setAcceptedPolicies(event.target.checked)} className="mt-1 h-4 w-4 accent-emerald-700" />
+                  <span className="text-sm font-medium leading-6 text-emerald-950">Tôi đã kiểm tra lịch, báo giá và đồng ý với quy định thuê xe nêu trên.</span>
+                </label>
+              </section>
+
               <button 
                 type="submit"
-                disabled={bookingLoading}
+                disabled={bookingLoading || quoteLoading || !quote || !acceptedPolicies}
                 className="gradient-btn mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-lg px-4 py-3.5 text-lg font-semibold text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               >
                 {bookingLoading && <Loader2 className="h-5 w-5 animate-spin" />}

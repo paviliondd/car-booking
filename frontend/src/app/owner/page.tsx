@@ -464,7 +464,7 @@ export default function OwnerDashboard() {
               {myCars.map((car) => (
                 <div key={car.id} className="glass-panel rounded-xl overflow-hidden border border-white/5 flex flex-col group">
                   <div className="relative h-[180px]">
-                    <Image src={car.images[0]} alt={car.model} fill sizes="(min-width: 1024px) 33vw, 50vw" className="object-cover" />
+                    {car.images[0] ? <Image src={car.images[0]} alt={car.model} fill sizes="(min-width: 1024px) 33vw, 50vw" className="object-cover" /> : <div className="flex h-full items-center justify-center bg-slate-900"><Car className="h-12 w-12 text-slate-600" /></div>}
                     <span className={`absolute top-4 right-4 text-xs font-semibold px-2 py-0.5 rounded border ${
                       car.status === 'AVAILABLE' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                     }`}>
@@ -490,6 +490,7 @@ export default function OwnerDashboard() {
                     </div>
 
                     <div className="flex gap-2 mt-2">
+                      <button onClick={() => router.push(`/owner/vehicles/${car.id}/edit`)} className="rounded-lg bg-slate-800 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700">Sửa</button>
                       <button 
                         onClick={() => handleToggleCarStatus(car.id, car.status)}
                         className={`flex-1 text-center py-2 rounded-lg text-xs font-semibold cursor-pointer transition ${

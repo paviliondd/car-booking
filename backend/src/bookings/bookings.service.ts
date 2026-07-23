@@ -9,7 +9,7 @@ import { RedisService } from '../redis/redis.service';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { PaymentsService } from '../payments/payments.service';
 import { NotificationService } from '../notification/notification.service';
-import { CreateBookingDto } from './dto/booking.dto';
+import { BookingQuoteDto, CreateBookingDto } from './dto/booking.dto';
 import {
   BookingStatus,
   PaymentStatus,
@@ -40,6 +40,97 @@ export class BookingsService {
     private notificationService: NotificationService,
     private localStorage: LocalStorageService,
   ) {}
+
+  async quote(dto: BookingQuoteDto) {
+    const start = new Date(dto.startDate);
+    const end = new Date(dto.endDate);
+    if (
+      Number.isNaN(start.getTime()) ||
+      Number.isNaN(end.getTime()) ||
+      start >= end
+    ) {
+      throw new BadRequestException(
+        'Thời gian nhận xe phải trước thời gian trả xe',
+      );
+    }
+
+    const vehicle = await this.prisma.vehicle.findUnique({
+      where: { id: dto.vehicleId },
+    });
+    if (!vehicle) {
+      throw new NotFoundException('Không tìm thấy xe yêu cầu');
+    }
+    if (vehicle.status !== VehicleStatus.AVAILABLE) {
+      throw new BadRequestException('Xe hiện không sẵn sàng để đặt');
+    }
+
+    const conflict = await this.prisma.booking.findFirst({
+      where: {
+        vehicleId: dto.vehicleId,
+        status: { in: ['CONFIRMED', 'RENTING', 'PENDING'] },
+        NOT: {
+          OR: [{ endDate: { lte: start } }, { startDate: { gte: end } }],
+        },
+      },
+      select: { id: true },
+    });
+    if (conflict) {
+      throw new BadRequestException('Xe đã có lịch trong khoảng thời gian này');
+    }
+
+    const pricing = this.vehiclesService.calculateTotalPrice(
+      vehicle,
+      start,
+      end,
+    );
+    let discountAmount = 0;
+    let couponMessage: string | null = null;
+    if (dto.couponCode) {
+      const coupon = await this.prisma.coupon.findUnique({
+        where: { code: dto.couponCode },
+      });
+      const now = new Date();
+      if (
+        !coupon ||
+        now < coupon.startDate ||
+        now > coupon.endDate ||
+        coupon.usedCount >= coupon.usageLimit ||
+        pricing.totalPrice < coupon.minOrderValue
+      ) {
+        couponMessage = 'Mã giảm giá không hợp lệ hoặc chưa đủ điều kiện';
+      } else {
+        discountAmount =
+          coupon.discountType === 'PERCENTAGE'
+            ? (pricing.totalPrice * coupon.value) / 100
+            : coupon.value;
+        if (coupon.maxDiscount) {
+          discountAmount = Math.min(discountAmount, coupon.maxDiscount);
+        }
+        discountAmount = Math.min(discountAmount, pricing.totalPrice);
+      }
+    }
+
+    const insuranceRates = { NONE: 0, BASIC: 100000, PREMIUM: 250000 };
+    const insuranceFee =
+      insuranceRates[dto.insuranceType as keyof typeof insuranceRates] *
+      pricing.totalDays;
+    const totalPrice = pricing.totalPrice - discountAmount + insuranceFee;
+    const depositAmount = Math.round(totalPrice * (dto.depositPercent / 100));
+
+    return {
+      available: true,
+      vehicleId: vehicle.id,
+      totalDays: pricing.totalDays,
+      basePrice: pricing.totalPrice,
+      priceDetails: pricing.details,
+      discountAmount,
+      insuranceFee,
+      totalPrice,
+      depositPercent: dto.depositPercent,
+      depositAmount,
+      couponMessage,
+    };
+  }
 
   async createBooking(dto: CreateBookingDto, actor: AuthenticatedUser) {
     const lockKey = `vehicle:${dto.vehicleId}`;
@@ -135,6 +226,7 @@ export class BookingsService {
           where: { id: customer.id },
           data: {
             fullName: dto.fullName,
+            phone: dto.phone,
             idCardNo: dto.idCardNo,
             userId: actor.id,
             ...(dto.idCardFront ? { idCardFront: dto.idCardFront } : {}),
