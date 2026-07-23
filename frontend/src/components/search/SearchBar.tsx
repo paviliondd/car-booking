@@ -2,19 +2,17 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Key, CalendarClock, Search, Loader2 } from 'lucide-react';
-import LocationDropdown from './LocationDropdown';
+import { Key, CalendarClock, Search, MapPin } from 'lucide-react';
 import DateTimePicker from './DateTimePicker';
 import LongTermForm from './LongTermForm';
 import { useToast } from '@/providers/ToastProvider';
+import { storeInfo } from '@/lib/store';
 
 export default function SearchBar() {
   const router = useRouter();
   const toast = useToast();
 
   const [activeTab, setActiveTab] = useState<'self-drive' | 'long-term'>('self-drive');
-  const [location, setLocation] = useState('TP. Hồ Chí Minh');
-  
   // Default values: 21:00 T5, 25/06 - 20:00 T6, 26/06
   const [startDate, setStartDate] = useState<Date>(() => {
     const d = new Date();
@@ -30,36 +28,23 @@ export default function SearchBar() {
     return d;
   });
 
-  const [loading, setLoading] = useState(false);
-
-  const handleSearchSubmit = async (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!location) {
-      toast.error('Vui lòng chọn địa điểm nhận xe');
-      return;
-    }
 
     if (endDate <= startDate) {
       toast.error('Thời gian trả xe phải sau thời gian nhận xe');
       return;
     }
 
-    setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setLoading(false);
-
-    toast.success(`Tìm xe tại ${location} thành công!`);
-
     const startStr = startDate.toISOString();
     const endStr = endDate.toISOString();
-    router.push(`/booking?location=${encodeURIComponent(location)}&startDate=${startStr}&endDate=${endStr}`);
+    router.push(`/booking?startDate=${startStr}&endDate=${endStr}`);
   };
 
-  const handleLongTermSubmit = (data: { location: string; startDate: Date; duration: string; endDate: Date | null }) => {
+  const handleLongTermSubmit = (data: { startDate: Date; duration: string; endDate: Date | null }) => {
     const startStr = data.startDate.toISOString();
     const endStr = data.endDate ? data.endDate.toISOString() : '';
-    router.push(`/booking?location=${encodeURIComponent(data.location)}&startDate=${startStr}&endDate=${endStr}&duration=${data.duration}`);
+    router.push(`/booking?startDate=${startStr}&endDate=${endStr}&duration=${data.duration}`);
   };
 
   return (
@@ -103,10 +88,10 @@ export default function SearchBar() {
           onSubmit={handleSearchSubmit}
           className="bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-white/5 rounded-b-2xl rounded-tr-2xl shadow-xl p-3 flex flex-col md:flex-row gap-3 items-stretch md:items-center relative"
         >
-          <LocationDropdown 
-            value={location} 
-            onChange={setLocation} 
-          />
+          <div className="flex flex-1 items-center gap-3 rounded-xl bg-emerald-50 px-5 py-3 text-emerald-950 dark:bg-emerald-950/30 dark:text-emerald-100">
+            <MapPin className="h-5 w-5 shrink-0 text-[#008F5A]" />
+            <div><span className="block text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Khu vực phục vụ</span><strong className="text-sm">{storeInfo.serviceArea}</strong></div>
+          </div>
           
           <DateTimePicker 
             startDate={startDate} 
@@ -121,10 +106,9 @@ export default function SearchBar() {
           <div className="px-4 flex items-center">
             <button
               type="submit"
-              disabled={loading}
               className="w-full md:w-auto bg-[#008F5A] hover:bg-[#007A4D] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition shadow-sm hover:scale-[1.02] active:scale-[0.98] duration-200 disabled:opacity-50"
             >
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
+              <Search className="h-5 w-5" />
               <span>Tìm Xe</span>
             </button>
           </div>

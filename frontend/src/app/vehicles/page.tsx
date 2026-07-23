@@ -7,6 +7,7 @@ import { AlertTriangle, CalendarClock, Car, Fuel, MapPin, Search, Settings2, Use
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { api, type Vehicle } from '@/lib/api';
+import { storeInfo } from '@/lib/store';
 
 const money = (value: number) => `${value.toLocaleString('vi-VN')} đ`;
 const fuelLabel: Record<string, string> = { GASOLINE: 'Xăng', DIESEL: 'Dầu', ELECTRIC: 'Điện' };
@@ -142,7 +143,7 @@ export default function AvailableVehiclesPage() {
                       <span className="rounded-lg bg-slate-50 p-2 font-semibold text-slate-700"><Settings2 className="mb-1 h-4 w-4 text-emerald-700" />{transmissionLabel[vehicle.transmission] || vehicle.transmission}</span>
                       <span className="rounded-lg bg-slate-50 p-2 font-semibold text-slate-700"><Fuel className="mb-1 h-4 w-4 text-emerald-700" />{fuelLabel[vehicle.fuel] || vehicle.fuel}</span>
                     </div>
-                    <p className="mt-4 flex items-start gap-2 text-sm text-slate-600"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />{vehicle.pickupLocation || 'Chưa cập nhật điểm nhận xe'}</p>
+                    <p className="mt-4 flex items-start gap-2 text-sm text-slate-600"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />{storeInfo.address}</p>
                     <div className="mt-5 grid grid-cols-2 gap-3">
                       <Link href={`/vehicles/${vehicle.id}`} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 px-3 text-sm font-bold text-slate-700 hover:bg-slate-50">Giới thiệu xe</Link>
                       <Link href={`/booking?vehicleId=${vehicle.id}`} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-3 text-sm font-bold text-white hover:bg-emerald-800">Thuê xe này</Link>

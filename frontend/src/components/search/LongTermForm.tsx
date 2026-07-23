@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Calendar as CalendarIcon, Clock, Search, Loader2, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Search, ChevronDown, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import { addMonths, format, startOfDay, isBefore, isSameDay } from 'date-fns';
-import { useToast } from '@/providers/ToastProvider';
-import LocationDropdown from './LocationDropdown';
+import { storeInfo } from '@/lib/store';
 
 interface LongTermFormProps {
-  onSubmit: (data: { location: string; startDate: Date; duration: string; endDate: Date | null }) => void;
+  onSubmit: (data: { startDate: Date; duration: string; endDate: Date | null }) => void;
 }
 
 const durationOptions = [
@@ -26,9 +25,6 @@ const monthNames = [
 ];
 
 export default function LongTermForm({ onSubmit }: LongTermFormProps) {
-  const toast = useToast();
-  const [location, setLocation] = useState('TP. Hồ Chí Minh');
-  
   // Default values
   const [startDate, setStartDate] = useState<Date>(() => {
     const d = new Date();
@@ -36,7 +32,6 @@ export default function LongTermForm({ onSubmit }: LongTermFormProps) {
     return startOfDay(d);
   });
   const [duration, setDuration] = useState('1'); // default 1 month
-  const [loading, setLoading] = useState(false);
 
   // Picker States
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -69,20 +64,9 @@ export default function LongTermForm({ onSubmit }: LongTermFormProps) {
 
   const expectedEndDate = getExpectedEndDate();
 
-  const handleSearchSubmit = async (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!location) {
-      toast.error('Vui lòng chọn địa điểm nhận xe');
-      return;
-    }
-
-    setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setLoading(false);
-
-    toast.success(`Tìm xe dài hạn tại ${location} thành công!`);
     onSubmit({
-      location,
       startDate,
       duration,
       endDate: expectedEndDate,
@@ -146,8 +130,10 @@ export default function LongTermForm({ onSubmit }: LongTermFormProps) {
       onSubmit={handleSearchSubmit}
       className="bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-white/5 rounded-b-2xl rounded-tr-2xl shadow-xl p-3 flex flex-col md:flex-row gap-3 items-stretch md:items-center relative"
     >
-      {/* Column 1: Location */}
-      <LocationDropdown value={location} onChange={setLocation} />
+      <div className="flex flex-1 items-center gap-3 rounded-xl bg-emerald-50 px-5 py-3 text-emerald-950 dark:bg-emerald-950/30 dark:text-emerald-100">
+        <MapPin className="h-5 w-5 shrink-0 text-[#008F5A]" />
+        <div><span className="block text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Khu vực phục vụ</span><strong className="text-sm">{storeInfo.serviceArea}</strong></div>
+      </div>
 
       {/* Column 2: Start Date Picker */}
       <div 
@@ -254,10 +240,9 @@ export default function LongTermForm({ onSubmit }: LongTermFormProps) {
         )}
         <button
           type="submit"
-          disabled={loading}
           className="bg-[#008F5A] hover:bg-[#007A4D] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition shadow-sm hover:scale-[1.02] active:scale-[0.98] duration-200 disabled:opacity-50"
         >
-          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
+          <Search className="h-5 w-5" />
           <span>Tìm Xe</span>
         </button>
       </div>

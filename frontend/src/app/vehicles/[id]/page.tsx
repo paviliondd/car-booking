@@ -133,7 +133,7 @@ export default function VehicleDetailPage({
               <div className="rounded-3xl border border-slate-200 bg-white p-6">
                 <h2 className="text-xl font-bold">Điểm nhận xe</h2>
                 <div className="mt-5 space-y-4 text-sm text-slate-700">
-                  <p className="flex gap-3"><MapPin className="h-5 w-5 shrink-0 text-emerald-700" />{vehicle.pickupLocation || storeInfo.address}</p>
+                  <p className="flex gap-3"><MapPin className="h-5 w-5 shrink-0 text-emerald-700" />{storeInfo.address}</p>
                   <p className="flex gap-3"><Clock3 className="h-5 w-5 shrink-0 text-emerald-700" />{storeInfo.hours}</p>
                   <a href={`tel:${storeInfo.phone.replace(/\s/g, '')}`} className="flex min-h-11 items-center gap-3 font-semibold text-emerald-800"><Phone className="h-5 w-5" />{storeInfo.phone}</a>
                 </div>

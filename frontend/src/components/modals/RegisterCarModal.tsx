@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Loader2, MapPin, User, Phone, Car } from 'lucide-react';
 import { useToast } from '@/providers/ToastProvider';
+import { storeInfo } from '@/lib/store';
 
 interface RegisterCarModalProps {
   isOpen: boolean;
@@ -17,7 +18,6 @@ export default function RegisterCarModal({ isOpen, onClose }: RegisterCarModalPr
   const [loading, setLoading] = useState(false);
 
   // Form Fields State
-  const [region, setRegion] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [phone, setPhone] = useState('');
   const [carName, setCarName] = useState('');
@@ -29,7 +29,6 @@ export default function RegisterCarModal({ isOpen, onClose }: RegisterCarModalPr
 
   useEffect(() => {
     if (isOpen) {
-      setRegion('');
       setOwnerName('');
       setPhone('');
       setCarName('');
@@ -41,9 +40,6 @@ export default function RegisterCarModal({ isOpen, onClose }: RegisterCarModalPr
 
   const validate = () => {
     const tempErrors: Record<string, string> = {};
-    if (!region) {
-      tempErrors.region = 'Vui lòng chọn khu vực của bạn';
-    }
     if (!ownerName.trim()) {
       tempErrors.ownerName = 'Tên chủ xe không được để trống';
     }
@@ -64,7 +60,7 @@ export default function RegisterCarModal({ isOpen, onClose }: RegisterCarModalPr
     setLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 1500));
     const lead = {
-      region,
+      region: storeInfo.serviceArea,
       ownerName: ownerName.trim(),
       phone: phone.trim(),
       carName: carName.trim(),
@@ -107,26 +103,10 @@ export default function RegisterCarModal({ isOpen, onClose }: RegisterCarModalPr
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           
-          {/* Region Field */}
+          {/* Fixed service area */}
           <div>
-            <label className="text-xs font-semibold text-gray-700 block mb-1">Khu vực cho thuê *</label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-3 h-4.5 w-4.5 text-gray-400" />
-              <select 
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                disabled={loading}
-                className={`w-full bg-gray-50 border ${errors.region ? 'border-red-500' : 'border-gray-200'} rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-900 focus:outline-none focus:border-[#008F5A] appearance-none`}
-              >
-                <option value="">Chọn khu vực</option>
-                <option value="HCM">TP. Hồ Chí Minh</option>
-                <option value="HN">Hà Nội</option>
-                <option value="DN">Đà Nẵng</option>
-                <option value="CT">Cần Thơ</option>
-                <option value="KHAC">Các tỉnh khác</option>
-              </select>
-            </div>
-            {errors.region && <p className="text-red-500 text-xs mt-1 font-medium">{errors.region}</p>}
+            <p className="text-xs font-semibold text-gray-700 block mb-1">Khu vực cho thuê</p>
+            <div className="flex min-h-11 items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-900"><MapPin className="h-4.5 w-4.5" />{storeInfo.serviceArea}</div>
           </div>
 
           {/* Owner Name Field */}

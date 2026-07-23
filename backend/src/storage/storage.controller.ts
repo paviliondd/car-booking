@@ -49,7 +49,7 @@ export class StorageController {
 
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.CUSTOMER)
+  @Roles(Role.CUSTOMER, Role.OWNER)
   @Post('customer-documents')
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -92,7 +92,7 @@ export class StorageController {
     @Param('fileName') fileName: string,
   ) {
     const key = `private/${ownerId}/${fileName}`;
-    if (req.user.role === Role.CUSTOMER) {
+    if (req.user.role === Role.CUSTOMER || req.user.role === Role.OWNER) {
       if (ownerId !== req.user.id) {
         throw new ForbiddenException('Bạn không có quyền xem tệp này');
       }

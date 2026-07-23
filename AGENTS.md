@@ -73,7 +73,7 @@ Backend domains: `auth`, `vehicles`, `bookings`, `payments`, `contracts`, `revie
 Roles: `ADMIN`, `STAFF`, `CUSTOMER`, `OWNER`.
 
 - Client không bao giờ được chọn role khi đăng ký; đăng ký mới luôn là `CUSTOMER`.
-- Tìm xe là public; tạo booking và upload CCCD/GPLX yêu cầu JWT `CUSTOMER`, đồng thời liên kết hồ sơ Customer với user hiện tại.
+- Tìm xe là public; tạo booking và upload/xem CCCD/GPLX của chính mình yêu cầu JWT `CUSTOMER` hoặc `OWNER`, đồng thời liên kết hồ sơ Customer với user hiện tại. `OWNER` vẫn có thể thuê xe như khách; `ADMIN`/`STAFF` không tạo đơn từ luồng khách.
 - OWNER chỉ truy cập vehicle, booking, dashboard thuộc xe có `ownerId` của chính họ.
 - Duyệt yêu cầu owner chỉ dành cho ADMIN/STAFF.
 - JWT phải kiểm tra user/role hiện tại trong DB và fail closed khi DB lỗi.
@@ -83,6 +83,7 @@ Roles: `ADMIN`, `STAFF`, `CUSTOMER`, `OWNER`.
 - Mock/demo chỉ được chạy khi flag explicit là `true`; production luôn đặt `ENABLE_DEMO_DATA=false` và `ENABLE_PAYMENT_MOCKS=false`.
 - Availability, giá, cọc và state transition phải được xác thực ở backend; không tin giá/status client gửi.
 - `POST /api/bookings/quote` là báo giá public, read-only trước khi đặt; lúc tạo booking backend vẫn phải kiểm tra lại availability và tự tính lại toàn bộ giá.
+- Hệ thống chỉ phục vụ tại `Số 87A Nguyễn Công Trứ, Phường La Gi, Tỉnh Lâm Đồng` (khu vực La Gi/Bình Thuận), 24/7. Điểm nhận/trả và tọa độ do backend gán cố định; client không được gửi hoặc sửa theo từng booking/xe.
 
 Trạng thái chính:
 
@@ -182,8 +183,9 @@ Baseline xác nhận ngày 2026-07-22:
 - Backend lint check: 0 lỗi; build pass.
 - Backend unit: 2 suites, 8 tests pass.
 - Backend e2e: 1 suite, 2 tests pass, không cần DB thật vì health/root test override Prisma.
-- Frontend lint: 0 lỗi, 0 warning; production build pass 22 routes.
-- Frontend hiện có thêm route động chi tiết xe và chỉnh sửa xe cho admin/owner; production build vẫn pass 22 trang tĩnh cùng các route động.
+- Frontend lint: 0 lỗi, 0 warning; production build pass 23 trang tĩnh cùng các route động.
+
+Migration `0002_single_rental_location` đổi default và cập nhật toàn bộ xe hiện có sang điểm La Gi cố định. Booking lịch sử không bị sửa. Rollback vận hành chỉ nên đổi default/tọa độ xe sang địa điểm mới được doanh nghiệp phê duyệt; không khôi phục các địa chỉ xe cũ không còn đáng tin.
 
 Task chỉ hoàn tất khi authorization/ownership/validation đúng, API/UI typed, không thêm mock ẩn, lint/build/test liên quan pass và giới hạn còn lại được báo rõ.
 

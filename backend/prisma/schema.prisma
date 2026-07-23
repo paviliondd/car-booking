@@ -116,7 +116,7 @@ model Vehicle {
   // Km Limit & Location Map
   limitKmPerDay  Float?
   overLimitFee   Float?
-  pickupLocation String        @default("Showroom Khuất Duy Tiến")
+  pickupLocation String        @default("Số 87A Nguyễn Công Trứ, Phường La Gi, Tỉnh Lâm Đồng")
   latitude       Float?
   longitude      Float?
   terms          String?       @db.Text

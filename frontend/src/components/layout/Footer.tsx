@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Car, Mail, MapPin, Phone, Shield } from 'lucide-react';
+import { storeInfo } from '@/lib/store';
 
 const linkClass = 'text-sm text-slate-600 hover:text-[#008F5A] leading-relaxed transition';
 
@@ -77,7 +78,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between gap-4 mb-6 border-t border-slate-100 pt-4">
           <span className="max-w-xl flex items-start gap-2">
             <MapPin className="h-4 w-4 mt-0.5 text-[#008F5A]" />
-            Văn phòng: Số 12 Khuất Duy Tiến, Thanh Xuân, Hà Nội
+            Văn phòng: {storeInfo.address} · {storeInfo.hours}
           </span>
           <span className="md:text-right">
             TK: 1029384756 (VND) - Công ty Cổ phần datxe Việt Nam - MB Bank chi nhánh Hà Nội

@@ -54,9 +54,6 @@ export type VehicleInput = {
   videoUrl?: string;
   limitKmPerDay?: number;
   overLimitFee?: number;
-  pickupLocation?: string;
-  latitude?: number;
-  longitude?: number;
   terms?: string;
 };
 export type Booking = {
@@ -132,7 +129,17 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'Something went wrong');
+    const fallback =
+      response.status === 403
+        ? 'Tài khoản hiện tại không có quyền thực hiện thao tác này.'
+        : response.status === 401
+          ? 'Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại.'
+          : 'Đã có lỗi xảy ra. Vui lòng thử lại.';
+    const message =
+      errorData.message === 'Forbidden resource'
+        ? fallback
+        : errorData.message || fallback;
+    throw new Error(message);
   }
 
   return response.json() as Promise<T>;

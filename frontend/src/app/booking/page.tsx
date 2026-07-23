@@ -59,8 +59,6 @@ export default function BookingPage() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [idCardNo, setIdCardNo] = useState('');
-  const [pickupLoc, setPickupLoc] = useState('Showroom Số 12 Khuất Duy Tiến, Hà Nội');
-  const [dropoffLoc, setDropoffLoc] = useState('Showroom Số 12 Khuất Duy Tiến, Hà Nội');
   const [notes, setNotes] = useState('');
   const [couponCode, setCouponCode] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('BANK_TRANSFER');
@@ -95,13 +93,27 @@ export default function BookingPage() {
   }, []);
 
   useEffect(() => {
-    const vehicleId = new URLSearchParams(window.location.search).get('vehicleId');
+    const searchParams = new URLSearchParams(window.location.search);
+    const applyDateTime = (value: string | null, setDate: (next: string) => void, setTime: (next: string) => void) => {
+      if (!value) return;
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) return;
+      const year = parsed.getFullYear();
+      const month = String(parsed.getMonth() + 1).padStart(2, '0');
+      const day = String(parsed.getDate()).padStart(2, '0');
+      const hours = String(parsed.getHours()).padStart(2, '0');
+      const minutes = String(parsed.getMinutes()).padStart(2, '0');
+      setDate(`${year}-${month}-${day}`);
+      setTime(`${hours}:${minutes}`);
+    };
+    applyDateTime(searchParams.get('startDate'), setStartDate, setStartTime);
+    applyDateTime(searchParams.get('endDate'), setEndDate, setEndTime);
+
+    const vehicleId = searchParams.get('vehicleId');
     if (!vehicleId) return;
     api.vehicles.findOne(vehicleId)
       .then((vehicle) => {
         setSelectedVehicle(vehicle);
-        setPickupLoc(vehicle.pickupLocation || storeInfo.address);
-        setDropoffLoc(vehicle.pickupLocation || storeInfo.address);
       })
       .catch((err: unknown) => setErrorMsg(errorMessage(err, 'Không thể tải xe đã chọn.')));
   }, []);
@@ -246,6 +258,10 @@ export default function BookingPage() {
         setErrorMsg('Vui lòng đăng nhập tài khoản khách hàng trước khi đặt xe.');
         return;
       }
+      if (currentUser?.role === 'ADMIN' || currentUser?.role === 'STAFF') {
+        setErrorMsg('Tài khoản quản trị không thể tạo đơn thuê. Vui lòng dùng tài khoản khách hàng hoặc chủ xe.');
+        return;
+      }
       if (!idCardFrontFile || !idCardBackFile || !driverLicenseFile) {
         setErrorMsg('Vui lòng tải đủ ảnh CCCD mặt trước, mặt sau và giấy phép lái xe.');
         return;
@@ -275,8 +291,6 @@ export default function BookingPage() {
         phone,
         email,
         idCardNo,
-        pickupLocation: pickupLoc,
-        dropoffLocation: dropoffLoc,
         notes,
         paymentMethod,
         couponCode: couponCode || undefined,
@@ -408,19 +422,9 @@ export default function BookingPage() {
                 </div>
               </div>
 
-              <div>
-                <label className={fieldLabelClassName}>Điểm Nhận/Trả Xe</label>
-                <div className="relative">
-                  <MapPin className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-500" />
-                  <input 
-                    type="text" 
-                    value={pickupLoc}
-                    onChange={(e) => { setPickupLoc(e.target.value); setDropoffLoc(e.target.value); }}
-                    placeholder="Điểm nhận xe" 
-                    required
-                    className={`${fieldClassName} pl-10`}
-                  />
-                </div>
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                <p className="flex items-center gap-2 text-sm font-bold text-emerald-950"><MapPin className="h-4 w-4" />{storeInfo.serviceArea}</p>
+                <p className="mt-1 text-xs leading-5 text-emerald-800">{storeInfo.address} · {storeInfo.hours}</p>
               </div>
 
               <button 
@@ -567,7 +571,7 @@ export default function BookingPage() {
                 </div>
                 <div className="flex justify-between gap-3 text-slate-600">
                   <span>Điểm giao nhận:</span>
-                  <span className="max-w-[180px] truncate text-right font-medium text-slate-950">{pickupLoc}</span>
+                  <span className="max-w-[220px] text-right font-medium text-slate-950">{storeInfo.address}</span>
                 </div>
               </div>
               <hr className="border-slate-200" />
@@ -613,11 +617,11 @@ export default function BookingPage() {
                 <Map className="h-4.5 w-4.5 text-emerald-600" />
                 <span>Vị Trí Nhận Xe</span>
               </h3>
-              <p className="text-xs text-slate-600">Xe đặt tại tọa độ: Lat {selectedVehicle.latitude || '20.999'}, Lng {selectedVehicle.longitude || '105.798'}</p>
+              <p className="text-sm leading-6 text-slate-600">{storeInfo.address} · {storeInfo.hours}</p>
               
               <div className="relative flex h-40 flex-col items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
                 <iframe 
-                  src={`https://maps.google.com/maps?q=${selectedVehicle.latitude || 20.9996},${selectedVehicle.longitude || 105.7981}&z=14&output=embed`}
+                  src={`https://maps.google.com/maps?q=${storeInfo.latitude},${storeInfo.longitude}&z=16&output=embed`}
                   width="100%" 
                   height="100%" 
                   style={{ border: 0 }} 
@@ -970,7 +974,7 @@ export default function BookingPage() {
               <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
                 <h3 className="font-bold text-slate-950">Cửa hàng và quy định đặt xe</h3>
                 <div className="mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
-                  <p><strong>Địa chỉ:</strong> {selectedVehicle.pickupLocation || storeInfo.address}</p>
+                  <p><strong>Địa chỉ:</strong> {storeInfo.address}</p>
                   <p><strong>Giờ hỗ trợ:</strong> {storeInfo.hours}</p>
                   <p><strong>Hotline:</strong> {storeInfo.phone}</p>
                   <p><strong>Email:</strong> {storeInfo.supportEmail}</p>

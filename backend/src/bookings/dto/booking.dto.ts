@@ -42,14 +42,6 @@ export class CreateBookingDto {
   email: string;
 
   @IsString()
-  @IsNotEmpty()
-  pickupLocation: string;
-
-  @IsString()
-  @IsNotEmpty()
-  dropoffLocation: string;
-
-  @IsString()
   @IsOptional()
   notes?: string;
 

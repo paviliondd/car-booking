@@ -8,6 +8,7 @@ import SearchBar from '@/components/search/SearchBar';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { api, type Vehicle } from '@/lib/api';
+import { storeInfo } from '@/lib/store';
 
 const money = (value: number) => `${value.toLocaleString('vi-VN')} đ`;
 const fuelLabel: Record<string, string> = { GASOLINE: 'Xăng', DIESEL: 'Dầu', ELECTRIC: 'Điện' };
@@ -166,9 +167,9 @@ export default function HomePage() {
           <div>
             <h2 className="flex items-center gap-2 text-3xl font-black"><MapPin className="h-7 w-7 text-emerald-700" />Showroom và hỗ trợ</h2>
             <div className="mt-6 space-y-4 text-sm leading-6 text-slate-600">
-              <p className="flex gap-3"><MapPin className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" /><span><strong>Địa chỉ:</strong> Số 12 Khuất Duy Tiến, Thanh Xuân, Hà Nội</span></p>
+              <p className="flex gap-3"><MapPin className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" /><span><strong>Địa chỉ:</strong> {storeInfo.address}</span></p>
               <p className="flex gap-3"><Phone className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" /><span><strong>Hotline:</strong> 1900 8888</span></p>
-              <p className="flex gap-3"><Clock className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" /><span><strong>Giờ làm việc:</strong> 07:00-22:00, tất cả các ngày</span></p>
+              <p className="flex gap-3"><Clock className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" /><span><strong>Giờ làm việc:</strong> {storeInfo.hours}</span></p>
             </div>
           </div>
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">

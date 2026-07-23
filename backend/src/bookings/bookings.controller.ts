@@ -32,7 +32,7 @@ export class BookingsController {
 
   // 1. Tạo đặt xe mới (Khách hàng đã đăng nhập)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.CUSTOMER)
+  @Roles(Role.CUSTOMER, Role.OWNER)
   @Post()
   async create(
     @Body() dto: CreateBookingDto,

@@ -19,6 +19,7 @@ import {
 import { AuthenticatedUser } from '../auth/types/authenticated-user';
 import { LocalStorageService } from '../storage/local-storage.service';
 import { canTransitionBooking } from './booking-status';
+import { RENTAL_LOCATION } from '../common/rental-location';
 
 type BookingDetails = Prisma.BookingGetPayload<{
   include: {
@@ -318,8 +319,8 @@ export class BookingsService {
             vehicleId: dto.vehicleId,
             startDate: start,
             endDate: end,
-            pickupLocation: dto.pickupLocation,
-            dropoffLocation: dto.dropoffLocation,
+            pickupLocation: RENTAL_LOCATION.address,
+            dropoffLocation: RENTAL_LOCATION.address,
             totalDays: pricing.totalDays,
             basePrice: pricing.totalPrice,
             discountAmount,

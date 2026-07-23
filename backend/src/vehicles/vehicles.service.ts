@@ -7,6 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateVehicleDto, UpdateVehicleDto } from './dto/vehicle.dto';
 import { Prisma, Role, Vehicle, VehicleStatus } from '@prisma/client';
 import { AuthenticatedUser } from '../auth/types/authenticated-user';
+import { RENTAL_LOCATION } from '../common/rental-location';
 
 @Injectable()
 export class VehiclesService {
@@ -78,6 +79,9 @@ export class VehiclesService {
         images: dto.images || [],
         status: VehicleStatus.AVAILABLE,
         ownerId: ownerId || null,
+        pickupLocation: RENTAL_LOCATION.address,
+        latitude: RENTAL_LOCATION.latitude,
+        longitude: RENTAL_LOCATION.longitude,
       },
     });
   }
@@ -246,7 +250,6 @@ export class VehiclesService {
       'penaltyRate',
       'limitKmPerDay',
       'overLimitFee',
-      'pickupLocation',
     ];
     if (
       current.status === VehicleStatus.RENTED &&

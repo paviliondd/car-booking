@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { api, type VehicleInput } from '@/lib/api';
 import { Car, ChevronLeft, Upload, Loader2, DollarSign, MapPin, Sliders, X } from 'lucide-react';
+import { storeInfo } from '@/lib/store';
 
 export default function AddCarPage() {
   const router = useRouter();
@@ -33,9 +34,6 @@ export default function AddCarPage() {
   // Advanced features fields
   const [limitKmPerDay, setLimitKmPerDay] = useState(300);
   const [overLimitFee, setOverLimitFee] = useState(3000);
-  const [pickupLocation, setPickupLocation] = useState('Số 12 Khuất Duy Tiến, Thanh Xuân, Hà Nội');
-  const [latitude, setLatitude] = useState(20.9996);
-  const [longitude, setLongitude] = useState(105.7981);
   const [terms, setTerms] = useState('Không hút thuốc lá trên xe. Không chở động vật/hàng cấm.');
   
   // Images (multi image inputs)
@@ -79,9 +77,6 @@ export default function AddCarPage() {
       setPenaltyRate(vehicle.penaltyRate);
       setLimitKmPerDay(vehicle.limitKmPerDay || 0);
       setOverLimitFee(vehicle.overLimitFee || 0);
-      setPickupLocation(vehicle.pickupLocation || '');
-      setLatitude(vehicle.latitude || 0);
-      setLongitude(vehicle.longitude || 0);
       setTerms(vehicle.terms || '');
       setImages(vehicle.images);
       }).catch((err: unknown) => setErrorMsg(err instanceof Error ? err.message : 'Không thể tải thông tin xe.'))
@@ -134,9 +129,6 @@ export default function AddCarPage() {
         penaltyRate: Number(penaltyRate),
         limitKmPerDay: Number(limitKmPerDay),
         overLimitFee: Number(overLimitFee),
-        pickupLocation,
-        latitude: Number(latitude),
-        longitude: Number(longitude),
         terms,
         images,
       };
@@ -271,7 +263,7 @@ export default function AddCarPage() {
         <div className="glass-panel p-6 rounded-xl border border-white/5 flex flex-col gap-6">
           <h2 className="text-lg font-bold text-white flex items-center gap-2 border-b border-white/5 pb-3">
             <Sliders className="h-5 w-5 text-green-400" />
-            <span>Giới Hạn Di Chuyển & Tọa Độ Bản Đồ</span>
+            <span>Giới Hạn Di Chuyển & Điểm Nhận Xe</span>
           </h2>
 
           <div className="grid md:grid-cols-2 gap-4">
@@ -285,24 +277,9 @@ export default function AddCarPage() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="md:col-span-2">
-              <label className="text-xs text-gray-400 block mb-1.5 font-medium">Địa điểm bàn giao/nhận xe</label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                <input type="text" required value={pickupLocation} onChange={(e) => setPickupLocation(e.target.value)} className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-green-500 text-white" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-xs text-gray-400 block mb-1.5 font-medium">Vĩ độ (Lat)</label>
-                <input type="number" step="any" required value={latitude} onChange={(e) => setLatitude(Number(e.target.value))} className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-green-500 text-white" />
-              </div>
-              <div>
-                <label className="text-xs text-gray-400 block mb-1.5 font-medium">Kinh độ (Lng)</label>
-                <input type="number" step="any" required value={longitude} onChange={(e) => setLongitude(Number(e.target.value))} className="w-full bg-gray-950 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-green-500 text-white" />
-              </div>
-            </div>
+          <div className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+            <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
+            <div><p className="font-bold">{storeInfo.serviceArea}</p><p className="mt-1 text-emerald-100/80">{storeInfo.address} · {storeInfo.hours}. Địa điểm do hệ thống quản lý và áp dụng cho mọi xe.</p></div>
           </div>
 
           <div>

@@ -92,20 +92,6 @@ export class CreateVehicleDto {
 
   @IsString()
   @IsOptional()
-  pickupLocation?: string;
-
-  @IsNumber()
-  @IsOptional()
-  @Type(() => Number)
-  latitude?: number;
-
-  @IsNumber()
-  @IsOptional()
-  @Type(() => Number)
-  longitude?: number;
-
-  @IsString()
-  @IsOptional()
   terms?: string;
 }
 
@@ -198,20 +184,6 @@ export class UpdateVehicleDto {
   @Type(() => Number)
   @IsOptional()
   overLimitFee?: number;
-
-  @IsString()
-  @IsOptional()
-  pickupLocation?: string;
-
-  @IsNumber()
-  @Type(() => Number)
-  @IsOptional()
-  latitude?: number;
-
-  @IsNumber()
-  @Type(() => Number)
-  @IsOptional()
-  longitude?: number;
 
   @IsString()
   @IsOptional()

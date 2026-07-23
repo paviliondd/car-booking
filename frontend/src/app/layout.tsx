@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "datxe - Hệ thống thuê xe tự lái thông minh",
   description: "Dịch vụ thuê xe tự lái nhanh chóng. Đặt xe trực tuyến, quản lý lịch trình, hợp đồng và thanh toán tiện lợi qua MoMo/VietQR.",
-  keywords: "thuê xe tự lái, đặt xe online, quản lý xe tự lái, xe tự lái Hà Nội, xe tự lái HCM, datxe",
+  keywords: "thuê xe tự lái La Gi, thuê xe Bình Thuận, đặt xe online, quản lý xe tự lái, datxe",
   metadataBase: new URL("https://datxe.linuxunity.com"),
   openGraph: {
     title: "datxe - Thuê xe tự lái minh bạch, nhanh chóng",

@@ -1,4 +1,5 @@
 import { PrismaClient, Role, VehicleStatus } from '@prisma/client';
+import { RENTAL_LOCATION } from '../src/common/rental-location';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
@@ -98,9 +99,9 @@ async function main() {
       penaltyRate: 150000,
       images: ['https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=600&q=80'],
       status: VehicleStatus.AVAILABLE,
-      pickupLocation: 'Showroom Cầu Giấy, Hà Nội',
-      latitude: 21.028511,
-      longitude: 105.798123,
+      pickupLocation: RENTAL_LOCATION.address,
+      latitude: RENTAL_LOCATION.latitude,
+      longitude: RENTAL_LOCATION.longitude,
       ownerId: null, // Xe của hệ thống
     },
     {
@@ -118,9 +119,9 @@ async function main() {
       penaltyRate: 80000,
       images: ['https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80'],
       status: VehicleStatus.AVAILABLE,
-      pickupLocation: 'Showroom Khuất Duy Tiến, Hà Nội',
-      latitude: 20.999123,
-      longitude: 105.801234,
+      pickupLocation: RENTAL_LOCATION.address,
+      latitude: RENTAL_LOCATION.latitude,
+      longitude: RENTAL_LOCATION.longitude,
       ownerId: null, // Xe của hệ thống
     },
     {
@@ -138,9 +139,9 @@ async function main() {
       penaltyRate: 200000,
       images: ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80'],
       status: VehicleStatus.AVAILABLE,
-      pickupLocation: 'Số 20 Cầu Giấy, Hà Nội',
-      latitude: 21.029876,
-      longitude: 105.792345,
+      pickupLocation: RENTAL_LOCATION.address,
+      latitude: RENTAL_LOCATION.latitude,
+      longitude: RENTAL_LOCATION.longitude,
       limitKmPerDay: 300,
       overLimitFee: 3000,
       ownerId: owner.id, // Xe thuộc về Chủ xe Nguyễn Văn B
@@ -160,9 +161,9 @@ async function main() {
       penaltyRate: 90000,
       images: ['https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=600&q=80'],
       status: VehicleStatus.AVAILABLE,
-      pickupLocation: 'Số 20 Cầu Giấy, Hà Nội',
-      latitude: 21.029876,
-      longitude: 105.792345,
+      pickupLocation: RENTAL_LOCATION.address,
+      latitude: RENTAL_LOCATION.latitude,
+      longitude: RENTAL_LOCATION.longitude,
       limitKmPerDay: 250,
       overLimitFee: 2500,
       ownerId: owner.id, // Xe thuộc về Chủ xe Nguyễn Văn B

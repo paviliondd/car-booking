@@ -1,8 +1,11 @@
 export const storeInfo = {
   name: 'datxe',
-  address: 'Showroom Số 12 Khuất Duy Tiến, Thanh Xuân, Hà Nội',
+  serviceArea: 'La Gi – khu vực Bình Thuận',
+  address: 'Số 87A Nguyễn Công Trứ, Phường La Gi, Tỉnh Lâm Đồng',
+  latitude: 10.682576018764667,
+  longitude: 107.75848360972678,
   phone: '090 450 9596',
-  hours: '08:00–21:00, tất cả các ngày',
+  hours: 'Phục vụ 24/7',
   supportEmail: 'support@datxe.linuxunity.com',
 };
 
