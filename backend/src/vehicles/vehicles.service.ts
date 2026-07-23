@@ -102,6 +102,34 @@ export class VehiclesService {
     });
   }
 
+  async findAvailableNow(filters: {
+    brand?: string;
+    seats?: number;
+  }): Promise<Vehicle[]> {
+    const now = new Date();
+    const busyBookings = await this.prisma.booking.findMany({
+      where: {
+        status: { in: ['CONFIRMED', 'RENTING', 'PENDING'] },
+        startDate: { lte: now },
+        endDate: { gt: now },
+      },
+      select: { vehicleId: true },
+    });
+
+    return await this.prisma.vehicle.findMany({
+      where: {
+        status: VehicleStatus.AVAILABLE,
+        id: { notIn: busyBookings.map((booking) => booking.vehicleId) },
+        images: { isEmpty: false },
+        ...(filters.brand
+          ? { brand: { contains: filters.brand, mode: 'insensitive' } }
+          : {}),
+        ...(filters.seats ? { seats: filters.seats } : {}),
+      },
+      orderBy: [{ updatedAt: 'desc' }],
+    });
+  }
+
   // Tìm các xe trống không bị trùng lịch
   async findAvailable(
     startDateStr: string,

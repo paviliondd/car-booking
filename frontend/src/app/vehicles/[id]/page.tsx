@@ -70,8 +70,8 @@ export default function VehicleDetailPage({
   return (
     <main className="bg-slate-50 text-slate-950">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <Link href="/booking" className="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-slate-700 hover:bg-white">
-          <ChevronLeft className="h-4 w-4" /> Quay lại tìm xe
+        <Link href="/vehicles" className="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-slate-700 hover:bg-white">
+          <ChevronLeft className="h-4 w-4" /> Quay lại danh sách xe
         </Link>
 
         <div className="mt-4 grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
@@ -98,6 +98,14 @@ export default function VehicleDetailPage({
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
               <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Xe tự lái</p>
               <h1 className="mt-2 text-3xl font-bold">{vehicle.brand} {vehicle.model}</h1>
+              <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold">
+                <span className={`rounded-full px-3 py-1 ${vehicle.status === 'AVAILABLE' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'}`}>
+                  {vehicle.status === 'AVAILABLE' ? 'Đang sẵn sàng' : 'Cần kiểm tra lịch'}
+                </span>
+                <span className={`rounded-full px-3 py-1 ${images.length > 0 ? 'bg-slate-100 text-slate-700' : 'bg-red-50 text-red-700'}`}>
+                  {images.length > 0 ? `${images.length} ảnh xe` : 'Thiếu ảnh xe'}
+                </span>
+              </div>
               <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
                 {[
                   [Users, `${vehicle.seats} chỗ`],

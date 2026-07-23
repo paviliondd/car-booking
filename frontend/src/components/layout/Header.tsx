@@ -12,6 +12,7 @@ type StoredUser = {
 };
 
 const navItems = [
+  { href: '/vehicles', label: 'Xe sẵn sàng' },
   { href: '/about', label: 'Về datxe' },
   { href: '/become-owner', label: 'Trở thành chủ xe' },
 ];

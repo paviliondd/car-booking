@@ -169,6 +169,10 @@ async function main() {
     },
   ];
 
+  // Không seed sẵn dữ liệu dòng xe/xe mẫu nữa.
+  // Admin sẽ tạo và cập nhật đội xe từ dashboard để dữ liệu public và admin dùng cùng một nguồn.
+  vehiclesData.splice(0, vehiclesData.length);
+
   const vehicles = [];
   for (const v of vehiclesData) {
     const dbVehicle = await prisma.vehicle.upsert({

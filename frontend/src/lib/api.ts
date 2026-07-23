@@ -158,6 +158,12 @@ export const api = {
       if (seats) params.append('seats', seats.toString());
       return request<Vehicle[]>(`/vehicles?${params.toString()}`);
     },
+    availableNow: (brand?: string, seats?: number) => {
+      const params = new URLSearchParams();
+      if (brand) params.append('brand', brand);
+      if (seats) params.append('seats', seats.toString());
+      return request<Vehicle[]>(`/vehicles/available-now?${params.toString()}`);
+    },
     search: (startDate: string, endDate: string, brand?: string, seats?: number) => {
       const params = new URLSearchParams({ startDate, endDate });
       if (brand) params.append('brand', brand);

@@ -54,6 +54,18 @@ export class VehiclesController {
     );
   }
 
+  // 2.1. Lấy các xe đang sẵn sàng cho thuê tại thời điểm hiện tại (Public)
+  @Get('available-now')
+  async findAvailableNow(
+    @Query('brand') brand?: string,
+    @Query('seats') seats?: string,
+  ) {
+    return await this.vehiclesService.findAvailableNow({
+      brand,
+      seats: seats ? parseInt(seats, 10) : undefined,
+    });
+  }
+
   // 3. Lấy thông tin lịch bận của một xe (Public)
   @Get(':id/calendar')
   async getCalendar(@Param('id') id: string) {
