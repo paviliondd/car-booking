@@ -6,14 +6,20 @@ import HeroBanner from '@/components/owner/HeroBanner';
 import StepsSection from '@/components/owner/StepsSection';
 import CTASection from '@/components/owner/CTASection';
 import RegisterCarModal from '@/components/modals/RegisterCarModal';
+import AuthModal from '@/components/modals/AuthModal';
 import { ChevronLeft, Home } from 'lucide-react';
 
 export default function BecomeOwnerPage() {
   const router = useRouter();
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   const handleOpenRegister = () => {
-    setIsRegisterOpen(true);
+    if (localStorage.getItem('token')) {
+      setIsRegisterOpen(true);
+    } else {
+      setIsAuthOpen(true);
+    }
   };
 
   const handleCloseRegister = () => {
@@ -54,6 +60,16 @@ export default function BecomeOwnerPage() {
 
       {/* Popup Modal */}
       <RegisterCarModal isOpen={isRegisterOpen} onClose={handleCloseRegister} />
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        initialMode="login"
+        redirectAfterAuth={false}
+        onAuthenticated={() => {
+          setIsAuthOpen(false);
+          setIsRegisterOpen(true);
+        }}
+      />
     </div>
   );
 }

@@ -9,22 +9,21 @@ import {
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import type { Request } from 'express';
-import { AuthService } from './auth.service';
+import { Roles } from './decorators/roles.decorator';
 import {
   GoogleLoginDto,
   LoginDto,
+  OwnerApplicationDto,
   RegisterDto,
-  UpgradeOwnerDto,
-  VerifyOwnerDto,
-  OwnerLeadDto,
   RequestPhoneCodeDto,
+  ResetPasswordDto,
   ReviewOwnerApplicationDto,
-  UpdateEmailDto,
+  VerifyOwnerDto,
   VerifyPhoneCodeDto,
 } from './dto/auth.dto';
-import { Roles } from './decorators/roles.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { AuthService } from './auth.service';
 
 type AuthenticatedRequest = Request & {
   user: { id: string; role: Role };
@@ -34,14 +33,29 @@ type AuthenticatedRequest = Request & {
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
-  async register(@Body() dto: RegisterDto) {
+  @Post('register/request-code')
+  requestRegistrationCode(@Body() dto: RequestPhoneCodeDto) {
+    return this.authService.requestRegistrationCode(dto.phone);
+  }
+
+  @Post('register/verify-code')
+  register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Post('login')
-  async login(@Body() dto: LoginDto) {
+  login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Post('password/request-reset-code')
+  requestPasswordResetCode(@Body() dto: RequestPhoneCodeDto) {
+    return this.authService.requestPasswordResetCode(dto.phone);
+  }
+
+  @Post('password/reset')
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -51,51 +65,60 @@ export class AuthController {
   }
 
   @Post('google')
-  async googleLogin(@Body() dto: GoogleLoginDto) {
+  googleLogin(@Body() dto: GoogleLoginDto) {
     return this.authService.googleLogin(dto.credential);
   }
 
-  @Post('owner-leads')
-  ownerLead(@Body() dto: OwnerLeadDto) {
-    return this.authService.createOwnerLead(dto);
-  }
-
-  @Post('phone/request-code')
-  requestPhoneCode(@Body() dto: RequestPhoneCodeDto) {
-    return this.authService.requestPhoneCode(dto.phone);
-  }
-
-  @Post('phone/verify-code')
-  verifyPhoneCode(@Body() dto: VerifyPhoneCodeDto) {
-    return this.authService.verifyPhoneCode(dto.phone, dto.code, dto.name);
-  }
-
   @UseGuards(JwtAuthGuard)
-  @Post('profile/email')
-  updateEmail(@Req() req: AuthenticatedRequest, @Body() dto: UpdateEmailDto) {
-    return this.authService.updateEmail(req.user.id, dto.email);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('upgrade-owner')
-  async upgradeOwner(
+  @Post('phone/request-link-code')
+  requestPhoneLinkCode(
     @Req() req: AuthenticatedRequest,
-    @Body() dto: UpgradeOwnerDto,
+    @Body() dto: RequestPhoneCodeDto,
   ) {
-    return this.authService.upgradeOwner(req.user.id, dto);
+    return this.authService.requestPhoneLinkCode(req.user.id, dto.phone);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('phone/verify-link-code')
+  verifyPhoneLinkCode(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: VerifyPhoneCodeDto,
+  ) {
+    return this.authService.verifyPhoneLinkCode(
+      req.user.id,
+      dto.phone,
+      dto.code,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.CUSTOMER, Role.OWNER)
+  @Get('owner-application')
+  getMyOwnerApplication(@Req() req: AuthenticatedRequest) {
+    return this.authService.getMyOwnerApplication(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.CUSTOMER)
+  @Post('owner-applications')
+  createOwnerApplication(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: OwnerApplicationDto,
+  ) {
+    return this.authService.createOwnerApplication(req.user.id, dto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.STAFF)
   @Get('owner-requests')
-  async getOwnerRequests() {
+  getOwnerRequests() {
     return this.authService.getOwnerRequests();
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.STAFF)
   @Post('owner-applications/:applicationId/review')
-  async reviewOwnerApplication(
+  reviewOwnerApplication(
     @Req() req: AuthenticatedRequest,
     @Param('applicationId') applicationId: string,
     @Body() dto: ReviewOwnerApplicationDto,
@@ -110,10 +133,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.STAFF)
   @Post('verify-owner/:userId')
-  async verifyOwner(
-    @Param('userId') userId: string,
-    @Body() dto: VerifyOwnerDto,
-  ) {
+  verifyOwner(@Param('userId') userId: string, @Body() dto: VerifyOwnerDto) {
     return this.authService.verifyOwner(userId, dto.approve);
   }
 }

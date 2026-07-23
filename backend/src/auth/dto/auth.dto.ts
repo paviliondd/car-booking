@@ -1,49 +1,64 @@
+import { OwnerApplicationStatus } from '@prisma/client';
 import {
   IsBoolean,
-  IsEmail,
   IsEnum,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   Length,
+  Matches,
   Max,
   Min,
-  Matches,
 } from 'class-validator';
-import { OwnerApplicationStatus } from '@prisma/client';
 
-export class RegisterDto {
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
+const PHONE_PATTERN = /^(0|\+84|84)\d{9}$/;
+const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d).+$/;
 
-  @IsString()
-  @Length(6, 50)
-  password: string;
-
-  @IsString()
-  @IsNotEmpty()
-  name: string;
-
-  // Dành cho customer profile đi kèm
-  @IsString()
-  @IsOptional()
-  phone?: string;
-
-  @IsString()
-  @IsOptional()
-  idCardNo?: string;
+export class RequestPhoneCodeDto {
+  @Matches(PHONE_PATTERN, {
+    message: 'Số điện thoại Việt Nam không hợp lệ',
+  })
+  phone: string;
 }
 
-export class LoginDto {
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
+export class RegisterDto extends RequestPhoneCodeDto {
+  @Matches(/^\d{6}$/)
+  code: string;
 
+  @IsString()
+  @Length(2, 80)
+  name: string;
+
+  @IsString()
+  @Length(8, 72)
+  @Matches(PASSWORD_PATTERN, {
+    message: 'Mật khẩu phải có ít nhất một chữ cái và một chữ số',
+  })
+  password: string;
+}
+
+export class LoginDto extends RequestPhoneCodeDto {
   @IsString()
   @IsNotEmpty()
   password: string;
+}
+
+export class ResetPasswordDto extends RequestPhoneCodeDto {
+  @Matches(/^\d{6}$/)
+  code: string;
+
+  @IsString()
+  @Length(8, 72)
+  @Matches(PASSWORD_PATTERN, {
+    message: 'Mật khẩu phải có ít nhất một chữ cái và một chữ số',
+  })
+  password: string;
+}
+
+export class VerifyPhoneCodeDto extends RequestPhoneCodeDto {
+  @Matches(/^\d{6}$/)
+  code: string;
 }
 
 export class GoogleLoginDto {
@@ -52,46 +67,31 @@ export class GoogleLoginDto {
   credential: string;
 }
 
-export class UpgradeOwnerDto {
+export class OwnerApplicationDto {
   @IsString()
-  @IsNotEmpty()
-  phone: string;
+  @Length(2, 100)
+  carName: string;
 
   @IsString()
-  @IsNotEmpty()
-  idCardNo: string;
+  @IsOptional()
+  @Length(4, 20)
+  plateNumber?: string;
+
+  @IsInt()
+  @Min(1980)
+  @Max(2100)
+  @IsOptional()
+  vehicleYear?: number;
 
   @IsString()
-  @IsNotEmpty()
-  address: string;
+  @IsOptional()
+  @Length(0, 1000)
+  applicantNotes?: string;
 }
 
 export class VerifyOwnerDto {
   @IsBoolean()
   approve: boolean;
-}
-
-export class OwnerLeadDto {
-  @IsString() @IsNotEmpty() name: string;
-  @Matches(/^(0|\+84|84)\d{9}$/) phone: string;
-  @IsString() @IsNotEmpty() carName: string;
-  @IsString() @IsOptional() plateNumber?: string;
-  @IsInt() @Min(1980) @Max(2100) @IsOptional() vehicleYear?: number;
-  @IsString() @IsOptional() applicantNotes?: string;
-}
-
-export class RequestPhoneCodeDto {
-  @Matches(/^(0|\+84|84)\d{9}$/)
-  phone: string;
-}
-
-export class VerifyPhoneCodeDto extends RequestPhoneCodeDto {
-  @Matches(/^\d{6}$/)
-  code: string;
-
-  @IsString()
-  @IsNotEmpty()
-  name: string;
 }
 
 export class ReviewOwnerApplicationDto {
@@ -105,9 +105,4 @@ export class ReviewOwnerApplicationDto {
   @IsString()
   @IsOptional()
   rejectionReason?: string;
-}
-
-export class UpdateEmailDto {
-  @IsEmail()
-  email: string;
 }

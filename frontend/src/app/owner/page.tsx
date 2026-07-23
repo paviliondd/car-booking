@@ -3,12 +3,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { api, type AuthUser, type Booking, type ChatMessage, type ChatPartner, type Vehicle } from '@/lib/api';
 import { io, type Socket } from 'socket.io-client';
 import {
-  Car, Phone, MapPin, DollarSign, Calendar, MessageSquare,
+  Car, DollarSign, Calendar, MessageSquare,
   Check,
-  Activity, Loader2, Plus, LogOut, Send, AlertCircle
+  Activity, Loader2, Plus, LogOut, Send
 } from 'lucide-react';
 
 export default function OwnerDashboard() {
@@ -18,17 +19,6 @@ export default function OwnerDashboard() {
   );
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profileEmail, setProfileEmail] = useState('');
-  const [profileMessage, setProfileMessage] = useState('');
-
-  // Upgrade form states
-  const [upgradePhone, setUpgradePhone] = useState('');
-  const [upgradeIdCard, setUpgradeIdCard] = useState('');
-  const [upgradeAddress, setUpgradeAddress] = useState('');
-  const [upgradeLoading, setUpgradeLoading] = useState(false);
-  const [upgradeError, setUpgradeError] = useState('');
-  const [upgradeSuccess, setUpgradeSuccess] = useState(false);
-
   // Active Tab
   const [activeTab, setActiveTab] = useState<'overview' | 'vehicles' | 'requests' | 'chat'>('overview');
 
@@ -76,28 +66,19 @@ export default function OwnerDashboard() {
     try {
       const me = await api.auth.me();
       setUser(me);
-      setProfileEmail(me.email || '');
       localStorage.setItem('user', JSON.stringify(me));
-      if (me.role === 'OWNER' && me.isVerifiedOwner) await loadOwnerData();
+      if (me.role === 'OWNER' && me.isVerifiedOwner) {
+        await loadOwnerData();
+      } else {
+        router.replace('/become-owner');
+      }
     } catch (err) {
       console.error(err);
       handleLogout();
     } finally {
       setLoading(false);
     }
-  }, [handleLogout, loadOwnerData]);
-
-  const saveProfileEmail = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setProfileMessage('');
-    try {
-      const saved = await api.auth.updateEmail(profileEmail.trim());
-      setUser((current) => current ? { ...current, email: saved.email } : current);
-      setProfileMessage('Đã lưu email. Bước xác minh email sẽ được bổ sung khi dịch vụ gửi thư sẵn sàng.');
-    } catch (error) {
-      setProfileMessage(error instanceof Error ? error.message : 'Không thể cập nhật email.');
-    }
-  };
+  }, [handleLogout, loadOwnerData, router]);
 
   useEffect(() => {
     if (!token) {
@@ -107,28 +88,6 @@ export default function OwnerDashboard() {
     const authTimer = window.setTimeout(() => void fetchMe(), 0);
     return () => window.clearTimeout(authTimer);
   }, [fetchMe, router, token]);
-
-  // Nâng cấp lên chủ xe
-  const handleUpgrade = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setUpgradeLoading(true);
-    setUpgradeError('');
-    try {
-      await api.auth.upgradeOwner({
-        phone: upgradePhone,
-        idCardNo: upgradeIdCard,
-        address: upgradeAddress
-      });
-      setUpgradeSuccess(true);
-      setTimeout(() => {
-        fetchMe();
-      }, 3000);
-    } catch (err: unknown) {
-      setUpgradeError(err instanceof Error ? err.message : 'Lỗi nâng cấp tài khoản.');
-    } finally {
-      setUpgradeLoading(false);
-    }
-  };
 
   // Duyệt/Từ chối đơn đặt xe
   const handleRequestStatus = async (bookingId: string, status: string) => {
@@ -198,8 +157,7 @@ export default function OwnerDashboard() {
     if (wsRef.current?.connected) {
       wsRef.current.emit('sendMessage', payload);
     } else {
-      // Dự phòng bằng REST API hoặc tự đẩy vào state để giả lập phản hồi nhanh
-      // (Nhưng backend Gateway đã có WS socket.io)
+      // REST fallback vẫn lưu tin nhắn thật khi kết nối Socket.IO gián đoạn.
       try {
         const saved = await api.chat.sendMessage(payload.receiverId, payload.message);
         setChatHistory((prev) => [...prev, saved]);
@@ -226,99 +184,13 @@ export default function OwnerDashboard() {
     );
   }
 
-  // TRƯỜNG HỢP: LÀ CUSTOMER VÀ CHƯA ĐƯỢC PHÊ DUYỆT CHỦ XE
+  // Tài khoản chưa được duyệt sẽ được đưa về đúng luồng đăng ký chủ xe.
   if (user?.role === 'CUSTOMER' || !user?.isVerifiedOwner) {
     return (
-      <div className="dark min-h-screen bg-night-surface py-12 px-6 flex items-center justify-center relative overflow-hidden">
-        <div className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] rounded-full bg-utility blur-[150px]"></div>
-        <div className="max-w-xl w-full glass-panel border border-app-border/30 rounded-2xl p-8 flex flex-col gap-6 shadow-2xl relative z-10">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center p-3 rounded-full bg-brand/10 border border-brand/35 mb-4">
-              <Car className="h-8 w-8 text-brand" />
-            </div>
-            <h1 className="text-2xl font-extrabold text-content">Đăng ký trở thành Chủ xe</h1>
-            <p className="text-xs text-content-secondary mt-2">Nâng cấp tài khoản để bắt đầu chia sẻ xe và kiếm thu nhập thụ động cùng datxe</p>
-          </div>
-
-          {upgradeSuccess ? (
-            <div className="bg-brand/10 border border-brand/35 text-brand p-6 rounded-xl flex flex-col gap-3 items-center text-center">
-              <Check className="h-12 w-12 text-brand bg-brand/10 p-2 rounded-full" />
-              <h3 className="font-bold text-lg">Gửi yêu cầu thành công!</h3>
-              <p className="text-sm">Hồ sơ của bạn đang được Ban Quản Trị hệ thống thẩm định và phê duyệt (CCCD, SĐT). Tiến trình nâng cấp sẽ tự động hoàn tất trong vòng vài giờ.</p>
-            </div>
-          ) : (
-            <form onSubmit={handleUpgrade} className="flex flex-col gap-4">
-              {upgradeError && (
-                <div className="bg-danger-muted border border-danger/35 text-danger p-3 rounded-lg text-xs">
-                  ⚠️ {upgradeError}
-                </div>
-              )}
-
-              {user?.ownerRequestAt && (
-                <div className="bg-warning-muted border border-warning/35 text-warning p-3 rounded-lg text-xs flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                  <span>Bạn đã gửi yêu cầu nâng cấp vào lúc {new Date(user.ownerRequestAt).toLocaleString()}. Vui lòng chờ Admin duyệt!</span>
-                </div>
-              )}
-
-              <div>
-                <label className="text-xs text-content-secondary block mb-1.5 font-medium">Số điện thoại liên hệ</label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-3 h-4 w-4 text-content-secondary" />
-                  <input
-                    type="tel"
-                    required
-                    value={upgradePhone}
-                    onChange={(e) => setUpgradePhone(e.target.value)}
-                    placeholder="0987654321"
-                    className="w-full bg-app-surface border border-app-border/50 rounded-lg py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:border-brand text-content"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs text-content-secondary block mb-1.5 font-medium">Số Căn cước công dân (CCCD)</label>
-                <input
-                  type="text"
-                  required
-                  value={upgradeIdCard}
-                  onChange={(e) => setUpgradeIdCard(e.target.value)}
-                  placeholder="037200123456"
-                  className="w-full bg-app-surface border border-app-border/50 rounded-lg py-2.5 px-4 text-sm focus:outline-none focus:border-brand text-content"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-content-secondary block mb-1.5 font-medium">Địa chỉ cư trú</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-content-secondary" />
-                  <input
-                    type="text"
-                    required
-                    value={upgradeAddress}
-                    onChange={(e) => setUpgradeAddress(e.target.value)}
-                    placeholder="Số 10, Đường ABC, Quận XYZ, Hà Nội"
-                    className="w-full bg-app-surface border border-app-border/50 rounded-lg py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:border-brand text-content"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={upgradeLoading}
-                className="w-full bg-brand hover:bg-brand-hover text-on-brand font-semibold py-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2 transition"
-              >
-                {upgradeLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                <span>Gửi yêu cầu nâng cấp</span>
-              </button>
-            </form>
-          )}
-
-          <div className="text-center text-xs text-content-secondary border-t border-app-border/30 pt-4">
-            Đăng nhập tài khoản Admin khác? <button onClick={handleLogout} className="text-brand hover:underline">Đăng xuất</button>
-          </div>
-        </div>
-      </div>
+      <main className="dark flex min-h-dvh items-center justify-center bg-night-surface text-content-secondary">
+        <Loader2 className="mr-3 h-6 w-6 animate-spin text-brand" />
+        Đang chuyển đến trang đăng ký chủ xe…
+      </main>
     );
   }
 
@@ -369,12 +241,9 @@ export default function OwnerDashboard() {
             </button>
           </div>
         </div>
-        <form onSubmit={saveProfileEmail} className="rounded-xl border border-app-border/30 p-3">
-          <label htmlFor="owner-email" className="text-xs font-bold text-content-secondary">Email nhận báo cáo</label>
-          <input id="owner-email" type="email" required value={profileEmail} onChange={(event) => setProfileEmail(event.target.value)} placeholder="ban@example.com" className="mt-2 min-h-11 w-full rounded-lg border border-app-border/40 bg-app-surface px-3 text-sm text-content outline-none focus:border-brand" />
-          <button type="submit" className="mt-2 min-h-11 w-full rounded-lg bg-brand px-3 text-sm font-bold text-on-brand hover:bg-brand-hover">Lưu email</button>
-          {profileMessage && <p className="mt-2 text-xs leading-5 text-content-secondary">{profileMessage}</p>}
-        </form>
+        <Link href="/account" className="flex min-h-11 items-center justify-center rounded-xl border border-app-border/30 px-3 text-sm font-bold text-content-secondary transition hover:border-brand hover:text-brand">
+          Thông tin tài khoản
+        </Link>
 
         <div className="flex items-center justify-between border-t border-app-border/30 pt-4 text-xs">
           <div className="flex flex-col gap-0.5">

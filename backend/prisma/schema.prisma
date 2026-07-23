@@ -47,6 +47,12 @@ enum CustomerSegment {
   BLACKLIST
 }
 
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
 enum OwnerApplicationStatus {
   PENDING_REVIEW
   CONTACTING
@@ -68,6 +74,8 @@ model User {
   emailVerifiedAt DateTime?
   idCardNo String? @unique
   address  String?
+  birthDate DateTime?
+  gender    Gender?
 
   // Owner Verification
   isVerifiedOwner Boolean   @default(false)
@@ -91,9 +99,9 @@ model User {
 model Customer {
   id            String          @id @default(uuid())
   userId        String?         @unique
-  phone         String          @unique
+  phone         String?         @unique
   fullName      String
-  idCardNo      String          @unique // CCCD
+  idCardNo      String?         @unique // CCCD
   idCardFront   String? // URL ảnh mặt trước
   idCardBack    String? // URL ảnh mặt sau
   driverLicense String? // URL ảnh GPLX

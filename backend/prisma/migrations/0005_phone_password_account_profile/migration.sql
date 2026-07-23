@@ -1,0 +1,9 @@
+CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER');
+
+ALTER TABLE "User"
+  ADD COLUMN "birthDate" TIMESTAMP(3),
+  ADD COLUMN "gender" "Gender";
+
+ALTER TABLE "Customer"
+  ALTER COLUMN "phone" DROP NOT NULL,
+  ALTER COLUMN "idCardNo" DROP NOT NULL;

@@ -140,6 +140,24 @@ export class BookingsService {
   }
 
   async createBooking(dto: CreateBookingDto, actor: AuthenticatedUser) {
+    if (!actor.phone || !actor.phoneVerifiedAt) {
+      throw new BadRequestException(
+        'Bạn cần xác minh số điện thoại trong tài khoản trước khi đặt xe',
+      );
+    }
+    const requestedPhone = dto.phone.replace(/[\s.-]/g, '');
+    const normalizedRequestedPhone = requestedPhone.startsWith('+84')
+      ? requestedPhone
+      : requestedPhone.startsWith('84')
+        ? `+${requestedPhone}`
+        : requestedPhone.startsWith('0')
+          ? `+84${requestedPhone.slice(1)}`
+          : requestedPhone;
+    if (normalizedRequestedPhone !== actor.phone) {
+      throw new BadRequestException(
+        'Số điện thoại đặt xe phải trùng với số đã xác minh của tài khoản',
+      );
+    }
     const lockKey = `vehicle:${dto.vehicleId}`;
     this.logger.log(`Acquiring lock for ${lockKey}`);
 
@@ -200,8 +218,8 @@ export class BookingsService {
         }
       }
 
-      let customer = await this.prisma.customer.findFirst({
-        where: { OR: [{ userId: actor.id }, { phone: dto.phone }] },
+      let customer = await this.prisma.customer.findUnique({
+        where: { userId: actor.id },
       });
 
       if (!customer) {
@@ -209,7 +227,7 @@ export class BookingsService {
         customer = await this.prisma.customer.create({
           data: {
             fullName: dto.fullName,
-            phone: dto.phone,
+            phone: actor.phone,
             idCardNo: dto.idCardNo,
             userId: actor.id,
             idCardFront: dto.idCardFront,
@@ -234,7 +252,7 @@ export class BookingsService {
           where: { id: customer.id },
           data: {
             fullName: dto.fullName,
-            phone: dto.phone,
+            phone: actor.phone,
             idCardNo: dto.idCardNo,
             userId: actor.id,
             ...(dto.idCardFront ? { idCardFront: dto.idCardFront } : {}),
@@ -242,6 +260,15 @@ export class BookingsService {
             ...(dto.driverLicense ? { driverLicense: dto.driverLicense } : {}),
           },
         });
+      }
+      if (
+        !customer.idCardFront ||
+        !customer.idCardBack ||
+        !customer.driverLicense
+      ) {
+        throw new BadRequestException(
+          'Hồ sơ cần đủ CCCD mặt trước, mặt sau và giấy phép lái xe',
+        );
       }
 
       // 5. Calculate Base Price via Dynamic Pricing Module
@@ -582,7 +609,7 @@ export class BookingsService {
 
     // 5. Gửi thông báo SMS / Email khi đổi trạng thái đơn
     const customerPhone = currentBooking.customer.phone;
-    if (status === BookingStatus.CONFIRMED) {
+    if (status === BookingStatus.CONFIRMED && customerPhone) {
       await this.notificationService.sendSMS(
         customerPhone,
         `datxe: Don ${currentBooking.bookingNumber} da hoan tat thu tuc. Nhan ${currentBooking.vehicle.brand} ${currentBooking.vehicle.model} luc ${currentBooking.startDate.toLocaleString('vi-VN')}, tra luc ${currentBooking.endDate.toLocaleString('vi-VN')} tai ${currentBooking.pickupLocation}.`,

@@ -15,7 +15,7 @@ UI và nội dung sản phẩm dùng tiếng Việt, file lưu UTF-8. Domain pro
 
 `datxe` là nền tảng thuê xe tự lái gồm:
 
-- Khách hàng: đăng ký/đăng nhập email hoặc Google, tìm xe, đặt xe, cọc/thanh toán, ký hợp đồng, tra cứu đơn, đánh giá, chat chủ xe.
+- Khách hàng: đăng ký bằng số điện thoại + OTP, đăng nhập số điện thoại + mật khẩu hoặc Google, tìm xe, đặt xe, cọc/thanh toán, ký hợp đồng, tra cứu đơn, đánh giá, chat chủ xe.
 - Chủ xe: gửi yêu cầu nâng cấp, đăng xe, quản lý trạng thái xe, duyệt booking, doanh thu và chat.
 - Admin/staff: dashboard, booking, CRM khách hàng, bảo dưỡng, tài chính, audit và hỗ trợ.
 
@@ -68,15 +68,15 @@ design-system/datxe/MASTER.md design-system do ui-ux-pro-max sinh
 
 Backend domains: `auth`, `vehicles`, `bookings`, `payments`, `contracts`, `reviews`, `chat`, `tickets`, `customers`, `maintenance`, `analytics`, `dashboard`, `audit`, `notification`, `redis`, `prisma`.
 
-`account` cung cấp lịch sử booking/hợp đồng theo JWT và luôn giới hạn qua `Customer.userId`. Notification hỗ trợ SMTP (`SMTP_*`) với SES fallback và AWS SNS cho SMS; mọi lần gửi được ghi vào `NotificationLog`. Form chủ xe công khai không cần đăng nhập/OTP, lưu hồ sơ có trạng thái trong `OwnerLead`; OTP chỉ dùng cho đăng ký/đăng nhập bằng số điện thoại và các bước xác minh thông tin sau này.
+`account` cung cấp hồ sơ cá nhân, cập nhật thông tin, đổi mật khẩu, lịch sử booking/hợp đồng theo JWT và luôn giới hạn qua `Customer.userId`. CCCD/GPLX được lưu ở private storage, storage key được ghi ngay vào `Customer` và chỉ chủ tài khoản hoặc ADMIN/STAFF được đọc. Notification hỗ trợ SMTP (`SMTP_*`) với SES fallback và AWS SNS cho SMS; mọi lần gửi được ghi vào `NotificationLog`. Hồ sơ chủ xe yêu cầu đăng nhập và số điện thoại đã xác minh, liên kết trực tiếp `OwnerLead.userId`; OTP chỉ dùng cho kích hoạt đăng ký, đặt lại mật khẩu và liên kết/xác minh số điện thoại cho tài khoản Google.
 
 ## Domain và các invariant bắt buộc
 
 Roles: `ADMIN`, `STAFF`, `CUSTOMER`, `OWNER`.
 
 - Client không bao giờ được chọn role khi đăng ký; đăng ký mới luôn là `CUSTOMER`.
-- Tài khoản có thể đăng ký/đăng nhập bằng OTP số điện thoại. OTP lưu hash trong Redis, hết hạn, giới hạn thử/gửi lại và phải fail rõ ràng nếu Redis/SNS chưa cấu hình; không log hoặc mock OTP production.
-- Hồ sơ chủ xe công khai không tự cấp quyền OWNER. Chỉ ADMIN/STAFF được duyệt; backend liên kết tài khoản theo số điện thoại chuẩn hóa hoặc tạo tài khoản phone-first, đổi role và ghi audit trong transaction.
+- Tài khoản đăng ký bằng số điện thoại phải xác minh OTP trước khi được tạo/kích hoạt; đăng nhập hằng ngày dùng số điện thoại + mật khẩu. OTP lưu hash theo mục đích trong Redis, hết hạn, giới hạn thử/gửi lại và phải fail rõ ràng nếu Redis/SNS chưa cấu hình; không log hoặc mock OTP production.
+- Hồ sơ chủ xe không tự cấp quyền OWNER. Chỉ tài khoản CUSTOMER có số điện thoại đã xác minh được gửi hồ sơ; chỉ ADMIN/STAFF được duyệt, đổi role và ghi audit trong transaction.
 - Tìm xe là public; tạo booking và upload/xem CCCD/GPLX của chính mình yêu cầu JWT `CUSTOMER` hoặc `OWNER`, đồng thời liên kết hồ sơ Customer với user hiện tại. `OWNER` vẫn có thể thuê xe như khách; `ADMIN`/`STAFF` không tạo đơn từ luồng khách.
 - OWNER chỉ truy cập vehicle, booking, dashboard thuộc xe có `ownerId` của chính họ.
 - Duyệt yêu cầu owner chỉ dành cho ADMIN/STAFF.
@@ -98,7 +98,7 @@ Trạng thái chính:
 
 ## Auth và Google OAuth
 
-Email/password dùng bcrypt (12 rounds) và JWT. Frontend hiện lưu `token`/`user` trong `localStorage`; nếu chuyển sang HttpOnly cookie phải đổi toàn bộ API client, guards, Socket.IO handshake và hydration trong một thay đổi có migration rõ ràng.
+Mật khẩu dùng bcrypt (12 rounds) và JWT. Đăng nhập chính dùng số điện thoại Việt Nam đã chuẩn hóa + mật khẩu; email chỉ là thông tin liên hệ tùy chọn. Frontend hiện lưu `token`/`user` trong `localStorage`; nếu chuyển sang HttpOnly cookie phải đổi toàn bộ API client, guards, Socket.IO handshake và hydration trong một thay đổi có migration rõ ràng.
 
 Google dùng Google Identity Services ID token flow:
 
@@ -183,14 +183,16 @@ npm run build
 docker compose up --build
 ```
 
-Baseline xác nhận ngày 2026-07-22:
+Baseline xác nhận ngày 2026-07-24:
 
 - Backend lint check: 0 lỗi; build pass.
-- Backend unit: 2 suites, 8 tests pass.
+- Backend unit: 4 suites, 21 tests pass.
 - Backend e2e: 1 suite, 2 tests pass, không cần DB thật vì health/root test override Prisma.
-- Frontend lint: 0 lỗi, 0 warning; production build pass 23 trang tĩnh cùng các route động.
+- Frontend lint: 0 lỗi, 0 warning; production build pass 24 trang tĩnh cùng các route động.
 
 Migration `0002_single_rental_location` đổi default và cập nhật toàn bộ xe hiện có sang điểm La Gi cố định. Booking lịch sử không bị sửa. Rollback vận hành chỉ nên đổi default/tọa độ xe sang địa điểm mới được doanh nghiệp phê duyệt; không khôi phục các địa chỉ xe cũ không còn đáng tin.
+
+Migration `0005_phone_password_account_profile` bổ sung ngày sinh/giới tính cho `User` và cho phép `Customer.phone`/`Customer.idCardNo` null để tài khoản Google không cần dữ liệu placeholder. Forward deploy chạy `prisma migrate deploy`; rollback chỉ an toàn khi không còn bản ghi Google thiếu phone/CCCD và phải backfill trước khi đặt lại NOT NULL.
 
 Task chỉ hoàn tất khi authorization/ownership/validation đúng, API/UI typed, không thêm mock ẩn, lint/build/test liên quan pass và giới hạn còn lại được báo rõ.
 

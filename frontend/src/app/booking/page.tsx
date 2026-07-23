@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { api, type AuthUser, type BookingQuote, type ChatMessage, type Vehicle } from '@/lib/api';
+import { api, type AuthUser, type BookingQuote, type ChatMessage, type CustomerDocumentKeys, type Vehicle } from '@/lib/api';
 import { rentalPolicies, storeInfo } from '@/lib/store';
 import { vehicleFuelLabel, vehicleTransmissionLabel } from '@/lib/vehicle-labels';
 import { io, type Socket } from 'socket.io-client';
@@ -75,13 +75,18 @@ export default function BookingPage() {
   const chatSocketRef = useRef<Socket | null>(null);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
 
-  // File Upload State Mocking (lưu base64 hoặc file name để hiển thị)
+  // Tệp mới chỉ dùng để xem trước; storage key đã lưu được lấy từ hồ sơ thật.
   const [idCardFront, setIdCardFront] = useState<string | null>(null);
   const [idCardBack, setIdCardBack] = useState<string | null>(null);
   const [driverLicense, setDriverLicense] = useState<string | null>(null);
   const [idCardFrontFile, setIdCardFrontFile] = useState<File | null>(null);
   const [idCardBackFile, setIdCardBackFile] = useState<File | null>(null);
   const [driverLicenseFile, setDriverLicenseFile] = useState<File | null>(null);
+  const [storedDocuments, setStoredDocuments] = useState<CustomerDocumentKeys>({
+    idCardFront: null,
+    idCardBack: null,
+    driverLicense: null,
+  });
 
   const [bookingLoading, setBookingLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -89,7 +94,16 @@ export default function BookingPage() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      api.auth.me().then(me => setCurrentUser(me)).catch(() => {});
+      Promise.all([api.auth.me(), api.account.profile()])
+        .then(([me, profile]) => {
+          setCurrentUser(me);
+          setFullName(profile.name);
+          setPhone(profile.phone || '');
+          setEmail(profile.email || '');
+          setIdCardNo(profile.idCardNo || '');
+          setStoredDocuments(profile.documents);
+        })
+        .catch(() => {});
     }
   }, []);
 
@@ -263,7 +277,11 @@ export default function BookingPage() {
         setErrorMsg('Tài khoản quản trị không thể tạo đơn thuê. Vui lòng dùng tài khoản khách hàng hoặc chủ xe.');
         return;
       }
-      if (!idCardFrontFile || !idCardBackFile || !driverLicenseFile) {
+      if (
+        (!idCardFrontFile && !storedDocuments.idCardFront) ||
+        (!idCardBackFile && !storedDocuments.idCardBack) ||
+        (!driverLicenseFile && !storedDocuments.driverLicense)
+      ) {
         setErrorMsg('Vui lòng tải đủ ảnh CCCD mặt trước, mặt sau và giấy phép lái xe.');
         return;
       }
@@ -276,11 +294,23 @@ export default function BookingPage() {
         return;
       }
 
-      const documentKeys = await api.storage.uploadCustomerDocuments({
-        idCardFront: idCardFrontFile,
-        idCardBack: idCardBackFile,
-        driverLicense: driverLicenseFile,
-      });
+      const uploadedKeys =
+        idCardFrontFile || idCardBackFile || driverLicenseFile
+          ? await api.storage.uploadCustomerDocuments({
+              ...(idCardFrontFile ? { idCardFront: idCardFrontFile } : {}),
+              ...(idCardBackFile ? { idCardBack: idCardBackFile } : {}),
+              ...(driverLicenseFile
+                ? { driverLicense: driverLicenseFile }
+                : {}),
+            })
+          : storedDocuments;
+      const documentKeys = {
+        idCardFront:
+          uploadedKeys.idCardFront || storedDocuments.idCardFront,
+        idCardBack: uploadedKeys.idCardBack || storedDocuments.idCardBack,
+        driverLicense:
+          uploadedKeys.driverLicense || storedDocuments.driverLicense,
+      };
       const startDateTime = `${startDate}T${startTime}:00+07:00`;
       const endDateTime = `${endDate}T${endTime}:00+07:00`;
 
@@ -692,10 +722,11 @@ export default function BookingPage() {
                     <input
                       type="tel"
                       required
+                      readOnly={Boolean(currentUser)}
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="0987654321"
-                      className={`${fieldClassName} pl-10`}
+                      className={`${fieldClassName} pl-10 read-only:bg-app-muted`}
                     />
                   </div>
                 </div>
@@ -823,6 +854,12 @@ export default function BookingPage() {
                         <Image unoptimized fill sizes="200px" src={idCardFront} alt="CCCD mặt trước" className="object-cover" />
                         <span className="absolute bottom-1 right-1 bg-brand text-on-brand text-[10px] px-1 rounded flex items-center gap-0.5"><CheckCircle2 className="h-3 w-3" /> OK</span>
                       </div>
+                    ) : storedDocuments.idCardFront ? (
+                      <>
+                        <CheckCircle2 className="h-7 w-7 text-brand" />
+                        <span className="text-xs font-bold text-brand">Đã lưu CCCD mặt trước</span>
+                        <span className="text-[11px] text-content-secondary">Chọn tệp để thay thế</span>
+                      </>
                     ) : (
                       <>
                         <Upload className="h-6 w-6 text-content-secondary" />
@@ -843,6 +880,12 @@ export default function BookingPage() {
                         <Image unoptimized fill sizes="200px" src={idCardBack} alt="CCCD mặt sau" className="object-cover" />
                         <span className="absolute bottom-1 right-1 bg-brand text-on-brand text-[10px] px-1 rounded flex items-center gap-0.5"><CheckCircle2 className="h-3 w-3" /> OK</span>
                       </div>
+                    ) : storedDocuments.idCardBack ? (
+                      <>
+                        <CheckCircle2 className="h-7 w-7 text-brand" />
+                        <span className="text-xs font-bold text-brand">Đã lưu CCCD mặt sau</span>
+                        <span className="text-[11px] text-content-secondary">Chọn tệp để thay thế</span>
+                      </>
                     ) : (
                       <>
                         <Upload className="h-6 w-6 text-content-secondary" />
@@ -863,6 +906,12 @@ export default function BookingPage() {
                         <Image unoptimized fill sizes="200px" src={driverLicense} alt="Giấy phép lái xe" className="object-cover" />
                         <span className="absolute bottom-1 right-1 bg-brand text-on-brand text-[10px] px-1 rounded flex items-center gap-0.5"><CheckCircle2 className="h-3 w-3" /> OK</span>
                       </div>
+                    ) : storedDocuments.driverLicense ? (
+                      <>
+                        <CheckCircle2 className="h-7 w-7 text-brand" />
+                        <span className="text-xs font-bold text-brand">Đã lưu giấy phép lái xe</span>
+                        <span className="text-[11px] text-content-secondary">Chọn tệp để thay thế</span>
+                      </>
                     ) : (
                       <>
                         <Upload className="h-6 w-6 text-content-secondary" />

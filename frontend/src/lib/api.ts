@@ -3,6 +3,9 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 export type AuthUser = {
   id: string;
   email: string | null;
+  phone?: string | null;
+  phoneVerifiedAt?: string | null;
+  avatar?: string | null;
   name: string;
   role: "ADMIN" | "STAFF" | "CUSTOMER" | "OWNER";
   isVerifiedOwner?: boolean;
@@ -18,9 +21,16 @@ export type OwnerRequest = {
   vehicleYear?: number | null;
   applicantNotes?: string | null;
   adminNotes?: string | null;
-  status: "PENDING_REVIEW" | "CONTACTING" | "NEED_MORE_INFO";
+  rejectionReason?: string | null;
+  status:
+    | "PENDING_REVIEW"
+    | "CONTACTING"
+    | "NEED_MORE_INFO"
+    | "APPROVED"
+    | "REJECTED"
+    | "CANCELLED";
   createdAt: string;
-  user?: Pick<AuthUser, "id" | "email" | "role"> | null;
+  user?: Pick<AuthUser, "id" | "email" | "phone" | "role"> | null;
 };
 
 export type AuthResponse = { accessToken: string; user: AuthUser };
@@ -101,17 +111,20 @@ export type ChatPartner = { id: string; name: string; email: string | null };
 export type CustomerRecord = {
   id: string;
   fullName: string;
-  phone: string;
-  idCardNo: string;
+  phone: string | null;
+  idCardNo: string | null;
   segment: "REGULAR" | "VIP" | "BLACKLIST";
   notes?: string | null;
   user?: AuthUser | null;
   bookings?: Booking[];
 };
-export type CustomerUpdateInput = Pick<
-  CustomerRecord,
-  "fullName" | "phone" | "idCardNo" | "segment"
-> & { notes?: string };
+export type CustomerUpdateInput = {
+  fullName: string;
+  phone: string;
+  idCardNo: string;
+  segment: CustomerRecord["segment"];
+  notes?: string;
+};
 export type BookingQuote = {
   available: true;
   vehicleId: string;
@@ -186,6 +199,26 @@ export type CustomerDocumentKeys = {
   driverLicense: string | null;
 };
 
+export type AccountProfile = {
+  id: string;
+  name: string;
+  email: string | null;
+  emailVerifiedAt: string | null;
+  phone: string | null;
+  phoneVerifiedAt: string | null;
+  avatar: string | null;
+  role: AuthUser["role"];
+  isVerifiedOwner: boolean;
+  createdAt: string;
+  birthDate: string | null;
+  gender: "MALE" | "FEMALE" | "OTHER" | null;
+  address: string | null;
+  idCardNo: string | null;
+  documents: CustomerDocumentKeys;
+  hasPassword: boolean;
+  ownerApplication: OwnerRequest | null;
+};
+
 async function request<T>(
   endpoint: string,
   options: RequestInit = {},
@@ -231,18 +264,23 @@ async function request<T>(
 export const api = {
   // Authentication
   auth: {
-    login: (dto: { email: string; password: string }) =>
+    login: (dto: { phone: string; password: string }) =>
       request<AuthResponse>("/auth/login", {
         method: "POST",
         body: JSON.stringify(dto),
       }),
+    requestRegistrationCode: (phone: string) =>
+      request<{ sent: true; expiresIn: number }>("/auth/register/request-code", {
+        method: "POST",
+        body: JSON.stringify({ phone }),
+      }),
     register: (dto: {
-      email: string;
+      phone: string;
+      code: string;
       password: string;
       name: string;
-      phone?: string;
     }) =>
-      request<AuthUser>("/auth/register", {
+      request<AuthResponse>("/auth/register/verify-code", {
         method: "POST",
         body: JSON.stringify(dto),
       }),
@@ -252,26 +290,38 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ credential }),
       }),
-    requestPhoneCode: (phone: string) =>
-      request<{ sent: true; expiresIn: number }>("/auth/phone/request-code", {
-        method: "POST",
-        body: JSON.stringify({ phone }),
-      }),
-    verifyPhoneCode: (dto: { phone: string; code: string; name: string }) =>
-      request<AuthResponse>("/auth/phone/verify-code", {
-        method: "POST",
-        body: JSON.stringify(dto),
-      }),
-    updateEmail: (email: string) =>
-      request<AuthUser>("/auth/profile/email", {
-        method: "POST",
-        body: JSON.stringify({ email }),
-      }),
-    upgradeOwner: (dto: { phone: string; idCardNo: string; address: string }) =>
-      request("/auth/upgrade-owner", {
+    requestPasswordResetCode: (phone: string) =>
+      request<{ sent: true; expiresIn: number }>(
+        "/auth/password/request-reset-code",
+        {
+          method: "POST",
+          body: JSON.stringify({ phone }),
+        },
+      ),
+    resetPassword: (dto: {
+      phone: string;
+      code: string;
+      password: string;
+    }) =>
+      request<{ reset: true }>("/auth/password/reset", {
         method: "POST",
         body: JSON.stringify(dto),
       }),
+    requestPhoneLinkCode: (phone: string) =>
+      request<{ sent: true; expiresIn: number }>(
+        "/auth/phone/request-link-code",
+        {
+          method: "POST",
+          body: JSON.stringify({ phone }),
+        },
+      ),
+    verifyPhoneLinkCode: (dto: { phone: string; code: string }) =>
+      request<AuthUser>("/auth/phone/verify-link-code", {
+        method: "POST",
+        body: JSON.stringify(dto),
+      }),
+    getOwnerApplication: () =>
+      request<OwnerRequest | null>("/auth/owner-application"),
     getOwnerRequests: () => request<OwnerRequest[]>("/auth/owner-requests"),
     reviewOwnerApplication: (
       applicationId: string,
@@ -285,20 +335,39 @@ export const api = {
         method: "POST",
         body: JSON.stringify(dto),
       }),
-    createOwnerLead: (dto: {
-      name: string;
-      phone: string;
+    createOwnerApplication: (dto: {
       carName: string;
       plateNumber?: string;
       vehicleYear?: number;
       applicantNotes?: string;
     }) =>
-      request<{ id: string; applicationNumber: string; received: true; status: string }>("/auth/owner-leads", {
+      request<OwnerRequest & { received: true }>("/auth/owner-applications", {
         method: "POST",
         body: JSON.stringify(dto),
       }),
   },
   account: {
+    profile: () => request<AccountProfile>("/account/profile"),
+    updateProfile: (dto: {
+      name?: string;
+      email?: string;
+      birthDate?: string;
+      gender?: AccountProfile["gender"];
+      address?: string;
+      idCardNo?: string;
+    }) =>
+      request<AccountProfile>("/account/profile", {
+        method: "PATCH",
+        body: JSON.stringify(dto),
+      }),
+    changePassword: (dto: {
+      currentPassword: string;
+      newPassword: string;
+    }) =>
+      request<{ changed: true }>("/account/change-password", {
+        method: "POST",
+        body: JSON.stringify(dto),
+      }),
     bookings: () => request<Booking[]>("/account/bookings"),
     contract: (id: string) =>
       request<{ bookingNumber: string; contract: Booking["contract"] }>(
@@ -377,19 +446,27 @@ export const api = {
         body,
       });
     },
-    uploadCustomerDocuments: (files: {
-      idCardFront: File;
-      idCardBack: File;
-      driverLicense: File;
-    }) => {
+    uploadCustomerDocuments: (files: Partial<Record<keyof CustomerDocumentKeys, File>>) => {
       const body = new FormData();
-      body.append("idCardFront", files.idCardFront);
-      body.append("idCardBack", files.idCardBack);
-      body.append("driverLicense", files.driverLicense);
+      if (files.idCardFront) body.append("idCardFront", files.idCardFront);
+      if (files.idCardBack) body.append("idCardBack", files.idCardBack);
+      if (files.driverLicense) body.append("driverLicense", files.driverLicense);
       return request<CustomerDocumentKeys>("/storage/customer-documents", {
         method: "POST",
         body,
       });
+    },
+    getPrivateDocument: async (key: string) => {
+      if (!/^private\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|pdf)$/i.test(key)) {
+        throw new Error("Tệp hồ sơ không hợp lệ.");
+      }
+      const token =
+        typeof window === "undefined" ? null : localStorage.getItem("token");
+      const response = await fetch(`${BASE_URL}/storage/${key}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error("Không thể mở tệp hồ sơ.");
+      return response.blob();
     },
   },
 

@@ -51,8 +51,8 @@ export default function CustomersPage() {
     setEditing(item);
     setForm({
       fullName: item.fullName,
-      phone: item.phone,
-      idCardNo: item.idCardNo,
+      phone: item.phone || '',
+      idCardNo: item.idCardNo || '',
       segment: item.segment,
       notes: item.notes || '',
     });

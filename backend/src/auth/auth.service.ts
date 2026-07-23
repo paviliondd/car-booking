@@ -1,6 +1,6 @@
 import {
-  ConflictException,
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
   ServiceUnavailableException,
@@ -11,18 +11,20 @@ import { JwtService } from '@nestjs/jwt';
 import { OwnerApplicationStatus, Prisma, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
-import { createHash, randomBytes, randomInt } from 'node:crypto';
-import { PrismaService } from '../prisma/prisma.service';
-import {
-  LoginDto,
-  OwnerLeadDto,
-  RegisterDto,
-  ReviewOwnerApplicationDto,
-  UpgradeOwnerDto,
-} from './dto/auth.dto';
+import { createHash, randomInt } from 'node:crypto';
 import { NotificationService } from '../notification/notification.service';
 import { ownerAdminEmail } from '../notification/mail-templates';
+import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
+import {
+  LoginDto,
+  OwnerApplicationDto,
+  RegisterDto,
+  ResetPasswordDto,
+  ReviewOwnerApplicationDto,
+} from './dto/auth.dto';
+
+type OtpPurpose = 'register' | 'password-reset' | `phone-link:${string}`;
 
 @Injectable()
 export class AuthService {
@@ -40,90 +42,22 @@ export class AuthService {
     );
   }
 
-  async createOwnerLead(dto: OwnerLeadDto) {
-    const phone = this.normalizePhone(dto.phone);
-    const duplicate = await this.prisma.ownerLead.findFirst({
-      where: {
-        phone,
-        status: {
-          in: [
-            OwnerApplicationStatus.PENDING_REVIEW,
-            OwnerApplicationStatus.CONTACTING,
-            OwnerApplicationStatus.NEED_MORE_INFO,
-            OwnerApplicationStatus.APPROVED,
-          ],
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-    if (duplicate) {
-      return {
-        id: duplicate.id,
-        applicationNumber: duplicate.applicationNumber,
-        received: true,
-        status: duplicate.status,
-      };
-    }
-    const applicationNumber = `OWN-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${randomInt(1000, 10000)}`;
-    const lead = await this.prisma.ownerLead.create({
-      data: {
-        applicationNumber,
-        name: dto.name.trim(),
-        phone,
-        carName: dto.carName.trim(),
-        plateNumber: dto.plateNumber?.trim().toUpperCase() || undefined,
-        vehicleYear: dto.vehicleYear,
-        applicantNotes: dto.applicantNotes?.trim() || undefined,
-      },
-    });
-    const base =
-      this.configService.get<string>('PUBLIC_APP_URL') ||
-      'https://datxe.linuxunity.com';
-    const admin = this.configService.get<string>('ADMIN_NOTIFICATION_EMAIL');
-    await Promise.all([
-      this.notifications.sendSMS(
-        lead.phone,
-        `datxe: Da nhan ho so ${lead.applicationNumber}. Chung toi se lien he trong 1 ngay lam viec.`,
-        'owner-application-received',
-        undefined,
-        `owner-received:${lead.id}`,
-      ),
-      admin
-        ? this.notifications.sendEmail(
-            admin,
-            '[datxe] Hồ sơ chủ xe mới',
-            ownerAdminEmail({
-              ...lead,
-              dashboardUrl: `${base}/dashboard/customers`,
-            }),
-            'become-owner-admin',
-          )
-        : Promise.resolve(),
-    ]);
-    return {
-      id: lead.id,
-      applicationNumber: lead.applicationNumber,
-      received: true,
-      status: lead.status,
-    };
-  }
-
   private normalizePhone(value: string) {
     const compact = value.replace(/[\s.-]/g, '');
-    if (compact.startsWith('+84')) return compact;
-    if (compact.startsWith('84')) return `+${compact}`;
-    if (compact.startsWith('0')) return `+84${compact.slice(1)}`;
+    if (/^\+84\d{9}$/.test(compact)) return compact;
+    if (/^84\d{9}$/.test(compact)) return `+${compact}`;
+    if (/^0\d{9}$/.test(compact)) return `+84${compact.slice(1)}`;
     throw new BadRequestException('Số điện thoại không hợp lệ');
   }
 
-  private otpHash(phone: string, code: string) {
+  private otpHash(phone: string, code: string, purpose: OtpPurpose) {
     const secret = this.configService.getOrThrow<string>('JWT_SECRET');
     return createHash('sha256')
-      .update(`${phone}:${code}:${secret}`)
+      .update(`${purpose}:${phone}:${code}:${secret}`)
       .digest('hex');
   }
 
-  async requestPhoneCode(rawPhone: string) {
+  private async sendOtp(rawPhone: string, purpose: OtpPurpose) {
     const phone = this.normalizePhone(rawPhone);
     const ttl = Number(
       this.configService.get<string>('OTP_TTL_SECONDS') || 300,
@@ -134,7 +68,8 @@ export class AuthService {
     const maxSends = Number(
       this.configService.get<string>('OTP_MAX_SENDS_PER_HOUR') || 5,
     );
-    const sends = await this.redis.increment(`otp-hour:${phone}`, 3600);
+    const rateKey = `otp-hour:${purpose}:${phone}`;
+    const sends = await this.redis.increment(rateKey, 3600);
     if (sends === null) {
       throw new ServiceUnavailableException(
         'Dịch vụ xác minh đang tạm thời không khả dụng.',
@@ -145,56 +80,68 @@ export class AuthService {
         'Bạn đã yêu cầu quá nhiều mã. Vui lòng thử lại sau.',
       );
     }
-    const lock = await this.redis.acquireLock(
-      `otp-send:${phone}`,
-      resendSeconds * 1000,
-    );
-    if (!lock) {
+
+    const lockKey = `otp-send:${purpose}:${phone}`;
+    if (!(await this.redis.acquireLock(lockKey, resendSeconds * 1000))) {
       throw new BadRequestException(
-        'Vui lòng chờ 60 giây trước khi yêu cầu mã mới.',
+        `Vui lòng chờ ${resendSeconds} giây trước khi yêu cầu mã mới.`,
       );
     }
+
     const code = randomInt(0, 1_000_000).toString().padStart(6, '0');
+    const otpKey = `otp:${purpose}:${phone}`;
     await this.redis.set(
-      `otp:auth:${phone}`,
-      JSON.stringify({ hash: this.otpHash(phone, code), attempts: 0 }),
+      otpKey,
+      JSON.stringify({
+        hash: this.otpHash(phone, code, purpose),
+        attempts: 0,
+      }),
       ttl,
     );
-    if (!(await this.redis.get(`otp:auth:${phone}`))) {
-      await this.redis.releaseLock(`otp-send:${phone}`);
+    if (!(await this.redis.get(otpKey))) {
+      await this.redis.releaseLock(lockKey);
       throw new ServiceUnavailableException(
         'Dịch vụ xác minh đang tạm thời không khả dụng.',
       );
     }
+
     try {
       await this.notifications.sendSMS(
         phone,
         `datxe: Ma xac minh cua ban la ${code}. Ma co hieu luc ${Math.ceil(ttl / 60)} phut. Khong chia se ma nay.`,
-        'auth-otp',
+        `otp-${purpose.split(':')[0]}`,
         undefined,
         undefined,
         true,
       );
     } catch {
-      await this.redis.del(`otp:auth:${phone}`);
-      await this.redis.releaseLock(`otp-send:${phone}`);
+      await this.redis.del(otpKey);
+      await this.redis.releaseLock(lockKey);
       throw new ServiceUnavailableException(
         'Dịch vụ SMS tạm thời không khả dụng.',
       );
     }
-    return { sent: true, expiresIn: ttl };
+    return { sent: true as const, expiresIn: ttl };
   }
 
-  async verifyPhoneCode(rawPhone: string, code: string, name: string) {
+  private async verifyOtp(rawPhone: string, code: string, purpose: OtpPurpose) {
     const phone = this.normalizePhone(rawPhone);
-    const key = `otp:auth:${phone}`;
+    const key = `otp:${purpose}:${phone}`;
     const stored = await this.redis.get(key);
     if (!stored) {
       throw new UnauthorizedException(
         'Mã xác minh không hợp lệ hoặc đã hết hạn',
       );
     }
-    const state = JSON.parse(stored) as { hash: string; attempts: number };
+
+    let state: { hash: string; attempts: number };
+    try {
+      state = JSON.parse(stored) as { hash: string; attempts: number };
+    } catch {
+      await this.redis.del(key);
+      throw new UnauthorizedException('Mã xác minh không hợp lệ');
+    }
+
     const maxAttempts = Number(
       this.configService.get<string>('OTP_MAX_ATTEMPTS') || 5,
     );
@@ -202,43 +149,41 @@ export class AuthService {
       await this.redis.del(key);
       throw new UnauthorizedException('Bạn đã nhập sai quá số lần cho phép');
     }
-    if (state.hash !== this.otpHash(phone, code)) {
+    if (state.hash !== this.otpHash(phone, code, purpose)) {
       await this.redis.set(
         key,
         JSON.stringify({ ...state, attempts: state.attempts + 1 }),
-        300,
+        Number(this.configService.get<string>('OTP_TTL_SECONDS') || 300),
       );
       throw new UnauthorizedException('Mã xác minh không chính xác');
     }
     await this.redis.del(key);
+    return phone;
+  }
 
-    let user = await this.prisma.user.findUnique({ where: { phone } });
-    let created = false;
-    if (!user) {
-      const suffix = randomBytes(8).toString('hex');
-      user = await this.prisma.user.create({
+  async requestRegistrationCode(rawPhone: string) {
+    const phone = this.normalizePhone(rawPhone);
+    if (await this.prisma.user.findUnique({ where: { phone } })) {
+      throw new ConflictException('Số điện thoại đã được đăng ký');
+    }
+    return this.sendOtp(phone, 'register');
+  }
+
+  async register(dto: RegisterDto) {
+    const phone = await this.verifyOtp(dto.phone, dto.code, 'register');
+    const hashedPassword = await bcrypt.hash(dto.password, 12);
+    const name = dto.name.trim();
+    try {
+      const user = await this.prisma.user.create({
         data: {
           phone,
           phoneVerifiedAt: new Date(),
-          name: name.trim(),
+          password: hashedPassword,
+          name,
           role: Role.CUSTOMER,
-          customer: {
-            create: {
-              phone,
-              fullName: name.trim(),
-              idCardNo: `PENDING-${suffix}`,
-            },
-          },
+          customer: { create: { phone, fullName: name } },
         },
       });
-      created = true;
-    } else if (!user.phoneVerifiedAt) {
-      user = await this.prisma.user.update({
-        where: { id: user.id },
-        data: { phoneVerifiedAt: new Date() },
-      });
-    }
-    if (created) {
       await this.notifications.sendSMS(
         phone,
         'datxe: Chao mung ban den voi datxe. Tai khoan cua ban da duoc kich hoat.',
@@ -246,91 +191,111 @@ export class AuthService {
         user.id,
         `welcome-customer:${user.id}`,
       );
-    }
-    return this.signUser(user);
-  }
-
-  private signUser(user: {
-    id: string;
-    email: string | null;
-    name: string;
-    role: Role;
-  }) {
-    const payload = {
-      email: user.email,
-      sub: user.id,
-      role: user.role,
-      name: user.name,
-    };
-
-    return {
-      accessToken: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
-    };
-  }
-
-  async register(dto: RegisterDto) {
-    const email = dto.email.toLowerCase().trim();
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (existingUser) {
-      throw new ConflictException('Email đã được đăng ký');
-    }
-
-    const hashedPassword = await bcrypt.hash(dto.password, 12);
-    const suffix = randomBytes(8).toString('hex');
-
-    try {
-      const user = await this.prisma.user.create({
-        data: {
-          email,
-          password: hashedPassword,
-          name: dto.name.trim(),
-          idCardNo: dto.idCardNo?.trim() || undefined,
-          role: Role.CUSTOMER,
-          customer: {
-            create: {
-              phone: `PENDING-${suffix}`,
-              fullName: dto.name.trim(),
-              idCardNo: dto.idCardNo?.trim() || `PENDING-${suffix}`,
-            },
-          },
-        },
-        select: { id: true, email: true, name: true, role: true },
-      });
-
-      return user;
+      return this.signUser(user);
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        throw new ConflictException('Email hoặc số điện thoại đã được sử dụng');
+        throw new ConflictException('Số điện thoại đã được đăng ký');
       }
       throw error;
     }
   }
 
   async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { email: dto.email.toLowerCase().trim() },
-    });
-
+    const phone = this.normalizePhone(dto.phone);
+    const user = await this.prisma.user.findUnique({ where: { phone } });
     if (
       !user?.password ||
+      !user.phoneVerifiedAt ||
       !(await bcrypt.compare(dto.password, user.password))
     ) {
-      throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
+      throw new UnauthorizedException(
+        'Số điện thoại hoặc mật khẩu không chính xác',
+      );
     }
-
     return this.signUser(user);
+  }
+
+  async requestPasswordResetCode(rawPhone: string) {
+    const phone = this.normalizePhone(rawPhone);
+    const user = await this.prisma.user.findUnique({ where: { phone } });
+    if (!user?.password || !user.phoneVerifiedAt) {
+      throw new BadRequestException(
+        'Tài khoản chưa thể đặt lại mật khẩu bằng số điện thoại',
+      );
+    }
+    return this.sendOtp(phone, 'password-reset');
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const phone = await this.verifyOtp(dto.phone, dto.code, 'password-reset');
+    const user = await this.prisma.user.findUnique({ where: { phone } });
+    if (!user) throw new NotFoundException('Không tìm thấy tài khoản');
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: { password: await bcrypt.hash(dto.password, 12) },
+      }),
+      this.prisma.auditLog.create({
+        data: {
+          userId: user.id,
+          action: 'RESET_PASSWORD',
+          targetTable: 'User',
+          targetId: user.id,
+        },
+      }),
+    ]);
+    return { reset: true };
+  }
+
+  async requestPhoneLinkCode(userId: string, rawPhone: string) {
+    const phone = this.normalizePhone(rawPhone);
+    const existing = await this.prisma.user.findUnique({ where: { phone } });
+    if (existing && existing.id !== userId) {
+      throw new ConflictException('Số điện thoại đã thuộc tài khoản khác');
+    }
+    return this.sendOtp(phone, `phone-link:${userId}`);
+  }
+
+  async verifyPhoneLinkCode(userId: string, rawPhone: string, code: string) {
+    const phone = await this.verifyOtp(rawPhone, code, `phone-link:${userId}`);
+    try {
+      const user = await this.prisma.$transaction(async (tx) => {
+        const current = await tx.user.findUnique({ where: { id: userId } });
+        if (!current) throw new NotFoundException('Không tìm thấy tài khoản');
+        const updated = await tx.user.update({
+          where: { id: userId },
+          data: { phone, phoneVerifiedAt: new Date() },
+        });
+        await tx.customer.upsert({
+          where: { userId },
+          create: { userId, phone, fullName: current.name },
+          update: { phone },
+        });
+        await tx.auditLog.create({
+          data: {
+            userId,
+            action: 'VERIFY_PHONE',
+            targetTable: 'User',
+            targetId: userId,
+            oldValue: { phone: current.phone },
+            newValue: { phone },
+          },
+        });
+        return updated;
+      });
+      return this.publicUser(user);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException('Số điện thoại đã thuộc tài khoản khác');
+      }
+      throw error;
+    }
   }
 
   async googleLogin(credential: string) {
@@ -353,57 +318,126 @@ export class AuthService {
         'Google ID token không hợp lệ hoặc đã hết hạn',
       );
     }
-
     if (!payload?.email || !payload.email_verified || !payload.sub) {
       throw new UnauthorizedException('Tài khoản Google chưa xác minh email');
     }
 
     const email = payload.email.toLowerCase();
     let user = await this.prisma.user.findUnique({ where: { email } });
-
     if (!user) {
-      const suffix = randomBytes(12).toString('hex');
+      const name = payload.name?.trim() || email.split('@')[0];
       user = await this.prisma.user.create({
         data: {
           email,
-          password: await bcrypt.hash(randomBytes(32).toString('hex'), 12),
-          name: payload.name?.trim() || email.split('@')[0],
+          emailVerifiedAt: new Date(),
+          name,
           avatar: payload.picture,
           role: Role.CUSTOMER,
-          customer: {
-            create: {
-              phone: `GOOGLE-${suffix}`,
-              fullName: payload.name?.trim() || email.split('@')[0],
-              idCardNo: `GOOGLE-${suffix}`,
-            },
-          },
+          customer: { create: { fullName: name } },
         },
       });
+    } else if (!user.emailVerifiedAt) {
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerifiedAt: new Date(), avatar: payload.picture },
+      });
     }
-
     return this.signUser(user);
   }
 
-  async upgradeOwner(userId: string, dto: UpgradeOwnerDto) {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        phone: dto.phone.trim(),
-        idCardNo: dto.idCardNo.trim(),
-        address: dto.address.trim(),
-        ownerRequestAt: new Date(),
-        isVerifiedOwner: false,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        phone: true,
-        address: true,
-        ownerRequestAt: true,
-        isVerifiedOwner: true,
-      },
+  async getMyOwnerApplication(userId: string) {
+    return this.prisma.ownerLead.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async createOwnerApplication(userId: string, dto: OwnerApplicationDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Không tìm thấy tài khoản');
+    if (!user.phone || !user.phoneVerifiedAt) {
+      throw new BadRequestException(
+        'Bạn cần xác minh số điện thoại trước khi đăng ký xe',
+      );
+    }
+    if (user.role === Role.OWNER && user.isVerifiedOwner) {
+      throw new ConflictException('Tài khoản đã là chủ xe');
+    }
+    const duplicate = await this.prisma.ownerLead.findFirst({
+      where: {
+        userId,
+        status: {
+          in: [
+            OwnerApplicationStatus.PENDING_REVIEW,
+            OwnerApplicationStatus.CONTACTING,
+            OwnerApplicationStatus.NEED_MORE_INFO,
+            OwnerApplicationStatus.APPROVED,
+          ],
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (duplicate) return { ...duplicate, received: true as const };
+
+    const applicationNumber = `OWN-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${randomInt(1000, 10000)}`;
+    const lead = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.ownerLead.create({
+        data: {
+          applicationNumber,
+          userId,
+          name: user.name,
+          phone: user.phone!,
+          carName: dto.carName.trim(),
+          plateNumber: dto.plateNumber?.trim().toUpperCase() || undefined,
+          vehicleYear: dto.vehicleYear,
+          applicantNotes: dto.applicantNotes?.trim() || undefined,
+        },
+      });
+      await tx.user.update({
+        where: { id: userId },
+        data: { ownerRequestAt: new Date(), isVerifiedOwner: false },
+      });
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: 'CREATE_OWNER_APPLICATION',
+          targetTable: 'OwnerLead',
+          targetId: created.id,
+          newValue: {
+            applicationNumber,
+            carName: created.carName,
+            plateNumber: created.plateNumber,
+          },
+        },
+      });
+      return created;
+    });
+
+    const base =
+      this.configService.get<string>('PUBLIC_APP_URL') ||
+      'https://datxe.linuxunity.com';
+    const admin = this.configService.get<string>('ADMIN_NOTIFICATION_EMAIL');
+    await Promise.all([
+      this.notifications.sendSMS(
+        lead.phone,
+        `datxe: Da nhan ho so ${lead.applicationNumber}. Chung toi se lien he trong 1 ngay lam viec.`,
+        'owner-application-received',
+        userId,
+        `owner-received:${lead.id}`,
+      ),
+      admin
+        ? this.notifications.sendEmail(
+            admin,
+            '[datxe] Hồ sơ chủ xe mới',
+            ownerAdminEmail({
+              ...lead,
+              dashboardUrl: `${base}/dashboard/customers`,
+            }),
+            'become-owner-admin',
+          )
+        : Promise.resolve(),
+    ]);
+    return { ...lead, received: true as const };
   }
 
   async getOwnerRequests() {
@@ -417,7 +451,11 @@ export class AuthService {
           ],
         },
       },
-      include: { user: { select: { id: true, email: true, role: true } } },
+      include: {
+        user: {
+          select: { id: true, email: true, phone: true, role: true },
+        },
+      },
       orderBy: { createdAt: 'asc' },
     });
   }
@@ -432,12 +470,13 @@ export class AuthService {
     });
     if (!application)
       throw new NotFoundException('Không tìm thấy hồ sơ chủ xe');
-    if (
-      dto.status !== OwnerApplicationStatus.CONTACTING &&
-      dto.status !== OwnerApplicationStatus.NEED_MORE_INFO &&
-      dto.status !== OwnerApplicationStatus.APPROVED &&
-      dto.status !== OwnerApplicationStatus.REJECTED
-    ) {
+    const reviewableStatuses: OwnerApplicationStatus[] = [
+      OwnerApplicationStatus.CONTACTING,
+      OwnerApplicationStatus.NEED_MORE_INFO,
+      OwnerApplicationStatus.APPROVED,
+      OwnerApplicationStatus.REJECTED,
+    ];
+    if (!reviewableStatuses.includes(dto.status)) {
       throw new BadRequestException('Trạng thái xử lý hồ sơ không hợp lệ');
     }
     if (
@@ -452,29 +491,26 @@ export class AuthService {
     ) {
       throw new BadRequestException('Cần nhập lý do từ chối');
     }
+    if (!application.userId) {
+      throw new BadRequestException(
+        'Hồ sơ cũ chưa liên kết tài khoản; cần xác minh người đăng ký trước',
+      );
+    }
 
-    let userId = application.userId;
     const result = await this.prisma.$transaction(async (tx) => {
       if (dto.status === OwnerApplicationStatus.APPROVED) {
-        let user = await tx.user.findUnique({
-          where: { phone: application.phone },
+        const applicant = await tx.user.findUnique({
+          where: { id: application.userId! },
         });
-        if (user) {
-          user = await tx.user.update({
-            where: { id: user.id },
-            data: { role: Role.OWNER, isVerifiedOwner: true },
-          });
-        } else {
-          user = await tx.user.create({
-            data: {
-              phone: application.phone,
-              name: application.name,
-              role: Role.OWNER,
-              isVerifiedOwner: true,
-            },
-          });
+        if (!applicant?.phoneVerifiedAt) {
+          throw new BadRequestException(
+            'Tài khoản chưa xác minh số điện thoại',
+          );
         }
-        userId = user.id;
+        await tx.user.update({
+          where: { id: application.userId! },
+          data: { role: Role.OWNER, isVerifiedOwner: true },
+        });
       }
       const updated = await tx.ownerLead.update({
         where: { id: application.id },
@@ -482,7 +518,6 @@ export class AuthService {
           status: dto.status,
           adminNotes: dto.adminNotes?.trim() || undefined,
           rejectionReason: dto.rejectionReason?.trim() || undefined,
-          userId,
           reviewedById: reviewerId,
           reviewedAt: new Date(),
         },
@@ -494,40 +529,22 @@ export class AuthService {
           targetTable: 'OwnerLead',
           targetId: application.id,
           oldValue: { status: application.status },
-          newValue: { status: dto.status, userId },
+          newValue: { status: dto.status, userId: application.userId },
         },
       });
       return updated;
     });
+
     if (dto.status === OwnerApplicationStatus.APPROVED) {
       await this.notifications.sendSMS(
         application.phone,
-        `datxe: Ho so ${application.applicationNumber} da duoc duyet. Dang nhap bang so dien thoai tai https://datxe.linuxunity.com/auth de quan ly xe.`,
+        `datxe: Ho so ${application.applicationNumber} da duoc duyet. Dang nhap tai https://datxe.linuxunity.com/auth de quan ly xe.`,
         'owner-application-approved',
-        userId || undefined,
+        application.userId,
         `owner-approved:${application.id}`,
       );
     }
     return result;
-  }
-
-  async updateEmail(userId: string, emailValue: string) {
-    const email = emailValue.toLowerCase().trim();
-    try {
-      return await this.prisma.user.update({
-        where: { id: userId },
-        data: { email, emailVerifiedAt: null },
-        select: { id: true, email: true, phone: true, name: true, role: true },
-      });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        throw new ConflictException('Email đã được tài khoản khác sử dụng');
-      }
-      throw error;
-    }
   }
 
   async verifyOwner(userId: string, approve: boolean) {
@@ -539,11 +556,59 @@ export class AuthService {
       select: {
         id: true,
         email: true,
+        phone: true,
         name: true,
         role: true,
         isVerifiedOwner: true,
         ownerRequestAt: true,
       },
     });
+  }
+
+  private publicUser(user: {
+    id: string;
+    email: string | null;
+    phone: string | null;
+    phoneVerifiedAt: Date | null;
+    name: string;
+    avatar: string | null;
+    role: Role;
+    isVerifiedOwner: boolean;
+    ownerRequestAt: Date | null;
+  }) {
+    return {
+      id: user.id,
+      email: user.email,
+      phone: user.phone,
+      phoneVerifiedAt: user.phoneVerifiedAt,
+      name: user.name,
+      avatar: user.avatar,
+      role: user.role,
+      isVerifiedOwner: user.isVerifiedOwner,
+      ownerRequestAt: user.ownerRequestAt,
+    };
+  }
+
+  private signUser(user: {
+    id: string;
+    email: string | null;
+    phone: string | null;
+    phoneVerifiedAt: Date | null;
+    name: string;
+    avatar: string | null;
+    role: Role;
+    isVerifiedOwner: boolean;
+    ownerRequestAt: Date | null;
+  }) {
+    const publicUser = this.publicUser(user);
+    return {
+      accessToken: this.jwtService.sign({
+        email: user.email,
+        sub: user.id,
+        role: user.role,
+        name: user.name,
+      }),
+      user: publicUser,
+    };
   }
 }

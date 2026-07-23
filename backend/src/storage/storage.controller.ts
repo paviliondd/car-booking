@@ -66,15 +66,58 @@ export class StorageController {
     @UploadedFiles()
     files: Record<string, Express.Multer.File[] | undefined>,
   ) {
+    const supplied = ['idCardFront', 'idCardBack', 'driverLicense'].filter(
+      (field) => Boolean(files[field]?.[0]),
+    );
+    if (supplied.length === 0) {
+      throw new BadRequestException('Cần chọn ít nhất một tệp hồ sơ');
+    }
     const entries = await Promise.all(
-      ['idCardFront', 'idCardBack', 'driverLicense'].map(async (field) => {
+      supplied.map(async (field) => {
         const file = files[field]?.[0];
-        if (!file) return [field, null] as const;
+        if (!file) throw new BadRequestException('Tệp tải lên không hợp lệ');
         const stored = await this.storage.save(file, 'private', req.user.id);
         return [field, stored.key] as const;
       }),
     );
-    return Object.fromEntries(entries);
+    const documentKeys = Object.fromEntries(entries) as {
+      idCardFront?: string;
+      idCardBack?: string;
+      driverLicense?: string;
+    };
+    const user = await this.prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { name: true, phone: true },
+    });
+    if (!user) throw new ForbiddenException('Tài khoản không còn hợp lệ');
+
+    const customer = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.customer.upsert({
+        where: { userId: req.user.id },
+        create: {
+          userId: req.user.id,
+          fullName: user.name,
+          phone: user.phone,
+          ...documentKeys,
+        },
+        update: documentKeys,
+      });
+      await tx.auditLog.create({
+        data: {
+          userId: req.user.id,
+          action: 'UPDATE_CUSTOMER_DOCUMENTS',
+          targetTable: 'Customer',
+          targetId: updated.id,
+          newValue: { fields: supplied },
+        },
+      });
+      return updated;
+    });
+    return {
+      idCardFront: customer.idCardFront,
+      idCardBack: customer.idCardBack,
+      driverLicense: customer.driverLicense,
+    };
   }
 
   @Get('public/:fileName')
