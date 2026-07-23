@@ -62,7 +62,7 @@ export class ChatService {
 
     const partnersMap = new Map<
       string,
-      { id: string; name: string; email: string }
+      { id: string; name: string; email: string | null }
     >();
     sent.forEach((m) => partnersMap.set(m.receiver.id, m.receiver));
     received.forEach((m) => partnersMap.set(m.sender.id, m.sender));

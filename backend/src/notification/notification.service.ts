@@ -181,24 +181,127 @@ export class NotificationService {
     }
   }
 
-  async sendSMS(phoneNumber: string, message: string): Promise<void> {
-    this.logger.log(`Sending SMS to ${phoneNumber}: "${message}"...`);
-    if (this.snsClient) {
+  async sendSMS(
+    phoneNumber: string,
+    message: string,
+    template = 'legacy-sms',
+    userId?: string,
+    idempotencyKey?: string,
+    required = false,
+  ): Promise<boolean> {
+    if (idempotencyKey) {
+      const delivered = await this.prisma.notificationLog.findUnique({
+        where: { idempotencyKey },
+      });
+      if (delivered?.status === 'SENT') return true;
+    }
+    this.logger.log(`Sending SMS template ${template} to ${phoneNumber}...`);
+    const smsEnabled =
+      this.configService.get<string>('SMS_ENABLED')?.toLowerCase() === 'true';
+    if (this.snsClient && smsEnabled) {
       try {
         const command = new PublishCommand({
           PhoneNumber: phoneNumber,
           Message: message,
+          MessageAttributes: {
+            'AWS.SNS.SMS.SMSType': {
+              DataType: 'String',
+              StringValue: 'Transactional',
+            },
+          },
         });
-        await this.snsClient.send(command);
+        const result = await this.snsClient.send(command);
+        await this.logSmsDelivery({
+          phoneNumber,
+          template,
+          status: 'SENT',
+          userId,
+          idempotencyKey,
+          providerMessageId: result.MessageId,
+        });
         this.logger.log(`SMS successfully sent to ${phoneNumber}`);
+        return true;
       } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         this.logger.error(
-          `Error sending SMS to ${phoneNumber} via AWS SNS: ${error instanceof Error ? error.message : String(error)}`,
+          `Error sending SMS to ${phoneNumber} via AWS SNS: ${errorMessage}`,
         );
+        await this.logSmsDelivery({
+          phoneNumber,
+          template,
+          status: 'FAILED',
+          userId,
+          idempotencyKey,
+          errorMessage,
+        });
+        if (required) throw error;
+        return false;
       }
-    } else {
-      this.logger.log(
-        `[MOCK SMS SENT] To: ${phoneNumber}\nMessage: ${message}\n----------------------`,
+    }
+    const errorMessage = smsEnabled
+      ? 'AWS SNS chưa được cấu hình'
+      : 'Gửi SMS chưa được bật';
+    await this.logSmsDelivery({
+      phoneNumber,
+      template,
+      status: 'FAILED',
+      userId,
+      idempotencyKey,
+      errorMessage,
+    });
+    if (required) throw new Error(errorMessage);
+    this.logger.warn(`SMS to ${phoneNumber} was not sent: ${errorMessage}`);
+    return false;
+  }
+
+  private async logSmsDelivery(input: {
+    phoneNumber: string;
+    template: string;
+    status: string;
+    userId?: string;
+    idempotencyKey?: string;
+    providerMessageId?: string;
+    errorMessage?: string;
+  }) {
+    try {
+      if (!input.idempotencyKey) {
+        await this.prisma.notificationLog.create({
+          data: {
+            channel: 'SMS',
+            recipient: input.phoneNumber,
+            template: input.template,
+            status: input.status,
+            userId: input.userId,
+            providerMessageId: input.providerMessageId,
+            errorMessage: input.errorMessage,
+          },
+        });
+        return;
+      }
+      await this.prisma.notificationLog.upsert({
+        where: { idempotencyKey: input.idempotencyKey },
+        create: {
+          channel: 'SMS',
+          recipient: input.phoneNumber,
+          template: input.template,
+          status: input.status,
+          userId: input.userId,
+          idempotencyKey: input.idempotencyKey,
+          providerMessageId: input.providerMessageId,
+          errorMessage: input.errorMessage,
+        },
+        update: {
+          status: input.status,
+          providerMessageId: input.providerMessageId,
+          errorMessage: input.errorMessage,
+          attemptCount: { increment: 1 },
+          lastAttemptAt: new Date(),
+        },
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Could not persist SMS log: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }

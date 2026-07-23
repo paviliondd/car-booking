@@ -159,7 +159,6 @@ Bên A đồng ý cho Bên B thuê xe tự lái với các thông tin sau:
       where: { customer: { id: booking.customerId } },
     });
 
-    const targetEmail = user?.email || 'customer@gmail.com';
     const emailBody = `
       <h3>Hợp đồng thuê xe điện tử số ${booking.bookingNumber}</h3>
       <p>Chào bạn ${booking.customer.fullName},</p>
@@ -173,13 +172,15 @@ Bên A đồng ý cho Bên B thuê xe tự lái với các thông tin sau:
     const mockPdfBase64 =
       'JVBERi0xLjQKJdPr6eEKMSAwIG9iago8PAovVGl0bGUgKEhvcCBkb25nIERBVFhFKQovQXV0aG9yIChEQVRYRSkKPj4KZW5kb2JqCnhyZWYKMCAxCjAwMDAwMDAwMDAgNjU1MzUgZiAKdHJhaWxlcgo8PAovU2l6ZSAyCj4+CnN0YXJ0eHJlZgoxMTYKJSVFT0Y=';
 
-    await this.notificationService.sendEmailWithAttachment(
-      targetEmail,
-      `[datxe] Hợp đồng điện tử ${booking.bookingNumber} đã ký kết`,
-      emailBody,
-      mockPdfBase64,
-      `HopDong_datxe_${booking.bookingNumber}.pdf`,
-    );
+    if (user?.email) {
+      await this.notificationService.sendEmailWithAttachment(
+        user.email,
+        `[datxe] Hợp đồng điện tử ${booking.bookingNumber} đã ký kết`,
+        emailBody,
+        mockPdfBase64,
+        `HopDong_datxe_${booking.bookingNumber}.pdf`,
+      );
+    }
 
     return updatedContract;
   }

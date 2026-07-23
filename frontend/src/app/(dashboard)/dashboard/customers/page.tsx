@@ -59,9 +59,14 @@ export default function CustomersPage() {
   };
 
   const reviewOwner = async (request: OwnerRequest, approve: boolean) => {
+    const rejectionReason = approve ? undefined : window.prompt('Nhập lý do từ chối hồ sơ:')?.trim();
+    if (!approve && !rejectionReason) return;
     setBusy(true);
     try {
-      await api.auth.verifyOwner(request.id, approve);
+      await api.auth.reviewOwnerApplication(request.id, {
+        status: approve ? 'APPROVED' : 'REJECTED',
+        rejectionReason,
+      });
       setOwnerRequests((list) => list.filter((item) => item.id !== request.id));
       toast.success(approve ? `Đã duyệt ${request.name} trở thành chủ xe.` : `Đã từ chối yêu cầu của ${request.name}.`);
     } catch (err) {
@@ -109,11 +114,11 @@ export default function CustomersPage() {
               <article key={request.id} className="rounded-xl border border-app-border/40 p-4">
                 <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
                   <div className="grid flex-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                    <div><p className="text-xs font-bold uppercase text-content-secondary">Người đăng ký</p><p className="mt-1 font-bold text-content">{request.name}</p><p className="text-xs text-content-secondary">{request.email}</p></div>
+                    <div><p className="text-xs font-bold uppercase text-content-secondary">Người đăng ký</p><p className="mt-1 font-bold text-content">{request.name}</p><p className="text-xs text-content-secondary">{request.applicationNumber}</p></div>
                     <div><p className="text-xs font-bold uppercase text-content-secondary">Liên hệ</p><p className="mt-1 font-semibold">{request.phone || 'Chưa cung cấp'}</p></div>
-                    <div><p className="text-xs font-bold uppercase text-content-secondary">CCCD</p><p className="mt-1 font-semibold">{request.idCardNo || 'Chưa cung cấp'}</p></div>
-                    <div><p className="text-xs font-bold uppercase text-content-secondary">Gửi lúc</p><p className="mt-1 font-semibold">{new Date(request.ownerRequestAt).toLocaleString('vi-VN')}</p></div>
-                    <div className="sm:col-span-2 lg:col-span-4"><p className="text-xs font-bold uppercase text-content-secondary">Địa chỉ cư trú</p><p className="mt-1 text-content-secondary">{request.address || 'Chưa cung cấp'}</p></div>
+                    <div><p className="text-xs font-bold uppercase text-content-secondary">Xe dự kiến</p><p className="mt-1 font-semibold">{request.carName}</p><p className="text-xs text-content-secondary">{request.plateNumber || 'Chưa có biển số'}</p></div>
+                    <div><p className="text-xs font-bold uppercase text-content-secondary">Gửi lúc</p><p className="mt-1 font-semibold">{new Date(request.createdAt).toLocaleString('vi-VN')}</p></div>
+                    <div className="sm:col-span-2 lg:col-span-4"><p className="text-xs font-bold uppercase text-content-secondary">Thông tin bổ sung</p><p className="mt-1 text-content-secondary">{request.applicantNotes || 'Không có ghi chú'}</p></div>
                   </div>
                   <div className="flex shrink-0 gap-2">
                     <button type="button" disabled={busy} onClick={() => void reviewOwner(request, false)} className="min-h-11 rounded-xl border border-danger/30 px-4 text-sm font-bold text-danger transition hover:bg-danger-muted disabled:opacity-50">Từ chối</button>

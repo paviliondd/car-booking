@@ -2,17 +2,25 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 export type AuthUser = {
   id: string;
-  email: string;
+  email: string | null;
   name: string;
   role: "ADMIN" | "STAFF" | "CUSTOMER" | "OWNER";
   isVerifiedOwner?: boolean;
   ownerRequestAt?: string | null;
 };
-export type OwnerRequest = AuthUser & {
-  phone: string | null;
-  idCardNo: string | null;
-  address: string | null;
-  ownerRequestAt: string;
+export type OwnerRequest = {
+  id: string;
+  applicationNumber: string;
+  name: string;
+  phone: string;
+  carName: string;
+  plateNumber?: string | null;
+  vehicleYear?: number | null;
+  applicantNotes?: string | null;
+  adminNotes?: string | null;
+  status: "PENDING_REVIEW" | "CONTACTING" | "NEED_MORE_INFO";
+  createdAt: string;
+  user?: Pick<AuthUser, "id" | "email" | "role"> | null;
 };
 
 export type AuthResponse = { accessToken: string; user: AuthUser };
@@ -89,7 +97,7 @@ export type ChatMessage = {
   message: string;
   createdAt: string;
 };
-export type ChatPartner = { id: string; name: string; email: string };
+export type ChatPartner = { id: string; name: string; email: string | null };
 export type CustomerRecord = {
   id: string;
   fullName: string;
@@ -244,24 +252,48 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ credential }),
       }),
+    requestPhoneCode: (phone: string) =>
+      request<{ sent: true; expiresIn: number }>("/auth/phone/request-code", {
+        method: "POST",
+        body: JSON.stringify({ phone }),
+      }),
+    verifyPhoneCode: (dto: { phone: string; code: string; name: string }) =>
+      request<AuthResponse>("/auth/phone/verify-code", {
+        method: "POST",
+        body: JSON.stringify(dto),
+      }),
+    updateEmail: (email: string) =>
+      request<AuthUser>("/auth/profile/email", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      }),
     upgradeOwner: (dto: { phone: string; idCardNo: string; address: string }) =>
       request("/auth/upgrade-owner", {
         method: "POST",
         body: JSON.stringify(dto),
       }),
     getOwnerRequests: () => request<OwnerRequest[]>("/auth/owner-requests"),
-    verifyOwner: (userId: string, approve: boolean) =>
-      request<AuthUser>(`/auth/verify-owner/${userId}`, {
+    reviewOwnerApplication: (
+      applicationId: string,
+      dto: {
+        status: "CONTACTING" | "NEED_MORE_INFO" | "APPROVED" | "REJECTED";
+        adminNotes?: string;
+        rejectionReason?: string;
+      },
+    ) =>
+      request<OwnerRequest>(`/auth/owner-applications/${applicationId}/review`, {
         method: "POST",
-        body: JSON.stringify({ approve }),
+        body: JSON.stringify(dto),
       }),
     createOwnerLead: (dto: {
       name: string;
-      email: string;
       phone: string;
       carName: string;
+      plateNumber?: string;
+      vehicleYear?: number;
+      applicantNotes?: string;
     }) =>
-      request<{ id: string; received: true }>("/auth/owner-leads", {
+      request<{ id: string; applicationNumber: string; received: true; status: string }>("/auth/owner-leads", {
         method: "POST",
         body: JSON.stringify(dto),
       }),

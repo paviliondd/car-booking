@@ -17,6 +17,10 @@ import {
   UpgradeOwnerDto,
   VerifyOwnerDto,
   OwnerLeadDto,
+  RequestPhoneCodeDto,
+  ReviewOwnerApplicationDto,
+  UpdateEmailDto,
+  VerifyPhoneCodeDto,
 } from './dto/auth.dto';
 import { Roles } from './decorators/roles.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -56,6 +60,22 @@ export class AuthController {
     return this.authService.createOwnerLead(dto);
   }
 
+  @Post('phone/request-code')
+  requestPhoneCode(@Body() dto: RequestPhoneCodeDto) {
+    return this.authService.requestPhoneCode(dto.phone);
+  }
+
+  @Post('phone/verify-code')
+  verifyPhoneCode(@Body() dto: VerifyPhoneCodeDto) {
+    return this.authService.verifyPhoneCode(dto.phone, dto.code, dto.name);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('profile/email')
+  updateEmail(@Req() req: AuthenticatedRequest, @Body() dto: UpdateEmailDto) {
+    return this.authService.updateEmail(req.user.id, dto.email);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('upgrade-owner')
   async upgradeOwner(
@@ -70,6 +90,21 @@ export class AuthController {
   @Get('owner-requests')
   async getOwnerRequests() {
     return this.authService.getOwnerRequests();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  @Post('owner-applications/:applicationId/review')
+  async reviewOwnerApplication(
+    @Req() req: AuthenticatedRequest,
+    @Param('applicationId') applicationId: string,
+    @Body() dto: ReviewOwnerApplicationDto,
+  ) {
+    return this.authService.reviewOwnerApplication(
+      applicationId,
+      req.user.id,
+      dto,
+    );
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

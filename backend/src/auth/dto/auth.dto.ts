@@ -1,11 +1,17 @@
 import {
   IsBoolean,
   IsEmail,
+  IsEnum,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   Length,
+  Max,
+  Min,
+  Matches,
 } from 'class-validator';
+import { OwnerApplicationStatus } from '@prisma/client';
 
 export class RegisterDto {
   @IsEmail()
@@ -67,7 +73,41 @@ export class VerifyOwnerDto {
 
 export class OwnerLeadDto {
   @IsString() @IsNotEmpty() name: string;
-  @IsEmail() email: string;
-  @IsString() @IsNotEmpty() phone: string;
+  @Matches(/^(0|\+84|84)\d{9}$/) phone: string;
   @IsString() @IsNotEmpty() carName: string;
+  @IsString() @IsOptional() plateNumber?: string;
+  @IsInt() @Min(1980) @Max(2100) @IsOptional() vehicleYear?: number;
+  @IsString() @IsOptional() applicantNotes?: string;
+}
+
+export class RequestPhoneCodeDto {
+  @Matches(/^(0|\+84|84)\d{9}$/)
+  phone: string;
+}
+
+export class VerifyPhoneCodeDto extends RequestPhoneCodeDto {
+  @Matches(/^\d{6}$/)
+  code: string;
+
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+}
+
+export class ReviewOwnerApplicationDto {
+  @IsEnum(OwnerApplicationStatus)
+  status: OwnerApplicationStatus;
+
+  @IsString()
+  @IsOptional()
+  adminNotes?: string;
+
+  @IsString()
+  @IsOptional()
+  rejectionReason?: string;
+}
+
+export class UpdateEmailDto {
+  @IsEmail()
+  email: string;
 }

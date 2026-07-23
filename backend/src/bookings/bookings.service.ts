@@ -585,7 +585,10 @@ export class BookingsService {
     if (status === BookingStatus.CONFIRMED) {
       await this.notificationService.sendSMS(
         customerPhone,
-        `datxe: Don hang ${currentBooking.bookingNumber} da duoc XAC NHAN. Hen gap ban luc nhan xe.`,
+        `datxe: Don ${currentBooking.bookingNumber} da hoan tat thu tuc. Nhan ${currentBooking.vehicle.brand} ${currentBooking.vehicle.model} luc ${currentBooking.startDate.toLocaleString('vi-VN')}, tra luc ${currentBooking.endDate.toLocaleString('vi-VN')} tai ${currentBooking.pickupLocation}.`,
+        'booking-confirmed',
+        currentBooking.customer.userId || undefined,
+        `booking-confirmed:${currentBooking.id}`,
       );
     }
 

@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Loader2, MapPin, User, Phone, Car, Mail } from "lucide-react";
+import { X, Loader2, MapPin, User, Phone, Car } from "lucide-react";
 import { api } from "@/lib/api";
 import { useToast } from "@/providers/ToastProvider";
 import { storeInfo } from "@/lib/store";
@@ -24,8 +24,9 @@ export default function RegisterCarModal({
   // Form Fields State
   const [ownerName, setOwnerName] = useState("");
   const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
   const [carName, setCarName] = useState("");
+  const [plateNumber, setPlateNumber] = useState("");
+  const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -36,8 +37,9 @@ export default function RegisterCarModal({
     if (isOpen) {
       setOwnerName("");
       setPhone("");
-      setEmail("");
       setCarName("");
+      setPlateNumber("");
+      setNotes("");
       setErrors({});
     }
   }, [isOpen]);
@@ -54,8 +56,6 @@ export default function RegisterCarModal({
     } else if (!/^\d{10,11}$/.test(phone.trim())) {
       tempErrors.phone = "Số di động phải có 10-11 số";
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-      tempErrors.email = "Email không hợp lệ";
     if (!carName.trim()) tempErrors.carName = "Vui lòng nhập dòng xe";
 
     setErrors(tempErrors);
@@ -68,13 +68,14 @@ export default function RegisterCarModal({
 
     setLoading(true);
     try {
-      await api.auth.createOwnerLead({
+      const result = await api.auth.createOwnerLead({
         name: ownerName.trim(),
-        email: email.trim(),
         phone: phone.trim(),
         carName: carName.trim(),
+        plateNumber: plateNumber.trim() || undefined,
+        applicantNotes: notes.trim() || undefined,
       });
-      toast.success("Đã nhận hồ sơ. datxe sẽ phản hồi trong 1 ngày làm việc.");
+      toast.success(`Đã nhận hồ sơ ${result.applicationNumber}. datxe sẽ phản hồi trong 1 ngày làm việc.`);
       onClose();
     } catch (error) {
       toast.error(
@@ -171,26 +172,6 @@ export default function RegisterCarModal({
             )}
           </div>
 
-          <div>
-            <label className="text-xs font-semibold text-content-secondary block mb-1">
-              Email *
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4.5 w-4.5 text-content-secondary" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={`w-full rounded-lg border bg-app-muted py-2.5 pl-10 pr-4 text-sm ${errors.email ? "border-danger" : "border-app-border"}`}
-              />
-            </div>
-            {errors.email && (
-              <p className="mt-1 text-xs font-medium text-danger">
-                {errors.email}
-              </p>
-            )}
-          </div>
-
           {/* Car Name Field */}
           <div>
             <label className="text-xs font-semibold text-content-secondary block mb-1 font-medium">
@@ -212,6 +193,16 @@ export default function RegisterCarModal({
                 {errors.carName}
               </p>
             )}
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-content-secondary">Biển số xe</label>
+            <input type="text" value={plateNumber} onChange={(e) => setPlateNumber(e.target.value)} placeholder="Ví dụ: 86A-123.45" disabled={loading} className="min-h-11 w-full rounded-lg border border-app-border/35 bg-app-muted px-4 text-sm uppercase text-content outline-none focus:border-brand" />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-content-secondary">Thông tin cần datxe hỗ trợ</label>
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Thời gian thuận tiện để liên hệ hoặc thông tin thêm về xe" disabled={loading} className="w-full rounded-lg border border-app-border/35 bg-app-muted px-4 py-3 text-sm text-content outline-none focus:border-brand" />
           </div>
 
           {/* Submit Button */}

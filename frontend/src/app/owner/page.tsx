@@ -18,6 +18,8 @@ export default function OwnerDashboard() {
   );
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileEmail, setProfileEmail] = useState('');
+  const [profileMessage, setProfileMessage] = useState('');
 
   // Upgrade form states
   const [upgradePhone, setUpgradePhone] = useState('');
@@ -74,6 +76,7 @@ export default function OwnerDashboard() {
     try {
       const me = await api.auth.me();
       setUser(me);
+      setProfileEmail(me.email || '');
       localStorage.setItem('user', JSON.stringify(me));
       if (me.role === 'OWNER' && me.isVerifiedOwner) await loadOwnerData();
     } catch (err) {
@@ -83,6 +86,18 @@ export default function OwnerDashboard() {
       setLoading(false);
     }
   }, [handleLogout, loadOwnerData]);
+
+  const saveProfileEmail = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setProfileMessage('');
+    try {
+      const saved = await api.auth.updateEmail(profileEmail.trim());
+      setUser((current) => current ? { ...current, email: saved.email } : current);
+      setProfileMessage('Đã lưu email. Bước xác minh email sẽ được bổ sung khi dịch vụ gửi thư sẵn sàng.');
+    } catch (error) {
+      setProfileMessage(error instanceof Error ? error.message : 'Không thể cập nhật email.');
+    }
+  };
 
   useEffect(() => {
     if (!token) {
@@ -354,6 +369,12 @@ export default function OwnerDashboard() {
             </button>
           </div>
         </div>
+        <form onSubmit={saveProfileEmail} className="rounded-xl border border-app-border/30 p-3">
+          <label htmlFor="owner-email" className="text-xs font-bold text-content-secondary">Email nhận báo cáo</label>
+          <input id="owner-email" type="email" required value={profileEmail} onChange={(event) => setProfileEmail(event.target.value)} placeholder="ban@example.com" className="mt-2 min-h-11 w-full rounded-lg border border-app-border/40 bg-app-surface px-3 text-sm text-content outline-none focus:border-brand" />
+          <button type="submit" className="mt-2 min-h-11 w-full rounded-lg bg-brand px-3 text-sm font-bold text-on-brand hover:bg-brand-hover">Lưu email</button>
+          {profileMessage && <p className="mt-2 text-xs leading-5 text-content-secondary">{profileMessage}</p>}
+        </form>
 
         <div className="flex items-center justify-between border-t border-app-border/30 pt-4 text-xs">
           <div className="flex flex-col gap-0.5">

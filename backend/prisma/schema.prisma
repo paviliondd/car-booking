@@ -47,14 +47,25 @@ enum CustomerSegment {
   BLACKLIST
 }
 
+enum OwnerApplicationStatus {
+  PENDING_REVIEW
+  CONTACTING
+  NEED_MORE_INFO
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
 model User {
   id       String  @id @default(uuid())
-  email    String  @unique
-  password String
+  email    String? @unique
+  password String?
   name     String
   role     Role    @default(CUSTOMER)
   avatar   String?
   phone    String? @unique
+  phoneVerifiedAt DateTime?
+  emailVerifiedAt DateTime?
   idCardNo String? @unique
   address  String?
 
@@ -73,6 +84,8 @@ model User {
   sentMessages     ChatMessage[]     @relation("SentMessages")
   receivedMessages ChatMessage[]     @relation("ReceivedMessages")
   notificationLogs NotificationLog[]
+  ownerApplications OwnerLead[] @relation("OwnerApplicant")
+  reviewedOwnerApplications OwnerLead[] @relation("OwnerReviewer")
 }
 
 model Customer {
@@ -314,12 +327,29 @@ model AuditLog {
 }
 
 model OwnerLead {
-  id        String   @id @default(uuid())
-  name      String
-  email     String
-  phone     String
-  carName   String
-  createdAt DateTime @default(now())
+  id               String                 @id @default(uuid())
+  applicationNumber String                @unique
+  name             String
+  phone            String
+  carName          String
+  plateNumber      String?
+  vehicleYear      Int?
+  applicantNotes   String?
+  adminNotes       String?
+  status           OwnerApplicationStatus @default(PENDING_REVIEW)
+  rejectionReason  String?
+  assignedStaffId  String?
+  userId           String?
+  reviewedById     String?
+  reviewedAt       DateTime?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  user       User? @relation("OwnerApplicant", fields: [userId], references: [id])
+  reviewedBy User? @relation("OwnerReviewer", fields: [reviewedById], references: [id])
+
+  @@index([phone, status])
+  @@index([status, createdAt])
 }
 
 model NotificationLog {
@@ -330,6 +360,10 @@ model NotificationLog {
   template     String
   status       String
   errorMessage String?
+  providerMessageId String?
+  idempotencyKey String? @unique
+  attemptCount Int @default(1)
+  lastAttemptAt DateTime @default(now())
   createdAt    DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id])

@@ -68,13 +68,15 @@ design-system/datxe/MASTER.md design-system do ui-ux-pro-max sinh
 
 Backend domains: `auth`, `vehicles`, `bookings`, `payments`, `contracts`, `reviews`, `chat`, `tickets`, `customers`, `maintenance`, `analytics`, `dashboard`, `audit`, `notification`, `redis`, `prisma`.
 
-`account` cung cấp lịch sử booking/hợp đồng theo JWT và luôn giới hạn qua `Customer.userId`. Notification hỗ trợ SMTP (`SMTP_*`) với SES fallback; mọi lần gửi email được ghi vào `NotificationLog`. Form chủ xe công khai lưu `OwnerLead`.
+`account` cung cấp lịch sử booking/hợp đồng theo JWT và luôn giới hạn qua `Customer.userId`. Notification hỗ trợ SMTP (`SMTP_*`) với SES fallback và AWS SNS cho SMS; mọi lần gửi được ghi vào `NotificationLog`. Form chủ xe công khai không cần đăng nhập/OTP, lưu hồ sơ có trạng thái trong `OwnerLead`; OTP chỉ dùng cho đăng ký/đăng nhập bằng số điện thoại và các bước xác minh thông tin sau này.
 
 ## Domain và các invariant bắt buộc
 
 Roles: `ADMIN`, `STAFF`, `CUSTOMER`, `OWNER`.
 
 - Client không bao giờ được chọn role khi đăng ký; đăng ký mới luôn là `CUSTOMER`.
+- Tài khoản có thể đăng ký/đăng nhập bằng OTP số điện thoại. OTP lưu hash trong Redis, hết hạn, giới hạn thử/gửi lại và phải fail rõ ràng nếu Redis/SNS chưa cấu hình; không log hoặc mock OTP production.
+- Hồ sơ chủ xe công khai không tự cấp quyền OWNER. Chỉ ADMIN/STAFF được duyệt; backend liên kết tài khoản theo số điện thoại chuẩn hóa hoặc tạo tài khoản phone-first, đổi role và ghi audit trong transaction.
 - Tìm xe là public; tạo booking và upload/xem CCCD/GPLX của chính mình yêu cầu JWT `CUSTOMER` hoặc `OWNER`, đồng thời liên kết hồ sơ Customer với user hiện tại. `OWNER` vẫn có thể thuê xe như khách; `ADMIN`/`STAFF` không tạo đơn từ luồng khách.
 - OWNER chỉ truy cập vehicle, booking, dashboard thuộc xe có `ownerId` của chính họ.
 - Duyệt yêu cầu owner chỉ dành cho ADMIN/STAFF.

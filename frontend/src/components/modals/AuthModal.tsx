@@ -3,9 +3,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Eye, EyeOff, Loader2, Lock, Mail, Phone, Sparkles, User, X } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Lock, Mail, Sparkles, User, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
+import { api, type AuthResponse } from '@/lib/api';
 import { useToast } from '@/providers/ToastProvider';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 
@@ -16,22 +16,11 @@ interface AuthModalProps {
   onAuthenticated?: () => void;
 }
 
-type AuthResponse = {
-  accessToken: string;
-  user: {
-    id?: string;
-    email?: string;
-    name?: string;
-    role?: string;
-  };
-};
-
 export default function AuthModal({ isOpen, onClose, initialMode = 'login', onAuthenticated }: AuthModalProps) {
   const router = useRouter();
   const toast = useToast();
   const [isLogin, setIsLogin] = useState(initialMode === 'login');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -46,7 +35,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onAu
     if (!isOpen) return;
     setIsLogin(initialMode === 'login');
     setEmail('');
-    setPhone('');
     setName('');
     setPassword('');
     setConfirmPassword('');
@@ -76,9 +64,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onAu
 
     if (!isLogin) {
       if (!name.trim()) nextErrors.name = 'Tên hiển thị không được để trống';
-      if (phone.trim() && !/^(0|\+84)\d{9,10}$/.test(phone.trim())) {
-        nextErrors.phone = 'Số điện thoại không hợp lệ';
-      }
       if (password !== confirmPassword) {
         nextErrors.confirmPassword = 'Mật khẩu nhập lại không trùng khớp';
       }
@@ -120,7 +105,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onAu
           email: email.trim(),
           password,
           name: name.trim(),
-          phone: phone.trim() || undefined,
         });
         const res = await api.auth.login({ email: email.trim(), password });
         finishLogin(res);
@@ -218,24 +202,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onAu
             </div>
             {errors.email && <p className="text-danger text-xs mt-1 font-medium">{errors.email}</p>}
           </div>
-
-          {!isLogin && (
-            <div>
-              <label className="text-xs font-semibold text-content-secondary block mb-1">Số điện thoại</label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-3 h-4.5 w-4.5 text-content-secondary" />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="0901234567"
-                  disabled={loading}
-                  className={`w-full bg-app-muted border ${errors.phone ? 'border-danger' : 'border-app-border/35'} rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-brand`}
-                />
-              </div>
-              {errors.phone && <p className="text-danger text-xs mt-1 font-medium">{errors.phone}</p>}
-            </div>
-          )}
 
           <div>
             <div className="flex justify-between items-center mb-1">
@@ -336,6 +302,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onAu
           <span className="flex-shrink mx-4 text-content-secondary text-xs uppercase font-medium">Hoặc tiếp tục bằng</span>
           <div className="flex-grow border-t border-app-border/35" />
         </div>
+
+        <button type="button" onClick={() => { onClose(); router.push('/auth'); }} className="min-h-11 w-full rounded-lg border border-brand px-4 text-sm font-bold text-brand transition hover:bg-utility">
+          Đăng nhập hoặc đăng ký bằng số điện thoại
+        </button>
 
         <GoogleSignInButton onCredential={handleGoogleLogin} disabled={loading} />
 

@@ -87,6 +87,13 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     await this.client.del(key);
   }
 
+  async increment(key: string, ttlSeconds: number): Promise<number | null> {
+    if (!this.client || !this.isReady) return null;
+    const value = await this.client.incr(key);
+    if (value === 1) await this.client.expire(key, ttlSeconds);
+    return value;
+  }
+
   async acquireLock(key: string, ttlMs: number): Promise<boolean> {
     if (!this.client || !this.isReady) {
       this.logger.warn(`Redis lock skipped for ${key}; Redis is unavailable.`);

@@ -34,12 +34,12 @@ export const ownerApplicantEmail = (d: { name: string }) =>
   );
 export const ownerAdminEmail = (d: {
   name: string;
-  email: string;
   phone: string;
   carName: string;
+  applicationNumber: string;
   dashboardUrl: string;
 }) =>
   shell(
     'Hồ sơ chủ xe mới',
-    `<p>${d.name} · ${d.phone} · ${d.email}</p><p>Xe dự kiến: <strong>${d.carName || 'Chưa xác định'}</strong></p><p><a href="${d.dashboardUrl}">Mở dashboard chủ xe</a></p>`,
+    `<p>Mã hồ sơ: <strong>${d.applicationNumber}</strong></p><p>${d.name} · ${d.phone}</p><p>Xe dự kiến: <strong>${d.carName || 'Chưa xác định'}</strong></p><p><a href="${d.dashboardUrl}">Mở dashboard chủ xe</a></p>`,
   );
