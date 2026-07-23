@@ -115,23 +115,23 @@ export default function DashboardHome() {
   }, [loadDashboardData]);
 
   return (
-    <div className="flex flex-col gap-6 pb-10">
-      <div className="flex justify-between items-center bg-[#1e1e2d] border border-[#2b2b40] p-6 rounded-2xl text-white">
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 pb-10">
+      <div className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900 p-5 text-white shadow-sm sm:p-6">
         <div className="flex flex-col gap-1.5">
-          <h2 className="text-lg md:text-xl font-black flex items-center gap-2">
-            <span>Chào mừng quay trở lại, đối tác quản lý!</span>
-            <Sparkles className="h-5 w-5 text-amber-400 fill-current animate-pulse" />
-          </h2>
-          <span className="text-xs text-gray-500 font-semibold">
+          <h1 className="flex items-start gap-2 text-xl font-bold text-white sm:items-center sm:text-2xl">
+            <span>Chào mừng quay trở lại</span>
+            <Sparkles className="mt-1 h-5 w-5 shrink-0 fill-current text-amber-400 sm:mt-0" />
+          </h1>
+          <p className="max-w-3xl text-sm leading-6 text-slate-300">
             Bảng điều khiển quản trị hạm đội xe datxe. Tất cả thống kê được đồng bộ theo thời gian thực.
-          </span>
+          </p>
         </div>
       </div>
 
       {loading ? (
-        <div className="py-20 flex flex-col items-center justify-center gap-3 text-gray-400">
-          <span className="h-8 w-8 rounded-full border-4 border-gray-300 border-t-[#008F5A] animate-spin" />
-          <span className="text-xs font-semibold uppercase tracking-wider">Đang cập nhật chỉ số...</span>
+        <div className="flex flex-col items-center justify-center gap-3 py-20 text-slate-500">
+          <span className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-emerald-600" />
+          <span className="text-sm font-semibold">Đang cập nhật chỉ số...</span>
         </div>
       ) : loadError ? <AdminError message={loadError} onRetry={() => void loadDashboardData()} /> : (
         <>

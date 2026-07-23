@@ -59,14 +59,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (loading || !user) {
     return (
       <main className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-slate-950 text-white">
-        <Loader2 className="h-10 w-10 text-[#008F5A] animate-spin" />
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Đang xác thực thông tin...</span>
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-400" />
+        <span className="text-sm font-semibold text-slate-400">Đang xác thực thông tin...</span>
       </main>
     );
   }
 
   return (
-    <div className="flex min-h-dvh max-w-full overflow-x-hidden bg-slate-50 font-sans text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-white">
+    <div className="flex min-h-dvh max-w-full overflow-x-hidden bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-white">
       <div className="hidden md:block">
         <DashboardSidebar user={user} />
       </div>
@@ -92,7 +92,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           onLogout={handleLogout}
         />
 
-        <main className="flex-grow p-4 md:p-6 overflow-y-auto">
+        <main className="flex-grow overflow-y-auto p-4 sm:p-5 lg:p-7">
           {children}
         </main>
       </div>

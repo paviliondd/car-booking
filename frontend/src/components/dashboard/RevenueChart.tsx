@@ -43,12 +43,12 @@ export default function RevenueChart({ data, selectedMonth, onMonthChange }: Rev
   }) ?? [];
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-150 dark:border-white/5 rounded-2xl p-6 shadow-xs flex flex-col gap-4 h-full">
+    <div className="flex h-full flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
       {/* Header with selector */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div className="flex flex-col gap-1.5">
-          <h3 className="text-base font-bold text-gray-950 dark:text-white">Doanh thu tháng này</h3>
-          <span className="text-2xl font-black text-[#008F5A]">
+          <h3 className="text-lg font-semibold text-slate-950 dark:text-white">Doanh thu tháng này</h3>
+          <span className="text-2xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400">
             {formatMoney(totalRevenue)}
           </span>
         </div>
@@ -57,7 +57,7 @@ export default function RevenueChart({ data, selectedMonth, onMonthChange }: Rev
         <select
           value={selectedMonth}
           onChange={(e) => onMonthChange(e.target.value)}
-          className="min-h-11 rounded-lg border border-gray-200 bg-gray-50 p-2 text-xs font-bold text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 dark:border-white/5 dark:bg-white/5 dark:text-white"
+          className="min-h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
         >
           {[0, 1, 2].map((offset) => {
             const date = new Date();
