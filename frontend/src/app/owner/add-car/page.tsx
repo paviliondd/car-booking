@@ -152,7 +152,7 @@ export default function AddCarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#080b11] py-12 px-6 md:px-12 max-w-4xl mx-auto flex flex-col gap-8">
+    <div className="dark min-h-screen bg-slate-950 py-12 px-6 md:px-12 max-w-4xl mx-auto flex flex-col gap-8">
       {/* Header Back */}
       <div className="flex justify-between items-center border-b border-white/5 pb-6">
         <button 

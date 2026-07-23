@@ -188,11 +188,13 @@ export class AuthService {
         id: true,
         email: true,
         name: true,
+        role: true,
         phone: true,
         idCardNo: true,
         address: true,
         ownerRequestAt: true,
       },
+      orderBy: { ownerRequestAt: 'asc' },
     });
   }
 

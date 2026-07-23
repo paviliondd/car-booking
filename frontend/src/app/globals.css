@@ -148,6 +148,16 @@
   box-shadow: 0 10px 24px rgb(5 150 105 / 0.2);
 }
 
+.admin-shell {
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
+  --surface: 0 0% 100%;
+  --surface-subtle: 210 40% 96%;
+  --muted-foreground: 215 16% 40%;
+  --border: 214 32% 91%;
+  --ring: 160 84% 32%;
+}
+
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: hsl(var(--surface-subtle)); }
 ::-webkit-scrollbar-thumb { border-radius: 999px; background: #94a3b8; }

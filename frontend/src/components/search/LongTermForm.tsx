@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Calendar as CalendarIcon, Clock, Search, ChevronDown, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Search, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { addMonths, format, startOfDay, isBefore, isSameDay } from 'date-fns';
-import { storeInfo } from '@/lib/store';
 
 interface LongTermFormProps {
   onSubmit: (data: { startDate: Date; duration: string; endDate: Date | null }) => void;
@@ -130,11 +129,6 @@ export default function LongTermForm({ onSubmit }: LongTermFormProps) {
       onSubmit={handleSearchSubmit}
       className="bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-white/5 rounded-b-2xl rounded-tr-2xl shadow-xl p-3 flex flex-col md:flex-row gap-3 items-stretch md:items-center relative"
     >
-      <div className="flex flex-1 items-center gap-3 rounded-xl bg-emerald-50 px-5 py-3 text-emerald-950 dark:bg-emerald-950/30 dark:text-emerald-100">
-        <MapPin className="h-5 w-5 shrink-0 text-[#008F5A]" />
-        <div><span className="block text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Khu vực phục vụ</span><strong className="text-sm">{storeInfo.serviceArea}</strong></div>
-      </div>
-
       {/* Column 2: Start Date Picker */}
       <div 
         ref={datePickerRef} 

@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pencil, Save, X } from 'lucide-react';
-import { api, type CustomerRecord, type CustomerUpdateInput } from '@/lib/api';
+import { Check, Pencil, Save, UserRoundCheck, X } from 'lucide-react';
+import { api, type CustomerRecord, type CustomerUpdateInput, type OwnerRequest } from '@/lib/api';
 import { useToast } from '@/providers/ToastProvider';
 import AdminPageHeader from '@/components/dashboard/AdminPageHeader';
 import { AdminEmpty, AdminError, AdminLoading } from '@/components/dashboard/AdminState';
@@ -12,6 +12,7 @@ const inputClass = 'min-h-11 w-full rounded-xl border border-slate-300 bg-white 
 export default function CustomersPage() {
   const toast = useToast();
   const [items, setItems] = useState<CustomerRecord[]>([]);
+  const [ownerRequests, setOwnerRequests] = useState<OwnerRequest[]>([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -23,7 +24,12 @@ export default function CustomersPage() {
     setLoading(true);
     setError('');
     try {
-      setItems(await api.customers.findAll());
+      const [customers, requests] = await Promise.all([
+        api.customers.findAll(),
+        api.auth.getOwnerRequests(),
+      ]);
+      setItems(customers);
+      setOwnerRequests(requests);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tải khách hàng.');
     } finally {
@@ -52,6 +58,19 @@ export default function CustomersPage() {
     });
   };
 
+  const reviewOwner = async (request: OwnerRequest, approve: boolean) => {
+    setBusy(true);
+    try {
+      await api.auth.verifyOwner(request.id, approve);
+      setOwnerRequests((list) => list.filter((item) => item.id !== request.id));
+      toast.success(approve ? `Đã duyệt ${request.name} trở thành chủ xe.` : `Đã từ chối yêu cầu của ${request.name}.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Không thể xử lý yêu cầu chủ xe.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!editing || !form) return;
@@ -72,6 +91,40 @@ export default function CustomersPage() {
   return (
     <div>
       <AdminPageHeader title="CRM khách hàng" description="Tra cứu và chỉnh sửa hồ sơ, phân khúc và ghi chú chăm sóc." />
+      <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="owner-requests-title">
+        <div className="flex items-start gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><UserRoundCheck className="h-5 w-5" /></span>
+          <div>
+            <h2 id="owner-requests-title" className="text-lg font-bold">Yêu cầu trở thành chủ xe</h2>
+            <p className="mt-1 text-sm text-slate-600">Kiểm tra thông tin liên hệ, CCCD và địa chỉ trước khi cấp quyền quản lý xe.</p>
+          </div>
+        </div>
+        {loading ? (
+          <p className="mt-5 text-sm text-slate-500">Đang tải yêu cầu…</p>
+        ) : ownerRequests.length === 0 ? (
+          <p className="mt-5 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Hiện không có yêu cầu nào đang chờ duyệt.</p>
+        ) : (
+          <div className="mt-5 grid gap-4">
+            {ownerRequests.map((request) => (
+              <article key={request.id} className="rounded-xl border border-slate-200 p-4">
+                <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+                  <div className="grid flex-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                    <div><p className="text-xs font-bold uppercase text-slate-500">Người đăng ký</p><p className="mt-1 font-bold text-slate-900">{request.name}</p><p className="text-xs text-slate-500">{request.email}</p></div>
+                    <div><p className="text-xs font-bold uppercase text-slate-500">Liên hệ</p><p className="mt-1 font-semibold">{request.phone || 'Chưa cung cấp'}</p></div>
+                    <div><p className="text-xs font-bold uppercase text-slate-500">CCCD</p><p className="mt-1 font-semibold">{request.idCardNo || 'Chưa cung cấp'}</p></div>
+                    <div><p className="text-xs font-bold uppercase text-slate-500">Gửi lúc</p><p className="mt-1 font-semibold">{new Date(request.ownerRequestAt).toLocaleString('vi-VN')}</p></div>
+                    <div className="sm:col-span-2 lg:col-span-4"><p className="text-xs font-bold uppercase text-slate-500">Địa chỉ cư trú</p><p className="mt-1 text-slate-700">{request.address || 'Chưa cung cấp'}</p></div>
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <button type="button" disabled={busy} onClick={() => void reviewOwner(request, false)} className="min-h-11 rounded-xl border border-red-200 px-4 text-sm font-bold text-red-700 transition hover:bg-red-50 disabled:opacity-50">Từ chối</button>
+                    <button type="button" disabled={busy} onClick={() => void reviewOwner(request, true)} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-bold text-white transition hover:bg-emerald-800 disabled:opacity-50"><Check className="h-4 w-4" />Duyệt chủ xe</button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
       <input aria-label="Tìm khách hàng" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm theo tên, số điện thoại hoặc CCCD" className="mb-4 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100" />
 
       {loading ? <AdminLoading /> : error ? <AdminError message={error} onRetry={() => void load()} /> : filtered.length === 0 ? <AdminEmpty message="Không có khách hàng phù hợp." /> : (

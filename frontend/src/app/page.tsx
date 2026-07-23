@@ -174,7 +174,7 @@ export default function HomePage() {
           </div>
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.8105742211993!2d105.79815541540188!3d20.999625686016142!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135acbe0316d2f3%3A0x7d6f51be676a0c02!2zMTIgS2h14bq_dCBEdXkgVGnhur9uLCBUaGFuaCBYdcOibiwgSMOgIE7hu5lp!5e0!3m2!1svi!2s!4v1655000000000!5m2!1svi!2s"
+              src={`https://www.google.com/maps?q=${encodeURIComponent(storeInfo.address)}&z=17&output=embed`}
               width="100%"
               height="320"
               style={{ border: 0 }}

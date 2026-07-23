@@ -8,6 +8,12 @@ export type AuthUser = {
   isVerifiedOwner?: boolean;
   ownerRequestAt?: string | null;
 };
+export type OwnerRequest = AuthUser & {
+  phone: string | null;
+  idCardNo: string | null;
+  address: string | null;
+  ownerRequestAt: string;
+};
 
 export type AuthResponse = { accessToken: string; user: AuthUser };
 export type Vehicle = {
@@ -153,7 +159,7 @@ export const api = {
     me: () => request<AuthUser>('/auth/me'),
     googleLogin: (credential: string) => request<AuthResponse>('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) }),
     upgradeOwner: (dto: { phone: string; idCardNo: string; address: string }) => request('/auth/upgrade-owner', { method: 'POST', body: JSON.stringify(dto) }),
-    getOwnerRequests: () => request<AuthUser[]>('/auth/owner-requests'),
+    getOwnerRequests: () => request<OwnerRequest[]>('/auth/owner-requests'),
     verifyOwner: (userId: string, approve: boolean) => request<AuthUser>(`/auth/verify-owner/${userId}`, { method: 'POST', body: JSON.stringify({ approve }) }),
   },
 
