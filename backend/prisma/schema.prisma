@@ -48,91 +48,92 @@ enum CustomerSegment {
 }
 
 model User {
-  id              String   @id @default(uuid())
-  email           String   @unique
-  password        String
-  name            String
-  role            Role     @default(CUSTOMER)
-  avatar          String?
-  phone           String?  @unique
-  idCardNo        String?  @unique
-  address         String?
-  
+  id       String  @id @default(uuid())
+  email    String  @unique
+  password String
+  name     String
+  role     Role    @default(CUSTOMER)
+  avatar   String?
+  phone    String? @unique
+  idCardNo String? @unique
+  address  String?
+
   // Owner Verification
-  isVerifiedOwner Boolean  @default(false)
+  isVerifiedOwner Boolean   @default(false)
   ownerRequestAt  DateTime?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  customer        Customer?
-  vehicles        Vehicle[]   @relation("OwnerVehicles")
-  bookings        Booking[]   @relation("StaffBookings")
-  auditLogs       AuditLog[]
-  tickets         SupportTicket[]
-  sentMessages    ChatMessage[]   @relation("SentMessages")
-  receivedMessages ChatMessage[]  @relation("ReceivedMessages")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customer         Customer?
+  vehicles         Vehicle[]         @relation("OwnerVehicles")
+  bookings         Booking[]         @relation("StaffBookings")
+  auditLogs        AuditLog[]
+  tickets          SupportTicket[]
+  sentMessages     ChatMessage[]     @relation("SentMessages")
+  receivedMessages ChatMessage[]     @relation("ReceivedMessages")
+  notificationLogs NotificationLog[]
 }
 
 model Customer {
-  id             String          @id @default(uuid())
-  userId         String?         @unique
-  phone          String          @unique
-  fullName       String
-  idCardNo       String          @unique // CCCD
-  idCardFront    String?         // URL ảnh mặt trước
-  idCardBack     String?         // URL ảnh mặt sau
-  driverLicense  String?         // URL ảnh GPLX
-  segment        CustomerSegment @default(REGULAR)
-  notes          String?         // Ghi chú CRM
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id            String          @id @default(uuid())
+  userId        String?         @unique
+  phone         String          @unique
+  fullName      String
+  idCardNo      String          @unique // CCCD
+  idCardFront   String? // URL ảnh mặt trước
+  idCardBack    String? // URL ảnh mặt sau
+  driverLicense String? // URL ảnh GPLX
+  segment       CustomerSegment @default(REGULAR)
+  notes         String? // Ghi chú CRM
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
-  user           User?           @relation(fields: [userId], references: [id])
-  bookings       Booking[]
-  reviews        Review[]
-  affiliateId    String?
-  referrer       Affiliate?      @relation(fields: [affiliateId], references: [id])
+  user        User?      @relation(fields: [userId], references: [id])
+  bookings    Booking[]
+  reviews     Review[]
+  affiliateId String?
+  referrer    Affiliate? @relation(fields: [affiliateId], references: [id])
 }
 
 model Vehicle {
-  id             String        @id @default(uuid())
-  plateNumber    String        @unique
-  brand          String
-  model          String
-  year           Int
-  seats          Int
-  transmission   String        // AUTO, MANUAL
-  fuel           String        // GASOLINE, DIESEL, ELECTRIC
-  color          String
-  dailyPrice     Float
-  weekendPrice   Float
-  holidayPrice   Float
-  penaltyRate    Float         // Phạt trả muộn/giờ
-  images         String[]      // URLs ảnh xe
-  videoUrl       String?
-  status         VehicleStatus @default(AVAILABLE)
-  
+  id           String        @id @default(uuid())
+  plateNumber  String        @unique
+  brand        String
+  model        String
+  year         Int
+  seats        Int
+  transmission String // AUTO, MANUAL
+  fuel         String // GASOLINE, DIESEL, ELECTRIC
+  color        String
+  dailyPrice   Float
+  weekendPrice Float
+  holidayPrice Float
+  penaltyRate  Float // Phạt trả muộn/giờ
+  images       String[] // URLs ảnh xe
+  videoUrl     String?
+  status       VehicleStatus @default(AVAILABLE)
+
   // Km Limit & Location Map
   limitKmPerDay  Float?
   overLimitFee   Float?
-  pickupLocation String        @default("Số 87A Nguyễn Công Trứ, Phường La Gi, Tỉnh Lâm Đồng")
+  pickupLocation String  @default("Số 87A Nguyễn Công Trứ, Phường La Gi, Tỉnh Lâm Đồng")
   latitude       Float?
   longitude      Float?
-  terms          String?       @db.Text
-  
-  // Owner link
-  ownerId        String?
-  owner          User?         @relation("OwnerVehicles", fields: [ownerId], references: [id])
-  
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  terms          String? @db.Text
 
-  bookings       Booking[]
-  maintenances   Maintenance[]
-  expenses       Expense[]
-  revenues       Revenue[]
-  reviews        Review[]
+  // Owner link
+  ownerId String?
+  owner   User?   @relation("OwnerVehicles", fields: [ownerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings     Booking[]
+  maintenances Maintenance[]
+  expenses     Expense[]
+  revenues     Revenue[]
+  reviews      Review[]
 }
 
 model Booking {
@@ -151,24 +152,24 @@ model Booking {
   status          BookingStatus @default(PENDING)
   notes           String?
   couponCode      String?
-  staffId         String?       // Nhân viên xử lý đơn
-  
-  // Insurance & Deposit
-  insuranceType   String        @default("NONE") // NONE, BASIC, PREMIUM
-  insuranceFee    Float         @default(0)
-  depositPercent  Float         @default(30.0)
-  depositAmount   Float?
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  staffId         String? // Nhân viên xử lý đơn
 
-  customer        Customer      @relation(fields: [customerId], references: [id])
-  vehicle         Vehicle       @relation(fields: [vehicleId], references: [id])
-  staff           User?         @relation("StaffBookings", fields: [staffId], references: [id])
-  payment         Payment?
-  coupon          Coupon?       @relation(fields: [couponCode], references: [code])
-  contract        Contract?
-  auditLogs       AuditLog[]
+  // Insurance & Deposit
+  insuranceType  String @default("NONE") // NONE, BASIC, PREMIUM
+  insuranceFee   Float  @default(0)
+  depositPercent Float  @default(30.0)
+  depositAmount  Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customer  Customer   @relation(fields: [customerId], references: [id])
+  vehicle   Vehicle    @relation(fields: [vehicleId], references: [id])
+  staff     User?      @relation("StaffBookings", fields: [staffId], references: [id])
+  payment   Payment?
+  coupon    Coupon?    @relation(fields: [couponCode], references: [code])
+  contract  Contract?
+  auditLogs AuditLog[]
 }
 
 model Payment {
@@ -182,7 +183,7 @@ model Payment {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  booking       Booking       @relation(fields: [bookingId], references: [id])
+  booking Booking @relation(fields: [bookingId], references: [id])
 }
 
 model Contract {
@@ -196,118 +197,140 @@ model Contract {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  booking         Booking   @relation(fields: [bookingId], references: [id])
+  booking Booking @relation(fields: [bookingId], references: [id])
 }
 
 model Review {
-  id              String    @id @default(uuid())
-  vehicleId       String
-  customerId      String
-  rating          Int
-  comment         String?   @db.Text
-  createdAt       DateTime  @default(now())
+  id         String   @id @default(uuid())
+  vehicleId  String
+  customerId String
+  rating     Int
+  comment    String?  @db.Text
+  createdAt  DateTime @default(now())
 
-  vehicle         Vehicle   @relation(fields: [vehicleId], references: [id])
-  customer        Customer  @relation(fields: [customerId], references: [id])
+  vehicle  Vehicle  @relation(fields: [vehicleId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
 }
 
 model SupportTicket {
-  id              String    @id @default(uuid())
-  userId          String
-  subject         String
-  message         String    @db.Text
-  status          String    @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
-  reply           String?   @db.Text
-  repliedAt       DateTime?
-  createdAt       DateTime  @default(now())
+  id        String    @id @default(uuid())
+  userId    String
+  subject   String
+  message   String    @db.Text
+  status    String    @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  reply     String?   @db.Text
+  repliedAt DateTime?
+  createdAt DateTime  @default(now())
 
-  user            User      @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model ChatMessage {
-  id              String    @id @default(uuid())
-  senderId        String
-  receiverId      String
-  message         String    @db.Text
-  createdAt       DateTime  @default(now())
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  message    String   @db.Text
+  createdAt  DateTime @default(now())
 
-  sender          User      @relation("SentMessages", fields: [senderId], references: [id])
-  receiver        User      @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
 }
 
 model Maintenance {
-  id             String        @id @default(uuid())
-  vehicleId      String
-  type           String        // OIL_CHANGE, INSPECTION, INSURANCE, REPAIR
-  scheduledDate  DateTime
-  completedDate  DateTime?
-  cost           Float         @default(0)
-  description    String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id            String    @id @default(uuid())
+  vehicleId     String
+  type          String // OIL_CHANGE, INSPECTION, INSURANCE, REPAIR
+  scheduledDate DateTime
+  completedDate DateTime?
+  cost          Float     @default(0)
+  description   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  vehicle        Vehicle       @relation(fields: [vehicleId], references: [id])
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
 }
 
 model Expense {
-  id             String        @id @default(uuid())
-  vehicleId      String
-  category       String        // MAINTENANCE, INSURANCE, REGISTRATION, DEPRECIATION
-  amount         Float
-  date           DateTime
-  description    String?
-  createdAt      DateTime      @default(now())
+  id          String   @id @default(uuid())
+  vehicleId   String
+  category    String // MAINTENANCE, INSURANCE, REGISTRATION, DEPRECIATION
+  amount      Float
+  date        DateTime
+  description String?
+  createdAt   DateTime @default(now())
 
-  vehicle        Vehicle       @relation(fields: [vehicleId], references: [id])
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
 }
 
 model Revenue {
-  id             String        @id @default(uuid())
-  vehicleId      String
-  bookingId      String        @unique
-  amount         Float
-  date           DateTime
-  createdAt      DateTime      @default(now())
+  id        String   @id @default(uuid())
+  vehicleId String
+  bookingId String   @unique
+  amount    Float
+  date      DateTime
+  createdAt DateTime @default(now())
 
-  vehicle        Vehicle       @relation(fields: [vehicleId], references: [id])
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
 }
 
 model Coupon {
-  code           String        @id // Mã giảm giá
-  discountType   String        // PERCENTAGE, FIXED_AMOUNT
-  value          Float
-  minOrderValue  Float         @default(0)
-  maxDiscount    Float?
-  startDate      DateTime
-  endDate        DateTime
-  usageLimit     Int
-  usedCount      Int           @default(0)
-  createdAt      DateTime      @default(now())
+  code          String   @id // Mã giảm giá
+  discountType  String // PERCENTAGE, FIXED_AMOUNT
+  value         Float
+  minOrderValue Float    @default(0)
+  maxDiscount   Float?
+  startDate     DateTime
+  endDate       DateTime
+  usageLimit    Int
+  usedCount     Int      @default(0)
+  createdAt     DateTime @default(now())
 
-  bookings       Booking[]
+  bookings Booking[]
 }
 
 model Affiliate {
-  id             String        @id @default(uuid())
-  code           String        @unique // Mã giới thiệu
-  userId         String        @unique
-  commissionRate Float         @default(0.05) // 5%
-  balance        Float         @default(0)
-  createdAt      DateTime      @default(now())
+  id             String   @id @default(uuid())
+  code           String   @unique // Mã giới thiệu
+  userId         String   @unique
+  commissionRate Float    @default(0.05) // 5%
+  balance        Float    @default(0)
+  createdAt      DateTime @default(now())
 
-  referrals      Customer[]
+  referrals Customer[]
 }
 
 model AuditLog {
-  id             String        @id @default(uuid())
-  userId         String?
-  action         String        // UPDATE_PRICE, UPDATE_BOOKING, CRM_NOTE...
-  targetTable    String
-  targetId       String
-  oldValue       Json?
-  newValue       Json?
-  createdAt      DateTime      @default(now())
+  id          String   @id @default(uuid())
+  userId      String?
+  action      String // UPDATE_PRICE, UPDATE_BOOKING, CRM_NOTE...
+  targetTable String
+  targetId    String
+  oldValue    Json?
+  newValue    Json?
+  createdAt   DateTime @default(now())
 
-  user           User?         @relation(fields: [userId], references: [id])
-  booking        Booking?      @relation(fields: [targetId], references: [id], map: "AuditLog_booking_fk")
+  user    User?    @relation(fields: [userId], references: [id])
+  booking Booking? @relation(fields: [targetId], references: [id], map: "AuditLog_booking_fk")
+}
+
+model OwnerLead {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String
+  carName   String
+  createdAt DateTime @default(now())
+}
+
+model NotificationLog {
+  id           String   @id @default(uuid())
+  userId       String?
+  channel      String
+  recipient    String
+  template     String
+  status       String
+  errorMessage String?
+  createdAt    DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
 }

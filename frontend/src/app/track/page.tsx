@@ -9,6 +9,7 @@ import { Search, Loader2, Calendar, Car, ChevronLeft, MapPin } from 'lucide-reac
 export default function TrackPage() {
   const router = useRouter();
   const [phone, setPhone] = useState('');
+  const [bookingCode, setBookingCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [searched, setSearched] = useState(false);
@@ -19,7 +20,7 @@ export default function TrackPage() {
     setLoading(true);
     setErrorMsg('');
     try {
-      const results = await api.bookings.track(phone);
+      const results = await api.bookings.track(phone, bookingCode);
       setBookings(results);
       setSearched(true);
     } catch (err: unknown) {
@@ -75,8 +76,9 @@ export default function TrackPage() {
 
       {/* Tra cứu Form */}
       <div className="glass-panel p-6 rounded-xl border border-white/5 flex flex-col gap-4">
-        <p className="text-sm text-gray-400">Vui lòng điền đúng số điện thoại di động bạn đã đăng ký để tra cứu danh sách đơn đặt xe tự lái.</p>
+        <p className="text-sm text-gray-300">Nhập mã đơn và số điện thoại đã dùng khi đặt xe.</p>
         <form onSubmit={handleTrack} className="flex gap-4 flex-col sm:flex-row">
+          <input type="text" required placeholder="Mã đơn BK-..." value={bookingCode} onChange={(e) => setBookingCode(e.target.value)} className="flex-grow bg-gray-950 border border-white/20 rounded-lg py-2.5 px-4 text-sm text-white focus:outline-none focus:border-emerald-400" />
           <input 
             type="tel" 
             required 

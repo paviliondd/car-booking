@@ -89,7 +89,7 @@ export default function Header() {
 
         {user ? (
           <>
-            <Link href={user.role === 'OWNER' ? '/owner' : user.role === 'ADMIN' || user.role === 'STAFF' ? '/dashboard' : '/track'} className="flex items-center gap-2 text-slate-700 hover:text-[#008F5A] transition">
+            <Link href={user.role === 'OWNER' ? '/owner' : user.role === 'ADMIN' || user.role === 'STAFF' ? '/dashboard' : '/account'} className="flex items-center gap-2 text-slate-700 hover:text-emerald-700 transition">
               <UserCircle className="h-5 w-5" />
               <span className="max-w-36 truncate">{user.name || user.email}</span>
             </Link>
@@ -141,7 +141,7 @@ export default function Header() {
           <hr className="border-emerald-100" />
           {user ? (
             <>
-              <Link href={user.role === 'OWNER' ? '/owner' : user.role === 'ADMIN' || user.role === 'STAFF' ? '/dashboard' : '/track'} onClick={() => setMobileMenuOpen(false)} className="text-base text-slate-700 hover:text-[#008F5A] font-semibold">
+              <Link href={user.role === 'OWNER' ? '/owner' : user.role === 'ADMIN' || user.role === 'STAFF' ? '/dashboard' : '/account'} onClick={() => setMobileMenuOpen(false)} className="text-base text-slate-700 hover:text-emerald-700 font-semibold">
                 Tài khoản của tôi
               </Link>
               <button

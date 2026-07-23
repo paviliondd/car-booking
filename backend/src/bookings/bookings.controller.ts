@@ -43,8 +43,11 @@ export class BookingsController {
 
   // 2. Tra cứu đơn hàng theo SĐT (Public)
   @Get('track')
-  async track(@Query('phone') phone: string) {
-    return await this.bookingsService.trackBookings(phone);
+  async track(
+    @Query('phone') phone: string,
+    @Query('bookingCode') bookingCode: string,
+  ) {
+    return await this.bookingsService.trackBookings(phone, bookingCode);
   }
 
   // 3. Lấy tất cả bookings (Admin/Staff)

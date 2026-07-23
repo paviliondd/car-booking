@@ -64,3 +64,10 @@ export class VerifyOwnerDto {
   @IsBoolean()
   approve: boolean;
 }
+
+export class OwnerLeadDto {
+  @IsString() @IsNotEmpty() name: string;
+  @IsEmail() email: string;
+  @IsString() @IsNotEmpty() phone: string;
+  @IsString() @IsNotEmpty() carName: string;
+}

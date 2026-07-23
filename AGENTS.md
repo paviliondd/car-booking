@@ -68,6 +68,8 @@ design-system/datxe/MASTER.md design-system do ui-ux-pro-max sinh
 
 Backend domains: `auth`, `vehicles`, `bookings`, `payments`, `contracts`, `reviews`, `chat`, `tickets`, `customers`, `maintenance`, `analytics`, `dashboard`, `audit`, `notification`, `redis`, `prisma`.
 
+`account` cung cấp lịch sử booking/hợp đồng theo JWT và luôn giới hạn qua `Customer.userId`. Notification hỗ trợ SMTP (`SMTP_*`) với SES fallback; mọi lần gửi email được ghi vào `NotificationLog`. Form chủ xe công khai lưu `OwnerLead`.
+
 ## Domain và các invariant bắt buộc
 
 Roles: `ADMIN`, `STAFF`, `CUSTOMER`, `OWNER`.
@@ -113,6 +115,7 @@ Tạo `/opt/datxe/.env` từ `.env.production.example`, permission hạn chế. 
 - Storage: `UPLOAD_HOST_DIR`, `UPLOAD_DIR`, `FILE_PUBLIC_BASE_URL`. Ảnh xe public qua API; CCCD/GPLX private và cần JWT. AWS credentials chỉ dành cho SES/SNS notification hiện tại.
 - PayOS: `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY`.
 - MoMo: `MOMO_PARTNER_CODE`, `MOMO_ACCESS_KEY`, `MOMO_SECRET_KEY`, `MOMO_API_URL`, `MOMO_REDIRECT_URL`, `MOMO_IPN_URL`.
+- Email: `PUBLIC_APP_URL`, `ADMIN_NOTIFICATION_EMAIL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`; bỏ trống SMTP để integration fail-soft và ghi log thất bại.
 
 GitHub repository/environment cần:
 

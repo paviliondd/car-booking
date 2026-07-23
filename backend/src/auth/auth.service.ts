@@ -11,7 +11,17 @@ import * as bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
 import { randomBytes } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
-import { LoginDto, RegisterDto, UpgradeOwnerDto } from './dto/auth.dto';
+import {
+  LoginDto,
+  OwnerLeadDto,
+  RegisterDto,
+  UpgradeOwnerDto,
+} from './dto/auth.dto';
+import { NotificationService } from '../notification/notification.service';
+import {
+  ownerAdminEmail,
+  ownerApplicantEmail,
+} from '../notification/mail-templates';
 
 @Injectable()
 export class AuthService {
@@ -21,10 +31,46 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly notifications: NotificationService,
   ) {
     this.googleClient = new OAuth2Client(
       this.configService.get<string>('GOOGLE_CLIENT_ID'),
     );
+  }
+
+  async createOwnerLead(dto: OwnerLeadDto) {
+    const lead = await this.prisma.ownerLead.create({
+      data: {
+        name: dto.name.trim(),
+        email: dto.email.toLowerCase().trim(),
+        phone: dto.phone.trim(),
+        carName: dto.carName.trim(),
+      },
+    });
+    const base =
+      this.configService.get<string>('PUBLIC_APP_URL') ||
+      'https://datxe.linuxunity.com';
+    const admin = this.configService.get<string>('ADMIN_NOTIFICATION_EMAIL');
+    await Promise.all([
+      this.notifications.sendEmail(
+        lead.email,
+        '[datxe] Đã nhận hồ sơ chủ xe',
+        ownerApplicantEmail(lead),
+        'become-owner-applicant',
+      ),
+      admin
+        ? this.notifications.sendEmail(
+            admin,
+            '[datxe] Hồ sơ chủ xe mới',
+            ownerAdminEmail({
+              ...lead,
+              dashboardUrl: `${base}/dashboard/customers`,
+            }),
+            'become-owner-admin',
+          )
+        : Promise.resolve(),
+    ]);
+    return { id: lead.id, received: true };
   }
 
   private signUser(user: {

@@ -20,6 +20,11 @@ import { AuthenticatedUser } from '../auth/types/authenticated-user';
 import { LocalStorageService } from '../storage/local-storage.service';
 import { canTransitionBooking } from './booking-status';
 import { RENTAL_LOCATION } from '../common/rental-location';
+import { ConfigService } from '@nestjs/config';
+import {
+  bookingCustomerEmail,
+  bookingOwnerEmail,
+} from '../notification/mail-templates';
 
 type BookingDetails = Prisma.BookingGetPayload<{
   include: {
@@ -40,6 +45,7 @@ export class BookingsService {
     private paymentsService: PaymentsService,
     private notificationService: NotificationService,
     private localStorage: LocalStorageService,
+    private config: ConfigService,
   ) {}
 
   async quote(dto: BookingQuoteDto) {
@@ -152,6 +158,7 @@ export class BookingsService {
       // 2. Validate Vehicle Existence and Status
       const vehicle = await this.prisma.vehicle.findUnique({
         where: { id: dto.vehicleId },
+        include: { owner: { select: { email: true } } },
       });
       if (!vehicle) {
         throw new NotFoundException('Không tìm thấy xe yêu cầu');
@@ -360,21 +367,44 @@ export class BookingsService {
         data: { transactionId: payGateway.transactionId },
       });
 
-      // 11. Send AWS Notifications (SES / SNS)
-      const emailContent = `
-        <h3>Xác nhận đặt xe tự lái thành công</h3>
-        <p>Xin chào ${dto.fullName},</p>
-        <p>Mã đơn đặt xe của bạn là: <strong>${bookingNumber}</strong></p>
-        <p>Xe: ${vehicle.brand} ${vehicle.model} - Biển số: ${vehicle.plateNumber}</p>
-        <p>Thời gian: Từ ${dto.startDate} đến ${dto.endDate}</p>
-        <p>Tổng tiền thanh toán: ${totalPrice.toLocaleString()} VND</p>
-        <p>Vui lòng click vào link sau để tiến hành đặt cọc/thanh toán: <a href="${payGateway.paymentUrl}">Thanh toán ngay</a></p>
-      `;
-      await this.notificationService.sendEmail(
-        dto.email,
-        `[datxe] Xác nhận đặt xe ${bookingNumber}`,
-        emailContent,
-      );
+      const base =
+        this.config.get<string>('PUBLIC_APP_URL') ||
+        'https://datxe.linuxunity.com';
+      const ownerEmail =
+        vehicle.owner?.email ||
+        this.config.get<string>('ADMIN_NOTIFICATION_EMAIL');
+      await Promise.all([
+        this.notificationService.sendEmail(
+          dto.email,
+          `[datxe] Xác nhận đặt xe ${bookingNumber}`,
+          bookingCustomerEmail({
+            name: dto.fullName,
+            code: bookingNumber,
+            vehicle: `${vehicle.brand} ${vehicle.model}`,
+            plate: vehicle.plateNumber,
+            start,
+            end,
+          }),
+          'booking-customer',
+          actor.id,
+        ),
+        ownerEmail
+          ? this.notificationService.sendEmail(
+              ownerEmail,
+              `[datxe] Yêu cầu thuê xe ${bookingNumber}`,
+              bookingOwnerEmail({
+                code: bookingNumber,
+                customer: dto.fullName,
+                phone: dto.phone,
+                vehicle: `${vehicle.brand} ${vehicle.model}`,
+                start,
+                end,
+                dashboardUrl: `${base}/dashboard/bookings/${result.booking.id}`,
+              }),
+              'booking-owner',
+            )
+          : Promise.resolve(),
+      ]);
 
       const smsContent = `datxe: Dat xe ${bookingNumber} thanh cong cho xe ${vehicle.brand}. Vui long thanh toan: ${payGateway.paymentUrl}`;
       await this.notificationService.sendSMS(dto.phone, smsContent);
@@ -391,7 +421,7 @@ export class BookingsService {
     }
   }
 
-  async trackBookings(phone: string) {
+  async trackBookings(phone: string, bookingCode?: string) {
     const customer = await this.prisma.customer.findUnique({
       where: { phone },
     });
@@ -400,7 +430,10 @@ export class BookingsService {
     }
 
     return await this.prisma.booking.findMany({
-      where: { customerId: customer.id },
+      where: {
+        customerId: customer.id,
+        ...(bookingCode ? { bookingNumber: bookingCode.trim() } : {}),
+      },
       include: {
         vehicle: true,
         payment: true,

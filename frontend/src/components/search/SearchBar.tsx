@@ -37,13 +37,13 @@ export default function SearchBar() {
 
     const startStr = startDate.toISOString();
     const endStr = endDate.toISOString();
-    router.push(`/booking?startDate=${startStr}&endDate=${endStr}`);
+    router.push(`/vehicles?startDate=${encodeURIComponent(startStr)}&endDate=${encodeURIComponent(endStr)}`);
   };
 
   const handleLongTermSubmit = (data: { startDate: Date; duration: string; endDate: Date | null }) => {
     const startStr = data.startDate.toISOString();
     const endStr = data.endDate ? data.endDate.toISOString() : '';
-    router.push(`/booking?startDate=${startStr}&endDate=${endStr}&duration=${data.duration}`);
+    router.push(`/vehicles?startDate=${encodeURIComponent(startStr)}&endDate=${encodeURIComponent(endStr)}&duration=${data.duration}`);
   };
 
   return (

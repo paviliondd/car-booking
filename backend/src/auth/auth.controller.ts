@@ -16,6 +16,7 @@ import {
   RegisterDto,
   UpgradeOwnerDto,
   VerifyOwnerDto,
+  OwnerLeadDto,
 } from './dto/auth.dto';
 import { Roles } from './decorators/roles.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -48,6 +49,11 @@ export class AuthController {
   @Post('google')
   async googleLogin(@Body() dto: GoogleLoginDto) {
     return this.authService.googleLogin(dto.credential);
+  }
+
+  @Post('owner-leads')
+  ownerLead(@Body() dto: OwnerLeadDto) {
+    return this.authService.createOwnerLead(dto);
   }
 
   @UseGuards(JwtAuthGuard)

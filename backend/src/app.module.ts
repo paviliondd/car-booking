@@ -21,6 +21,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { StorageModule } from './storage/storage.module';
+import { AccountModule } from './account/account.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { StorageModule } from './storage/storage.module';
     ChatModule,
     DashboardModule,
     StorageModule,
+    AccountModule,
   ],
   controllers: [AppController],
   providers: [
