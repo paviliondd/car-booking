@@ -103,7 +103,7 @@ jobs:
         run: |
           ssh -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "mkdir -p '$DEPLOY_PATH/scripts'"
           scp -P "$VPS_PORT" docker-compose.prod.yml nginx.prod.conf "$VPS_USER@$VPS_HOST:$DEPLOY_PATH/"
-          scp -P "$VPS_PORT" scripts/deploy-vps.sh "$VPS_USER@$VPS_HOST:$DEPLOY_PATH/scripts/"
+          scp -P "$VPS_PORT" scripts/deploy-vps.sh scripts/bootstrap-admin-vps.sh "$VPS_USER@$VPS_HOST:$DEPLOY_PATH/scripts/"
       - name: Pull images and deploy with rollback
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -116,4 +116,4 @@ jobs:
           GHCR_NAMESPACE: ${{ github.repository_owner }}
         run: |
           printf '%s' "$GHCR_TOKEN" | ssh -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "docker login ghcr.io -u '$GHCR_USER' --password-stdin"
-          ssh -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "cd '$DEPLOY_PATH' && chmod 700 scripts/deploy-vps.sh && scripts/deploy-vps.sh '$IMAGE_TAG' '$GHCR_NAMESPACE' 'datxe.linuxunity.com'"
+          ssh -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "cd '$DEPLOY_PATH' && chmod 700 scripts/deploy-vps.sh scripts/bootstrap-admin-vps.sh && scripts/deploy-vps.sh '$IMAGE_TAG' '$GHCR_NAMESPACE' 'datxe.linuxunity.com'"

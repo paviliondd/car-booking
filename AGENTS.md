@@ -62,6 +62,7 @@ backend/
 docker-compose.prod.yml       production stack, network nội bộ
 nginx.prod.conf               TLS/reverse proxy/websocket
 scripts/deploy-vps.sh         migration, deploy, health, rollback
+scripts/bootstrap-admin-vps.sh khôi phục admin bằng đúng image backend đang chạy
 .env.production.example      danh sách biến production, không có secret thật
 design-system/datxe/MASTER.md design-system do ui-ux-pro-max sinh
 ```

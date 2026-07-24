@@ -158,12 +158,8 @@ export ADMIN_PHONE='0901234567'
 read -rsp 'Mật khẩu admin mới (tối thiểu 12 ký tự): ' ADMIN_PASSWORD
 echo
 export ADMIN_PASSWORD
-docker compose -f docker-compose.prod.yml run --rm \
-  -e ADMIN_PHONE \
-  -e ADMIN_PASSWORD \
-  -e ADMIN_EMAIL= \
-  -e ADMIN_NAME='Quản trị datxe' \
-  backend npm run admin:bootstrap
+chmod 700 scripts/bootstrap-admin-vps.sh
+scripts/bootstrap-admin-vps.sh
 unset ADMIN_PHONE ADMIN_PASSWORD
 ```
 
@@ -172,6 +168,10 @@ role `ADMIN`. `ADMIN_PHONE` là bắt buộc và phải là số điện thoại
 placeholder như `09xxxxxxxx`. Không lưu `ADMIN_PASSWORD` trong file env hoặc command history. Đăng nhập bằng số điện
 thoại + mật khẩu tại `https://datxe.linuxunity.com/auth`, rồi mở `/dashboard`. Người dùng đăng ký bình thường luôn là
 `CUSTOMER` và không thể tự chọn role.
+
+Script lấy chính xác image backend production đang chạy, không dùng `IMAGE_TAG` cũ có thể còn trong `.env`. Nếu log
+vẫn nhắc `/app/prisma/bootstrap-admin.ts` hoặc bắt buộc `ADMIN_EMAIL`, VPS đang chạy image cũ và phải deploy bản mới
+thành công trước.
 
 Seed phát triển chỉ chạy khi đặt rõ `ENABLE_DEMO_DATA=true`; tài khoản demo admin là `0900000001` / `adminpassword123`. Không dùng tài khoản demo trên production.
 
