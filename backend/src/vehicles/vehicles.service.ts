@@ -122,7 +122,9 @@ export class VehiclesService {
 
     return await this.prisma.vehicle.findMany({
       where: {
-        status: VehicleStatus.AVAILABLE,
+        status: {
+          notIn: [VehicleStatus.LOCKED, VehicleStatus.MAINTENANCE],
+        },
         id: { notIn: busyBookings.map((booking) => booking.vehicleId) },
         images: { isEmpty: false },
         ...(filters.brand
@@ -170,7 +172,9 @@ export class VehiclesService {
     // 2. Lấy ra các xe trống và đáp ứng bộ lọc
     return await this.prisma.vehicle.findMany({
       where: {
-        status: VehicleStatus.AVAILABLE, // Chỉ lấy các xe đang hoạt động tốt (không bảo dưỡng, khóa)
+        status: {
+          notIn: [VehicleStatus.LOCKED, VehicleStatus.MAINTENANCE],
+        },
         id: { notIn: bookedIds },
         images: { isEmpty: false },
         ...(filters.brand
@@ -190,37 +194,73 @@ export class VehiclesService {
     return vehicle;
   }
 
-  async getCalendar(id: string) {
+  async getCalendar(id: string, fromValue?: string, toValue?: string) {
     const vehicle = await this.findOne(id);
+    const from = fromValue ? new Date(fromValue) : new Date();
+    const to = toValue
+      ? new Date(toValue)
+      : new Date(from.getTime() + 180 * 86_400_000);
+    if (
+      Number.isNaN(from.getTime()) ||
+      Number.isNaN(to.getTime()) ||
+      from >= to
+    ) {
+      throw new BadRequestException('Khoảng thời gian xem lịch không hợp lệ');
+    }
+    if (to.getTime() - from.getTime() > 366 * 86_400_000) {
+      throw new BadRequestException('Chỉ có thể xem lịch tối đa 366 ngày');
+    }
+
     const bookings = await this.prisma.booking.findMany({
       where: {
         vehicleId: id,
         status: { in: ['CONFIRMED', 'RENTING', 'PENDING'] },
+        startDate: { lt: to },
+        endDate: { gt: from },
       },
       select: {
-        id: true,
         startDate: true,
         endDate: true,
-        status: true,
       },
+      orderBy: { startDate: 'asc' },
     });
 
     const maintenances = await this.prisma.maintenance.findMany({
       where: {
         vehicleId: id,
         completedDate: null,
+        scheduledDate: { gte: from, lt: to },
       },
       select: {
-        id: true,
         scheduledDate: true,
-        type: true,
       },
+      orderBy: { scheduledDate: 'asc' },
     });
 
     return {
-      vehicle,
-      bookings,
-      maintenances,
+      vehicle: {
+        id: vehicle.id,
+        brand: vehicle.brand,
+        model: vehicle.model,
+        status: vehicle.status,
+      },
+      range: { from, to },
+      busyPeriods: [
+        ...bookings.map((booking) => ({
+          type: 'BOOKING' as const,
+          label: 'Đã có lịch thuê',
+          startDate: booking.startDate,
+          endDate: booking.endDate,
+        })),
+        ...maintenances.map((maintenance) => ({
+          type: 'MAINTENANCE' as const,
+          label: 'Lịch bảo dưỡng',
+          startDate: maintenance.scheduledDate,
+          endDate: new Date(maintenance.scheduledDate.getTime() + 86_400_000),
+        })),
+      ].sort(
+        (left, right) => left.startDate.getTime() - right.startDate.getTime(),
+      ),
     };
   }
 

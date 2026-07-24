@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   CalendarDays,
+  CalendarRange,
   Car,
   ExternalLink,
   Fuel,
@@ -21,6 +22,7 @@ import {
   vehicleFuelLabel,
   vehicleTransmissionLabel,
 } from "@/lib/vehicle-labels";
+import VehicleAvailabilityDialog from "./VehicleAvailabilityDialog";
 
 const tabs = ["Đặc điểm", "Giấy tờ thuê xe"] as const;
 type Tab = (typeof tabs)[number];
@@ -37,6 +39,11 @@ export default function VehicleDetailModal({
   onClose: () => void;
 }) {
   const [tab, setTab] = useState<Tab>("Đặc điểm");
+  const [availabilityOpen, setAvailabilityOpen] = useState(false);
+  const [selectedStartDate, setSelectedStartDate] = useState(
+    dates.startDate || "",
+  );
+  const [selectedEndDate, setSelectedEndDate] = useState(dates.endDate || "");
   const dialogRef = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -47,6 +54,7 @@ export default function VehicleDetailModal({
     closeRef.current?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (availabilityOpen) return;
       if (event.key === "Escape") {
         onClose();
         return;
@@ -76,11 +84,25 @@ export default function VehicleDetailModal({
       document.removeEventListener("keydown", handleKeyDown);
       previousFocus?.focus();
     };
-  }, [onClose]);
+  }, [availabilityOpen, onClose]);
 
   const booking = new URLSearchParams({ vehicleId: vehicle.id });
-  if (dates.startDate) booking.set("startDate", dates.startDate);
-  if (dates.endDate) booking.set("endDate", dates.endDate);
+  if (selectedStartDate) {
+    booking.set(
+      "startDate",
+      selectedStartDate.includes("T")
+        ? selectedStartDate
+        : `${selectedStartDate}T08:00:00+07:00`,
+    );
+  }
+  if (selectedEndDate) {
+    booking.set(
+      "endDate",
+      selectedEndDate.includes("T")
+        ? selectedEndDate
+        : `${selectedEndDate}T18:00:00+07:00`,
+    );
+  }
 
   const details = [
     { label: "Số chỗ", value: `${vehicle.seats} chỗ`, icon: Users },
@@ -320,12 +342,32 @@ export default function VehicleDetailModal({
             >
               Chọn lịch thuê xe
             </Link>
+            <button
+              type="button"
+              onClick={() => setAvailabilityOpen(true)}
+              className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-brand px-4 text-sm font-bold text-brand transition hover:bg-utility focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/20"
+            >
+              <CalendarRange className="h-5 w-5" />
+              Xem lịch trống của xe
+            </button>
             <p className="mt-3 text-center text-xs leading-5 text-content-secondary">
               Bạn chưa bị tính phí ở bước này.
             </p>
           </aside>
         </div>
       </section>
+      {availabilityOpen && (
+        <VehicleAvailabilityDialog
+          vehicle={vehicle}
+          initialStartDate={selectedStartDate}
+          initialEndDate={selectedEndDate}
+          onApply={(startDate, endDate) => {
+            setSelectedStartDate(startDate);
+            setSelectedEndDate(endDate);
+          }}
+          onClose={() => setAvailabilityOpen(false)}
+        />
+      )}
     </div>
   );
 }

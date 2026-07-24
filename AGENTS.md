@@ -197,7 +197,7 @@ docker compose up --build
 Baseline xác nhận ngày 2026-07-24:
 
 - Backend lint check: 0 lỗi; build pass.
-- Backend unit: 5 suites, 26 tests pass.
+- Backend unit: 6 suites, 28 tests pass.
 - Backend e2e: 1 suite, 2 tests pass, không cần DB thật vì health/root test override Prisma.
 - Frontend lint: 0 lỗi, 0 warning; production build pass 25 trang tĩnh cùng các route động.
 
@@ -208,6 +208,8 @@ Migration `0005_phone_password_account_profile` bổ sung ngày sinh/giới tín
 Migration `0006_quick_booking_requests` tạo yêu cầu đặt xe nhanh độc lập với `Booking` và gỡ khóa ngoại sai từ `AuditLog.targetId` sang `Booking` để audit tiếp tục là polymorphic. Forward deploy chạy `prisma migrate deploy`; rollback phải lưu/xuất toàn bộ yêu cầu nhanh trước khi xóa bảng/enum và chỉ nên khôi phục khóa ngoại audit sau khi chắc chắn không có audit cho target khác Booking.
 
 Migration `0007_facebook_login` thêm `User.facebookId` nullable/unique để đăng nhập Facebook không phụ thuộc email. Forward deploy chạy `prisma migrate deploy`; rollback chỉ được xóa unique index/cột sau khi đã xuất mapping Facebook và chấp nhận các tài khoản Facebook không thể đăng nhập lại.
+
+Migration `0008_quick_booking_conversion` liên kết `QuickBookingRequest.bookingId` tới `Booking` để admin/staff tạo đơn thật từ yêu cầu đặt nhanh, tự đóng yêu cầu và giữ audit/payment đồng bộ. Forward deploy chạy `prisma migrate deploy`; rollback phải xuất hoặc hủy liên kết các yêu cầu đã chuyển thành booking trước khi xóa khóa ngoại, unique index và cột `bookingId`.
 
 Task chỉ hoàn tất khi authorization/ownership/validation đúng, API/UI typed, không thêm mock ẩn, lint/build/test liên quan pass và giới hạn còn lại được báo rõ.
 

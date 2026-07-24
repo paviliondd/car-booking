@@ -1,9 +1,11 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import {
   CalendarDays,
   Check,
+  ClipboardPlus,
   MessageSquareText,
   Phone,
   RefreshCw,
@@ -22,12 +24,13 @@ import {
   type QuickBookingStatus,
 } from "@/lib/api";
 import { useToast } from "@/providers/ToastProvider";
+import AdminCreateBookingDialog from "@/components/dashboard/AdminCreateBookingDialog";
 
 const statusLabels: Record<QuickBookingStatus, string> = {
   NEW: "Mới",
   CONTACTING: "Đang liên hệ",
   CONTACTED: "Đã liên hệ",
-  CLOSED: "Đã đóng",
+  CLOSED: "Đã xử lý hoàn tất",
   CANCELLED: "Đã hủy",
 };
 
@@ -57,6 +60,8 @@ export default function QuickBookingsAdminPage() {
   const [draftStatus, setDraftStatus] = useState<QuickBookingStatus>("NEW");
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
+  const [createSource, setCreateSource] =
+    useState<QuickBookingRequest | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -256,10 +261,11 @@ export default function QuickBookingsAdminPage() {
                 Trạng thái xử lý
                 <select
                   value={draftStatus}
+                  disabled={Boolean(selected.booking)}
                   onChange={(event) =>
                     setDraftStatus(event.target.value as QuickBookingStatus)
                   }
-                  className="mt-1 min-h-11 w-full rounded-xl border border-app-border bg-app-surface px-3 text-sm outline-none focus:border-brand focus:ring-4 focus:ring-brand/20"
+                  className="mt-1 min-h-11 w-full rounded-xl border border-app-border bg-app-surface px-3 text-sm outline-none focus:border-brand focus:ring-4 focus:ring-brand/20 disabled:cursor-not-allowed disabled:bg-app-muted"
                 >
                   {statusOptions.map(([value, label]) => (
                     <option key={value} value={value}>
@@ -288,6 +294,23 @@ export default function QuickBookingsAdminPage() {
                 <Check className="h-4 w-4" />
                 Lưu xử lý
               </button>
+              {selected.booking ? (
+                <Link
+                  href={`/dashboard/bookings/${selected.booking.id}`}
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-brand px-4 text-sm font-bold text-brand hover:bg-utility"
+                >
+                  Mở đơn {selected.booking.bookingNumber}
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setCreateSource(selected)}
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-brand px-4 text-sm font-bold text-brand hover:bg-utility"
+                >
+                  <ClipboardPlus className="h-4 w-4" />
+                  Tạo đơn từ yêu cầu
+                </button>
+              )}
             </div>
           </div>
         </section>
@@ -335,6 +358,23 @@ export default function QuickBookingsAdminPage() {
                 >
                   Xử lý yêu cầu
                 </button>
+                {item.booking ? (
+                  <Link
+                    href={`/dashboard/bookings/${item.booking.id}`}
+                    className="mt-2 flex min-h-11 w-full items-center justify-center rounded-xl border border-brand px-4 text-sm font-bold text-brand hover:bg-utility"
+                  >
+                    Mở đơn {item.booking.bookingNumber}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setCreateSource(item)}
+                    className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-brand px-4 text-sm font-bold text-brand hover:bg-utility"
+                  >
+                    <ClipboardPlus className="h-4 w-4" />
+                    Tạo đơn
+                  </button>
+                )}
               </article>
             ))}
           </div>
@@ -382,13 +422,31 @@ export default function QuickBookingsAdminPage() {
                       </span>
                     </td>
                     <td className="p-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => openRequest(item)}
-                        className="min-h-11 rounded-xl bg-brand px-4 text-xs font-bold text-on-brand hover:bg-brand-hover"
-                      >
-                        Xử lý
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openRequest(item)}
+                          className="min-h-11 rounded-xl bg-brand px-4 text-xs font-bold text-on-brand hover:bg-brand-hover"
+                        >
+                          Xử lý
+                        </button>
+                        {item.booking ? (
+                          <Link
+                            href={`/dashboard/bookings/${item.booking.id}`}
+                            className="inline-flex min-h-11 items-center rounded-xl border border-brand px-4 text-xs font-bold text-brand hover:bg-utility"
+                          >
+                            Mở đơn
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setCreateSource(item)}
+                            className="min-h-11 rounded-xl border border-brand px-4 text-xs font-bold text-brand hover:bg-utility"
+                          >
+                            Tạo đơn
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -396,6 +454,31 @@ export default function QuickBookingsAdminPage() {
             </table>
           </div>
         </>
+      )}
+      {createSource && (
+        <AdminCreateBookingDialog
+          source={createSource}
+          onClose={() => setCreateSource(null)}
+          onCreated={(response) => {
+            const updated = response.quickBookingRequest;
+            if (updated) {
+              setItems((current) =>
+                current.map((item) =>
+                  item.id === updated.id ? updated : item,
+                ),
+              );
+              setSelected((current) =>
+                current?.id === updated.id ? updated : current,
+              );
+            } else {
+              void load();
+            }
+            setCreateSource(null);
+            toast.success(
+              `Đã tạo đơn ${response.booking.bookingNumber} và hoàn tất yêu cầu.`,
+            );
+          }}
+        />
       )}
     </div>
   );

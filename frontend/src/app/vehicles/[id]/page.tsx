@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   CalendarDays,
+  CalendarRange,
   Car,
   CheckCircle2,
   ChevronLeft,
@@ -20,6 +21,7 @@ import {
 import { api, type Vehicle } from '@/lib/api';
 import { rentalPolicies, storeInfo } from '@/lib/store';
 import { vehicleFuelLabel, vehicleTransmissionLabel } from '@/lib/vehicle-labels';
+import VehicleAvailabilityDialog from '@/components/vehicles/VehicleAvailabilityDialog';
 
 const money = (value: number) => `${value.toLocaleString('vi-VN')} đ`;
 
@@ -33,6 +35,9 @@ export default function VehicleDetailPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeImage, setActiveImage] = useState(0);
+  const [availabilityOpen, setAvailabilityOpen] = useState(false);
+  const [selectedStartDate, setSelectedStartDate] = useState('');
+  const [selectedEndDate, setSelectedEndDate] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -66,7 +71,14 @@ export default function VehicleDetailPage({
 
   const images = vehicle.images.filter(Boolean);
   const heroImage = images[activeImage];
-  const bookingHref = `/booking?vehicleId=${encodeURIComponent(vehicle.id)}`;
+  const bookingParams = new URLSearchParams({ vehicleId: vehicle.id });
+  if (selectedStartDate) {
+    bookingParams.set('startDate', `${selectedStartDate}T08:00:00+07:00`);
+  }
+  if (selectedEndDate) {
+    bookingParams.set('endDate', `${selectedEndDate}T18:00:00+07:00`);
+  }
+  const bookingHref = `/booking?${bookingParams}`;
 
   return (
     <main className="bg-app-muted text-content">
@@ -157,10 +169,35 @@ export default function VehicleDetailPage({
             <Link href={bookingHref} className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand px-5 font-bold text-on-brand shadow-sm transition hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2">
               <Gauge className="h-5 w-5" /> Chọn lịch thuê xe
             </Link>
+            <button
+              type="button"
+              onClick={() => setAvailabilityOpen(true)}
+              className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-brand px-5 text-sm font-bold text-brand transition hover:bg-utility focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+            >
+              <CalendarRange className="h-5 w-5" />
+              Xem lịch trống của xe
+            </button>
+            {selectedStartDate && selectedEndDate && (
+              <p className="mt-3 rounded-xl bg-utility p-3 text-center text-xs font-bold text-utility-foreground">
+                Đã chọn {new Date(`${selectedStartDate}T00:00:00`).toLocaleDateString('vi-VN')} → {new Date(`${selectedEndDate}T00:00:00`).toLocaleDateString('vi-VN')}
+              </p>
+            )}
             <p className="mt-4 text-center text-xs leading-5 text-content-secondary">Bạn chưa bị tính phí ở bước này.</p>
           </aside>
         </div>
       </div>
+      {availabilityOpen && (
+        <VehicleAvailabilityDialog
+          vehicle={vehicle}
+          initialStartDate={selectedStartDate}
+          initialEndDate={selectedEndDate}
+          onApply={(startDate, endDate) => {
+            setSelectedStartDate(startDate);
+            setSelectedEndDate(endDate);
+          }}
+          onClose={() => setAvailabilityOpen(false)}
+        />
+      )}
     </main>
   );
 }

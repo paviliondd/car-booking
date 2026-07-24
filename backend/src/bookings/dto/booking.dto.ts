@@ -8,9 +8,14 @@ import {
   IsIn,
   Min,
   Max,
+  IsISO8601,
+  IsUUID,
+  Length,
+  Matches,
 } from 'class-validator';
 import { BookingStatus, PaymentMethod } from '@prisma/client';
 import { Type } from 'class-transformer';
+import { VIETNAM_PHONE_PATTERN } from '../../common/phone';
 
 export class CreateBookingDto {
   @IsString()
@@ -109,6 +114,47 @@ export class BookingQuoteDto {
   @IsString()
   @IsOptional()
   couponCode?: string;
+}
+
+export class CreateAdminBookingDto {
+  @IsUUID()
+  vehicleId: string;
+
+  @IsISO8601({ strict: true })
+  startDate: string;
+
+  @IsISO8601({ strict: true })
+  endDate: string;
+
+  @IsString()
+  @Length(2, 120)
+  fullName: string;
+
+  @Matches(VIETNAM_PHONE_PATTERN, {
+    message: 'Số điện thoại Việt Nam không hợp lệ',
+  })
+  phone: string;
+
+  @IsEnum(PaymentMethod)
+  paymentMethod: PaymentMethod;
+
+  @IsString()
+  @Length(0, 2000)
+  @IsOptional()
+  notes?: string;
+
+  @IsString()
+  @IsIn(['NONE', 'BASIC', 'PREMIUM'])
+  insuranceType: string = 'NONE';
+
+  @IsNumber()
+  @IsIn([30, 50])
+  @Type(() => Number)
+  depositPercent: number = 30;
+
+  @IsUUID()
+  @IsOptional()
+  quickBookingRequestId?: string;
 }
 
 export class TrackBookingDto {

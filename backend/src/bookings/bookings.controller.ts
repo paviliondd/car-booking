@@ -12,6 +12,7 @@ import {
 import { BookingsService } from './bookings.service';
 import {
   BookingQuoteDto,
+  CreateAdminBookingDto,
   CreateBookingDto,
   UpdateBookingStatusDto,
 } from './dto/booking.dto';
@@ -39,6 +40,16 @@ export class BookingsController {
     @Req() req: AuthenticatedRequest,
   ) {
     return await this.bookingsService.createBooking(dto, req.user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  @Post('admin')
+  async createByAdmin(
+    @Body() dto: CreateAdminBookingDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return await this.bookingsService.createAdminBooking(dto, req.user);
   }
 
   // 2. Tra cứu đơn hàng theo SĐT (Public)

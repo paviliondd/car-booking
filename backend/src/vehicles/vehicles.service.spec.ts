@@ -14,6 +14,7 @@ describe('VehiclesService Unit Tests', () => {
       delete: jest.Mock;
     };
     booking: { findMany: jest.Mock };
+    maintenance: { findMany: jest.Mock };
   };
 
   beforeEach(async () => {
@@ -27,6 +28,9 @@ describe('VehiclesService Unit Tests', () => {
         delete: jest.fn(),
       },
       booking: {
+        findMany: jest.fn(),
+      },
+      maintenance: {
         findMany: jest.fn(),
       },
     };
@@ -134,12 +138,54 @@ describe('VehiclesService Unit Tests', () => {
 
       expect(prismaMock.vehicle.findMany).toHaveBeenCalledWith({
         where: {
-          status: VehicleStatus.AVAILABLE,
+          status: {
+            notIn: [VehicleStatus.LOCKED, VehicleStatus.MAINTENANCE],
+          },
           id: { notIn: ['busy-vehicle'] },
           images: { isEmpty: false },
         },
         orderBy: [{ updatedAt: 'desc' }],
       });
+    });
+  });
+
+  describe('getCalendar', () => {
+    it('returns public busy periods without exposing booking identifiers', async () => {
+      prismaMock.vehicle.findUnique.mockResolvedValue({
+        id: 'vehicle-1',
+        brand: 'Toyota',
+        model: 'Vios',
+        status: VehicleStatus.AVAILABLE,
+      });
+      prismaMock.booking.findMany.mockResolvedValue([
+        {
+          startDate: new Date('2026-08-01T01:00:00.000Z'),
+          endDate: new Date('2026-08-03T11:00:00.000Z'),
+        },
+      ]);
+      prismaMock.maintenance.findMany.mockResolvedValue([]);
+
+      const result = await service.getCalendar(
+        'vehicle-1',
+        '2026-08-01T00:00:00.000Z',
+        '2026-09-01T00:00:00.000Z',
+      );
+
+      expect(result.vehicle).toEqual({
+        id: 'vehicle-1',
+        brand: 'Toyota',
+        model: 'Vios',
+        status: VehicleStatus.AVAILABLE,
+      });
+      expect(result.busyPeriods).toEqual([
+        {
+          type: 'BOOKING',
+          label: 'Đã có lịch thuê',
+          startDate: new Date('2026-08-01T01:00:00.000Z'),
+          endDate: new Date('2026-08-03T11:00:00.000Z'),
+        },
+      ]);
+      expect(result.busyPeriods[0]).not.toHaveProperty('id');
     });
   });
 });

@@ -9,11 +9,16 @@ import { RedisService } from '../redis/redis.service';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { PaymentsService } from '../payments/payments.service';
 import { NotificationService } from '../notification/notification.service';
-import { BookingQuoteDto, CreateBookingDto } from './dto/booking.dto';
+import {
+  BookingQuoteDto,
+  CreateAdminBookingDto,
+  CreateBookingDto,
+} from './dto/booking.dto';
 import {
   BookingStatus,
   PaymentStatus,
   Prisma,
+  QuickBookingStatus,
   VehicleStatus,
 } from '@prisma/client';
 import { AuthenticatedUser } from '../auth/types/authenticated-user';
@@ -25,6 +30,7 @@ import {
   bookingCustomerEmail,
   bookingOwnerEmail,
 } from '../notification/mail-templates';
+import { normalizeVietnamesePhone } from '../common/phone';
 
 type BookingDetails = Prisma.BookingGetPayload<{
   include: {
@@ -60,6 +66,9 @@ export class BookingsService {
         'Thời gian nhận xe phải trước thời gian trả xe',
       );
     }
+    if (start.getTime() < Date.now() - 5 * 60_000) {
+      throw new BadRequestException('Thời gian nhận xe phải ở tương lai');
+    }
 
     const vehicle = await this.prisma.vehicle.findUnique({
       where: { id: dto.vehicleId },
@@ -67,7 +76,10 @@ export class BookingsService {
     if (!vehicle) {
       throw new NotFoundException('Không tìm thấy xe yêu cầu');
     }
-    if (vehicle.status !== VehicleStatus.AVAILABLE) {
+    if (
+      vehicle.status === VehicleStatus.LOCKED ||
+      vehicle.status === VehicleStatus.MAINTENANCE
+    ) {
       throw new BadRequestException('Xe hiện không sẵn sàng để đặt');
     }
 
@@ -158,6 +170,20 @@ export class BookingsService {
         'Số điện thoại đặt xe phải trùng với số đã xác minh của tài khoản',
       );
     }
+    const start = new Date(dto.startDate);
+    const end = new Date(dto.endDate);
+    if (
+      Number.isNaN(start.getTime()) ||
+      Number.isNaN(end.getTime()) ||
+      start >= end
+    ) {
+      throw new BadRequestException(
+        'Thời gian nhận xe phải trước thời gian trả xe',
+      );
+    }
+    if (start.getTime() < Date.now() - 5 * 60_000) {
+      throw new BadRequestException('Thời gian nhận xe phải ở tương lai');
+    }
     const lockKey = `vehicle:${dto.vehicleId}`;
     this.logger.log(`Acquiring lock for ${lockKey}`);
 
@@ -170,9 +196,6 @@ export class BookingsService {
     }
 
     try {
-      const start = new Date(dto.startDate);
-      const end = new Date(dto.endDate);
-
       // 2. Validate Vehicle Existence and Status
       const vehicle = await this.prisma.vehicle.findUnique({
         where: { id: dto.vehicleId },
@@ -444,6 +467,273 @@ export class BookingsService {
     } finally {
       // 12. Release Lock
       this.logger.log(`Releasing lock for ${lockKey}`);
+      await this.redisService.releaseLock(lockKey);
+    }
+  }
+
+  async createAdminBooking(
+    dto: CreateAdminBookingDto,
+    actor: AuthenticatedUser,
+  ) {
+    const start = new Date(dto.startDate);
+    const end = new Date(dto.endDate);
+    if (
+      Number.isNaN(start.getTime()) ||
+      Number.isNaN(end.getTime()) ||
+      start >= end
+    ) {
+      throw new BadRequestException(
+        'Thời gian nhận xe phải trước thời gian trả xe',
+      );
+    }
+    if (start.getTime() < Date.now() - 5 * 60_000) {
+      throw new BadRequestException('Thời gian nhận xe phải ở tương lai');
+    }
+
+    const phone = normalizeVietnamesePhone(dto.phone);
+    const lockKey = `vehicle:${dto.vehicleId}`;
+    const locked = await this.redisService.acquireLock(lockKey, 10_000);
+    if (!locked) {
+      throw new BadRequestException(
+        'Xe đang được xử lý bởi một yêu cầu khác. Vui lòng thử lại sau vài giây.',
+      );
+    }
+
+    try {
+      const vehicle = await this.prisma.vehicle.findUnique({
+        where: { id: dto.vehicleId },
+      });
+      if (!vehicle) throw new NotFoundException('Không tìm thấy xe yêu cầu');
+      if (
+        vehicle.status === VehicleStatus.LOCKED ||
+        vehicle.status === VehicleStatus.MAINTENANCE
+      ) {
+        throw new BadRequestException(
+          'Xe đang khóa hoặc bảo dưỡng, chưa thể tạo đơn thuê',
+        );
+      }
+
+      const sourceRequest = dto.quickBookingRequestId
+        ? await this.prisma.quickBookingRequest.findUnique({
+            where: { id: dto.quickBookingRequestId },
+            include: { booking: true },
+          })
+        : null;
+      if (dto.quickBookingRequestId && !sourceRequest) {
+        throw new NotFoundException('Không tìm thấy yêu cầu đặt xe nhanh');
+      }
+      if (sourceRequest?.booking) {
+        throw new BadRequestException(
+          `Yêu cầu này đã được chuyển thành đơn ${sourceRequest.booking.bookingNumber}`,
+        );
+      }
+
+      const conflict = await this.prisma.booking.findFirst({
+        where: {
+          vehicleId: dto.vehicleId,
+          status: {
+            in: [
+              BookingStatus.PENDING,
+              BookingStatus.CONFIRMED,
+              BookingStatus.RENTING,
+            ],
+          },
+          startDate: { lt: end },
+          endDate: { gt: start },
+        },
+        select: { bookingNumber: true },
+      });
+      if (conflict) {
+        throw new BadRequestException(
+          `Xe đã bận trong khoảng thời gian này (${conflict.bookingNumber})`,
+        );
+      }
+
+      const user = await this.prisma.user.findUnique({ where: { phone } });
+      const matchedCustomers = await this.prisma.customer.findMany({
+        where: {
+          OR: [{ phone }, ...(user ? [{ userId: user.id }] : [])],
+        },
+      });
+      if (matchedCustomers.length > 1) {
+        throw new BadRequestException(
+          'Số điện thoại đang liên kết với nhiều hồ sơ khách hàng. Vui lòng hợp nhất hồ sơ trước khi tạo đơn.',
+        );
+      }
+      const currentCustomer = matchedCustomers[0];
+      if (currentCustomer?.segment === 'BLACKLIST') {
+        throw new BadRequestException(
+          'Khách hàng nằm trong danh sách hạn chế, không thể tạo đơn thuê',
+        );
+      }
+
+      const pricing = this.vehiclesService.calculateTotalPrice(
+        vehicle,
+        start,
+        end,
+      );
+      const insuranceType = dto.insuranceType || 'NONE';
+      const insuranceRate =
+        insuranceType === 'PREMIUM'
+          ? 250_000
+          : insuranceType === 'BASIC'
+            ? 100_000
+            : 0;
+      const insuranceFee = insuranceRate * pricing.totalDays;
+      const totalPrice = pricing.totalPrice + insuranceFee;
+      const depositPercent = dto.depositPercent || 30;
+      const depositAmount = Math.round(totalPrice * (depositPercent / 100));
+      const bookingNumber = `BK-${Date.now().toString().slice(-6)}-${Math.floor(10 + Math.random() * 90)}`;
+
+      const result = await this.prisma.$transaction(async (tx) => {
+        const customer = currentCustomer
+          ? await tx.customer.update({
+              where: { id: currentCustomer.id },
+              data: {
+                fullName: dto.fullName.trim(),
+                phone,
+                ...(user && !currentCustomer.userId ? { userId: user.id } : {}),
+              },
+            })
+          : await tx.customer.create({
+              data: {
+                fullName: dto.fullName.trim(),
+                phone,
+                userId: user?.id,
+                segment: 'REGULAR',
+              },
+            });
+
+        const booking = await tx.booking.create({
+          data: {
+            bookingNumber,
+            customerId: customer.id,
+            vehicleId: vehicle.id,
+            startDate: start,
+            endDate: end,
+            pickupLocation: RENTAL_LOCATION.address,
+            dropoffLocation: RENTAL_LOCATION.address,
+            totalDays: pricing.totalDays,
+            basePrice: pricing.totalPrice,
+            totalPrice,
+            notes: dto.notes?.trim() || null,
+            staffId: actor.id,
+            insuranceType,
+            insuranceFee,
+            depositPercent,
+            depositAmount,
+            status: BookingStatus.PENDING,
+          },
+        });
+        const payment = await tx.payment.create({
+          data: {
+            bookingId: booking.id,
+            amount: depositAmount,
+            method: dto.paymentMethod,
+            status: PaymentStatus.UNPAID,
+          },
+        });
+
+        let quickBookingRequest = null;
+        if (sourceRequest) {
+          quickBookingRequest = await tx.quickBookingRequest.update({
+            where: { id: sourceRequest.id },
+            data: {
+              bookingId: booking.id,
+              status: QuickBookingStatus.CLOSED,
+              handledById: actor.id,
+              contactedAt: sourceRequest.contactedAt || new Date(),
+            },
+            include: {
+              vehicle: {
+                select: {
+                  id: true,
+                  brand: true,
+                  model: true,
+                  plateNumber: true,
+                  images: true,
+                },
+              },
+              handledBy: { select: { id: true, name: true } },
+              booking: {
+                select: {
+                  id: true,
+                  bookingNumber: true,
+                  status: true,
+                },
+              },
+            },
+          });
+          await tx.auditLog.create({
+            data: {
+              userId: actor.id,
+              action: 'CONVERT_QUICK_BOOKING',
+              targetTable: 'QuickBookingRequest',
+              targetId: sourceRequest.id,
+              oldValue: {
+                status: sourceRequest.status,
+                bookingId: sourceRequest.bookingId,
+              },
+              newValue: {
+                status: QuickBookingStatus.CLOSED,
+                bookingId: booking.id,
+              },
+            },
+          });
+        }
+
+        await tx.auditLog.create({
+          data: {
+            userId: actor.id,
+            action: 'CREATE_BOOKING_BY_ADMIN',
+            targetTable: 'Booking',
+            targetId: booking.id,
+            newValue: {
+              bookingNumber,
+              vehicleId: vehicle.id,
+              customerId: customer.id,
+              quickBookingRequestId: sourceRequest?.id,
+            },
+          },
+        });
+
+        return {
+          booking: {
+            ...booking,
+            customer,
+            vehicle,
+            payment,
+          },
+          quickBookingRequest,
+        };
+      });
+
+      try {
+        await this.notificationService.sendSMS(
+          phone,
+          `datxe: Don ${bookingNumber} da duoc tao cho ${vehicle.brand} ${vehicle.model}, tu ${start.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })} den ${end.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}. Nhan vien se lien he de hoan tat thu tuc.`,
+          'admin-booking-created',
+          user?.id,
+          `admin-booking-created:${result.booking.id}`,
+        );
+      } catch (error) {
+        this.logger.warn(
+          `Không thể gửi SMS cho đơn ${bookingNumber}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+
+      return result;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new BadRequestException(
+          'Yêu cầu đã được tạo đơn hoặc thông tin khách hàng đang bị trùng. Vui lòng tải lại dữ liệu.',
+        );
+      }
+      throw error;
+    } finally {
       await this.redisService.releaseLock(lockKey);
     }
   }

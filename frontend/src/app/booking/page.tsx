@@ -11,8 +11,9 @@ import { io, type Socket } from 'socket.io-client';
 import {
   Car, Calendar, MapPin, User, Phone,
   CreditCard, Tag, Sparkles, ChevronLeft, Upload, Loader2, CheckCircle2,
-  Star, MessageSquare, Send, X, Shield, Map, AlertTriangle
+  Star, MessageSquare, Send, X, Shield, Map, AlertTriangle, CalendarRange
 } from 'lucide-react';
+import VehicleAvailabilityDialog from '@/components/vehicles/VehicleAvailabilityDialog';
 
 const fieldClassName = 'min-h-11 w-full rounded-lg border border-app-border bg-app-surface px-3 py-2 text-sm text-content shadow-sm outline-none transition placeholder:text-content-secondary hover:border-app-border focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:cursor-not-allowed disabled:bg-app-muted';
 const fieldLabelClassName = 'mb-1.5 block text-sm font-medium text-content-secondary';
@@ -21,13 +22,16 @@ const optionClassName = 'rounded-xl border p-4 transition focus-within:ring-2 fo
 const selectedOptionClassName = 'border-brand bg-utility ring-1 ring-brand/15';
 const idleOptionClassName = 'border-app-border/35 bg-app-surface hover:border-app-border hover:bg-app-muted';
 
-const tomorrow = new Date();
-tomorrow.setDate(tomorrow.getDate() + 1);
-const threeDaysFromNow = new Date();
-threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
-
 const errorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
+
+const todayInVietnam = () =>
+  new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
 
 type VehicleReview = {
   id: string;
@@ -39,11 +43,12 @@ type VehicleReview = {
 
 export default function BookingPage() {
   const router = useRouter();
+  const todayDate = todayInVietnam();
 
   // Search States
-  const [startDate, setStartDate] = useState(() => tomorrow.toISOString().slice(0, 10));
+  const [startDate, setStartDate] = useState('');
   const [startTime, setStartTime] = useState('08:00');
-  const [endDate, setEndDate] = useState(() => threeDaysFromNow.toISOString().slice(0, 10));
+  const [endDate, setEndDate] = useState('');
   const [endTime, setEndTime] = useState('18:00');
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -55,6 +60,10 @@ export default function BookingPage() {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [quote, setQuote] = useState<BookingQuote | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState('');
+  const [quoteKey, setQuoteKey] = useState('');
+  const [quoteErrorKey, setQuoteErrorKey] = useState('');
+  const [availabilityOpen, setAvailabilityOpen] = useState(false);
   const [acceptedPolicies, setAcceptedPolicies] = useState(false);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -90,6 +99,32 @@ export default function BookingPage() {
 
   const [bookingLoading, setBookingLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const quoteInputValid = Boolean(
+    selectedVehicle &&
+    startDate &&
+    endDate &&
+    startTime &&
+    endTime &&
+    new Date(`${startDate}T${startTime}:00+07:00`) <
+      new Date(`${endDate}T${endTime}:00+07:00`),
+  );
+  const quoteRequestKey = selectedVehicle
+    ? [
+        selectedVehicle.id,
+        startDate,
+        startTime,
+        endDate,
+        endTime,
+        insuranceType,
+        depositPercent,
+        couponCode.trim(),
+      ].join("|")
+    : "";
+  const activeQuote =
+    quoteInputValid && quoteKey === quoteRequestKey ? quote : null;
+  const activeQuoteError =
+    quoteInputValid && quoteErrorKey === quoteRequestKey ? quoteError : "";
+  const activeQuoteLoading = quoteInputValid && quoteLoading;
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -134,11 +169,13 @@ export default function BookingPage() {
   }, []);
 
   useEffect(() => {
-    if (!selectedVehicle) {
-      return;
-    }
+    if (!selectedVehicle || !quoteInputValid) return;
+    const requestKey = quoteRequestKey;
+    let active = true;
     const timer = window.setTimeout(() => {
       setQuoteLoading(true);
+      setQuoteError('');
+      setQuoteErrorKey('');
       api.bookings.quote({
         vehicleId: selectedVehicle.id,
         startDate: `${startDate}T${startTime}:00+07:00`,
@@ -146,15 +183,27 @@ export default function BookingPage() {
         insuranceType,
         depositPercent,
         couponCode: couponCode.trim() || undefined,
-      }).then(setQuote)
+      }).then((nextQuote) => {
+        if (!active) return;
+        setQuote(nextQuote);
+        setQuoteKey(requestKey);
+      })
         .catch((err: unknown) => {
+          if (!active) return;
           setQuote(null);
-          setErrorMsg(errorMessage(err, 'Không thể cập nhật báo giá.'));
+          setQuoteKey('');
+          setQuoteError(errorMessage(err, 'Không thể cập nhật báo giá.'));
+          setQuoteErrorKey(requestKey);
         })
-        .finally(() => setQuoteLoading(false));
+        .finally(() => {
+          if (active) setQuoteLoading(false);
+        });
     }, 350);
-    return () => window.clearTimeout(timer);
-  }, [couponCode, depositPercent, endDate, endTime, insuranceType, selectedVehicle, startDate, startTime]);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [couponCode, depositPercent, endDate, endTime, insuranceType, quoteInputValid, quoteRequestKey, selectedVehicle, startDate, startTime]);
 
   useEffect(() => {
     if (selectedVehicle) {
@@ -289,7 +338,7 @@ export default function BookingPage() {
         setErrorMsg('Vui lòng đọc và đồng ý với quy định thuê xe trước khi xác nhận.');
         return;
       }
-      if (!quote) {
+      if (!activeQuote) {
         setErrorMsg('Báo giá chưa sẵn sàng. Vui lòng kiểm tra lại lịch thuê.');
         return;
       }
@@ -346,27 +395,6 @@ export default function BookingPage() {
     }
   };
 
-  // Tính toán phí bảo hiểm và cọc hiển thị
-  const getInsuranceFee = () => {
-    if (insuranceType === 'NONE') return 0;
-    if (insuranceType === 'BASIC') return 100000;
-    return 250000;
-  };
-
-  const getDaysCount = () => {
-    const s = new Date(`${startDate}T${startTime}:00+07:00`);
-    const e = new Date(`${endDate}T${endTime}:00+07:00`);
-    const diff = e.getTime() - s.getTime();
-    if (diff <= 0) return 1;
-    return Math.ceil(diff / (1000 * 60 * 60 * 24));
-  };
-
-  const getSubTotal = () => {
-    if (!selectedVehicle) return 0;
-    const days = getDaysCount();
-    return selectedVehicle.dailyPrice * days;
-  };
-
   return (
     <main className="min-h-screen bg-app-muted px-4 py-8 text-content sm:px-6 sm:py-10 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
@@ -413,7 +441,12 @@ export default function BookingPage() {
                   <input
                     type="date"
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                    min={todayDate}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setStartDate(value);
+                      if (endDate && endDate < value) setEndDate('');
+                    }}
                     required
                     className={fieldClassName}
                   />
@@ -436,6 +469,7 @@ export default function BookingPage() {
                   <input
                     type="date"
                     value={endDate}
+                    min={startDate || todayDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     required
                     className={fieldClassName}
@@ -591,15 +625,79 @@ export default function BookingPage() {
                 </div>
               </div>
               <hr className="border-app-border/35" />
-              <div className="text-sm space-y-2">
-                <div className="flex justify-between gap-3 text-content-secondary">
-                  <span>Nhận xe:</span>
-                  <span className="font-medium text-content">{startDate} | {startTime}</span>
+              <div className="rounded-xl border border-brand/25 bg-utility p-4">
+                <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+                  <div>
+                    <h3 className="font-bold text-utility-foreground">
+                      Điều chỉnh lịch thuê
+                    </h3>
+                    <p className="mt-1 text-xs leading-5 text-utility-foreground">
+                      Giá được backend tính lại ngay sau khi bạn đổi ngày hoặc giờ.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAvailabilityOpen(true)}
+                    className="flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-brand bg-app-surface px-3 text-xs font-bold text-brand transition hover:bg-app-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  >
+                    <CalendarRange className="h-4 w-4" />
+                    Xem lịch trống
+                  </button>
                 </div>
-                <div className="flex justify-between gap-3 text-content-secondary">
-                  <span>Trả xe:</span>
-                  <span className="font-medium text-content">{endDate} | {endTime}</span>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <label className="text-xs font-bold text-content-secondary">
+                    Ngày nhận
+                    <input
+                      type="date"
+                      min={todayDate}
+                      value={startDate}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setStartDate(value);
+                        if (endDate && endDate < value) setEndDate('');
+                      }}
+                      className={fieldClassName}
+                    />
+                  </label>
+                  <label className="text-xs font-bold text-content-secondary">
+                    Giờ nhận
+                    <input
+                      type="time"
+                      value={startTime}
+                      onChange={(event) => setStartTime(event.target.value)}
+                      className={fieldClassName}
+                    />
+                  </label>
+                  <label className="text-xs font-bold text-content-secondary">
+                    Ngày trả
+                    <input
+                      type="date"
+                      min={startDate || todayDate}
+                      value={endDate}
+                      onChange={(event) => setEndDate(event.target.value)}
+                      className={fieldClassName}
+                    />
+                  </label>
+                  <label className="text-xs font-bold text-content-secondary">
+                    Giờ trả
+                    <input
+                      type="time"
+                      value={endTime}
+                      onChange={(event) => setEndTime(event.target.value)}
+                      className={fieldClassName}
+                    />
+                  </label>
                 </div>
+                {activeQuoteError && (
+                  <p
+                    role="alert"
+                    className="mt-3 rounded-lg bg-danger-muted p-3 text-xs font-semibold text-danger"
+                  >
+                    {activeQuoteError}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2 text-sm">
                 <div className="flex justify-between gap-3 text-content-secondary">
                   <span>Điểm giao nhận:</span>
                   <span className="max-w-[220px] text-right font-medium text-content">{storeInfo.address}</span>
@@ -609,26 +707,26 @@ export default function BookingPage() {
               <div className="text-sm space-y-2">
                 <div className="flex justify-between text-content-secondary">
                   <span>Tổng ngày thuê:</span>
-                  <span className="font-bold text-content">{quote?.totalDays ?? getDaysCount()} Ngày</span>
+                  <span className="font-bold text-content">{activeQuote ? `${activeQuote.totalDays} ngày` : '—'}</span>
                 </div>
                 <div className="flex justify-between text-content-secondary">
                   <span>Giá thuê:</span>
-                  <span className="text-content">{(quote?.basePrice ?? getSubTotal()).toLocaleString()}đ</span>
+                  <span className="text-content">{activeQuote ? `${activeQuote.basePrice.toLocaleString('vi-VN')}đ` : '—'}</span>
                 </div>
                 <div className="flex justify-between text-content-secondary">
                   <span>Phí bảo hiểm:</span>
-                  <span className="text-content">{(quote?.insuranceFee ?? getInsuranceFee() * getDaysCount()).toLocaleString()}đ</span>
+                  <span className="text-content">{activeQuote ? `${activeQuote.insuranceFee.toLocaleString('vi-VN')}đ` : '—'}</span>
                 </div>
-                {quote && quote.discountAmount > 0 && <div className="flex justify-between text-brand"><span>Giảm giá:</span><span>-{quote.discountAmount.toLocaleString()}đ</span></div>}
+                {activeQuote && activeQuote.discountAmount > 0 && <div className="flex justify-between text-brand"><span>Giảm giá:</span><span>-{activeQuote.discountAmount.toLocaleString()}đ</span></div>}
                 <div className="flex justify-between border-t border-app-border/35 pt-2 font-bold text-content-secondary">
                   <span>Tổng tiền thanh toán:</span>
-                  <span className="text-rental-price">{quoteLoading ? 'Đang tính…' : quote ? `${quote.totalPrice.toLocaleString()}đ` : 'Chưa có báo giá'}</span>
+                  <span className="text-rental-price">{activeQuoteLoading ? 'Đang tính…' : activeQuote ? `${activeQuote.totalPrice.toLocaleString()}đ` : 'Chưa có báo giá'}</span>
                 </div>
                 <div className="flex justify-between text-base font-black text-rental-price">
                   <span>Tiền đặt cọc ({depositPercent}%):</span>
-                  <span>{quote ? `${quote.depositAmount.toLocaleString()}đ` : '—'}</span>
+                  <span>{activeQuote ? `${activeQuote.depositAmount.toLocaleString()}đ` : '—'}</span>
                 </div>
-                {quote?.couponMessage && <p className="text-xs text-warning">{quote.couponMessage}</p>}
+                {activeQuote?.couponMessage && <p className="text-xs text-warning">{activeQuote.couponMessage}</p>}
               </div>
 
               {currentUser && selectedVehicle.ownerId && (
@@ -1046,7 +1144,7 @@ export default function BookingPage() {
 
               <button
                 type="submit"
-                disabled={bookingLoading || quoteLoading || !quote || !acceptedPolicies}
+                disabled={bookingLoading || activeQuoteLoading || !activeQuote || !acceptedPolicies}
                 className="gradient-btn mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-lg px-4 py-3.5 text-lg font-semibold text-on-brand shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               >
                 {bookingLoading && <Loader2 className="h-5 w-5 animate-spin" />}
@@ -1115,6 +1213,19 @@ export default function BookingPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {availabilityOpen && selectedVehicle && (
+        <VehicleAvailabilityDialog
+          vehicle={selectedVehicle}
+          initialStartDate={startDate}
+          initialEndDate={endDate}
+          onApply={(nextStartDate, nextEndDate) => {
+            setStartDate(nextStartDate);
+            setEndDate(nextEndDate);
+          }}
+          onClose={() => setAvailabilityOpen(false)}
+        />
       )}
 
       </div>

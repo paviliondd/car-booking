@@ -8,6 +8,7 @@ import {
   Min,
   Max,
   IsEnum,
+  IsISO8601,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { VehicleStatus } from '@prisma/client';
@@ -212,4 +213,14 @@ export class SearchVehicleDto {
 export class UpdateVehicleStatusDto {
   @IsEnum(VehicleStatus)
   status: VehicleStatus;
+}
+
+export class VehicleCalendarQueryDto {
+  @IsISO8601({ strict: true })
+  @IsOptional()
+  from?: string;
+
+  @IsISO8601({ strict: true })
+  @IsOptional()
+  to?: string;
 }

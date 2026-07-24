@@ -17,6 +17,7 @@ import {
   SearchVehicleDto,
   UpdateVehicleDto,
   UpdateVehicleStatusDto,
+  VehicleCalendarQueryDto,
 } from './dto/vehicle.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -68,8 +69,11 @@ export class VehiclesController {
 
   // 3. Lấy thông tin lịch bận của một xe (Public)
   @Get(':id/calendar')
-  async getCalendar(@Param('id') id: string) {
-    return await this.vehiclesService.getCalendar(id);
+  async getCalendar(
+    @Param('id') id: string,
+    @Query() query: VehicleCalendarQueryDto,
+  ) {
+    return await this.vehiclesService.getCalendar(id, query.from, query.to);
   }
 
   // 4. Lấy chi tiết một xe (Public)

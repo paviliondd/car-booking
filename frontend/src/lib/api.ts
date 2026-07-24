@@ -80,6 +80,17 @@ export type VehicleInput = {
   overLimitFee?: number;
   terms?: string;
 };
+export type VehicleBusyPeriod = {
+  type: "BOOKING" | "MAINTENANCE";
+  label: string;
+  startDate: string;
+  endDate: string;
+};
+export type VehicleCalendar = {
+  vehicle: Pick<Vehicle, "id" | "brand" | "model" | "status">;
+  range: { from: string; to: string };
+  busyPeriods: VehicleBusyPeriod[];
+};
 export type Booking = {
   id: string;
   bookingNumber: string;
@@ -237,6 +248,7 @@ export type QuickBookingRequest = {
   updatedAt: string;
   vehicle: Pick<Vehicle, "id" | "brand" | "model" | "plateNumber" | "images">;
   handledBy?: { id: string; name: string } | null;
+  booking?: Pick<Booking, "id" | "bookingNumber" | "status"> | null;
 };
 
 export type QuickBookingPublicResponse = {
@@ -250,6 +262,24 @@ export type QuickBookingPublicResponse = {
   duplicate: boolean;
   reservationConfirmed: false;
   message: string;
+};
+
+export type AdminBookingInput = {
+  vehicleId: string;
+  startDate: string;
+  endDate: string;
+  fullName: string;
+  phone: string;
+  paymentMethod: "MOMO" | "BANK_TRANSFER" | "CASH";
+  notes?: string;
+  insuranceType: "NONE" | "BASIC" | "PREMIUM";
+  depositPercent: 30 | 50;
+  quickBookingRequestId?: string;
+};
+
+export type AdminBookingResponse = {
+  booking: Booking;
+  quickBookingRequest?: QuickBookingRequest | null;
 };
 
 async function request<T>(
@@ -491,8 +521,15 @@ export const api = {
       return request<Vehicle[]>(`/vehicles/search?${params.toString()}`);
     },
     findOne: (id: string) => request<Vehicle>(`/vehicles/${id}`),
-    getCalendar: (id: string) =>
-      request<JsonObject[]>(`/vehicles/${id}/calendar`),
+    getCalendar: (id: string, from?: string, to?: string) => {
+      const params = new URLSearchParams();
+      if (from) params.set("from", from);
+      if (to) params.set("to", to);
+      const query = params.toString();
+      return request<VehicleCalendar>(
+        `/vehicles/${id}/calendar${query ? `?${query}` : ""}`,
+      );
+    },
     getSuggestions: (
       brand: string,
       seats: number,
@@ -586,6 +623,11 @@ export const api = {
         "/bookings",
         { method: "POST", body: JSON.stringify(dto) },
       ),
+    createAdmin: (dto: AdminBookingInput) =>
+      request<AdminBookingResponse>("/bookings/admin", {
+        method: "POST",
+        body: JSON.stringify(dto),
+      }),
     track: (phone: string, bookingCode?: string) => {
       const params = new URLSearchParams({ phone });
       if (bookingCode) params.set("bookingCode", bookingCode);

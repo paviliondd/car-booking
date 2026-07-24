@@ -154,6 +154,13 @@ export class QuickBookingsService {
           handledBy: {
             select: { id: true, name: true },
           },
+          booking: {
+            select: {
+              id: true,
+              bookingNumber: true,
+              status: true,
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip: (query.page - 1) * query.limit,
@@ -172,6 +179,15 @@ export class QuickBookingsService {
       where: { id },
     });
     if (!current) throw new NotFoundException('Không tìm thấy yêu cầu');
+    if (
+      current.bookingId &&
+      dto.status &&
+      dto.status !== QuickBookingStatus.CLOSED
+    ) {
+      throw new BadRequestException(
+        'Yêu cầu đã được chuyển thành đơn thuê nên phải giữ trạng thái hoàn tất',
+      );
+    }
 
     return this.prisma.$transaction(async (tx) => {
       const updated = await tx.quickBookingRequest.update({
@@ -190,6 +206,13 @@ export class QuickBookingsService {
         include: {
           vehicle: true,
           handledBy: { select: { id: true, name: true } },
+          booking: {
+            select: {
+              id: true,
+              bookingNumber: true,
+              status: true,
+            },
+          },
         },
       });
       await tx.auditLog.create({
@@ -270,7 +293,11 @@ export class QuickBookingsService {
     const vehicle = await this.prisma.vehicle.findUnique({
       where: { id: vehicleId },
     });
-    if (!vehicle || vehicle.status !== VehicleStatus.AVAILABLE) {
+    if (
+      !vehicle ||
+      vehicle.status === VehicleStatus.LOCKED ||
+      vehicle.status === VehicleStatus.MAINTENANCE
+    ) {
       throw new NotFoundException('Xe không tồn tại hoặc đang không khả dụng');
     }
     const conflict = await this.prisma.booking.count({
