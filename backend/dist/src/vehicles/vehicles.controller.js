@@ -35,8 +35,14 @@ let VehiclesController = class VehiclesController {
     async getSuggestions(brand, seats, startDate, endDate) {
         return await this.vehiclesService.findSuggestions(brand || '', seats ? parseInt(seats, 10) : 4, startDate, endDate);
     }
-    async getCalendar(id) {
-        return await this.vehiclesService.getCalendar(id);
+    async findAvailableNow(brand, seats) {
+        return await this.vehiclesService.findAvailableNow({
+            brand,
+            seats: seats ? parseInt(seats, 10) : undefined,
+        });
+    }
+    async getCalendar(id, query) {
+        return await this.vehiclesService.getCalendar(id, query.from, query.to);
     }
     async findOne(id) {
         return await this.vehiclesService.findOne(id);
@@ -55,31 +61,13 @@ let VehiclesController = class VehiclesController {
         return await this.vehiclesService.create(dto, ownerId);
     }
     async update(req, id, dto) {
-        if (req.user.role === client_1.Role.OWNER) {
-            const car = await this.vehiclesService.findOne(id);
-            if (car.ownerId !== req.user.id) {
-                throw new common_1.BadRequestException('Bạn không sở hữu phương tiện này');
-            }
-        }
-        return await this.vehiclesService.update(id, dto);
+        return await this.vehiclesService.update(id, dto, req.user);
     }
-    async updateStatus(req, id, status) {
-        if (req.user.role === client_1.Role.OWNER) {
-            const car = await this.vehiclesService.findOne(id);
-            if (car.ownerId !== req.user.id) {
-                throw new common_1.BadRequestException('Bạn không sở hữu phương tiện này');
-            }
-        }
-        return await this.vehiclesService.updateStatus(id, status);
+    async updateStatus(req, id, dto) {
+        return await this.vehiclesService.updateStatus(id, dto.status, req.user);
     }
     async delete(req, id) {
-        if (req.user.role === client_1.Role.OWNER) {
-            const car = await this.vehiclesService.findOne(id);
-            if (car.ownerId !== req.user.id) {
-                throw new common_1.BadRequestException('Bạn không sở hữu phương tiện này');
-            }
-        }
-        return await this.vehiclesService.delete(id);
+        return await this.vehiclesService.delete(id, req.user);
     }
 };
 exports.VehiclesController = VehiclesController;
@@ -101,10 +89,19 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], VehiclesController.prototype, "getSuggestions", null);
 __decorate([
+    (0, common_1.Get)('available-now'),
+    __param(0, (0, common_1.Query)('brand')),
+    __param(1, (0, common_1.Query)('seats')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], VehiclesController.prototype, "findAvailableNow", null);
+__decorate([
     (0, common_1.Get)(':id/calendar'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, vehicle_dto_1.VehicleCalendarQueryDto]),
     __metadata("design:returntype", Promise)
 ], VehiclesController.prototype, "getCalendar", null);
 __decorate([
@@ -149,7 +146,7 @@ __decorate([
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:paramtypes", [Object, String, vehicle_dto_1.UpdateVehicleDto]),
     __metadata("design:returntype", Promise)
 ], VehiclesController.prototype, "update", null);
 __decorate([
@@ -158,9 +155,9 @@ __decorate([
     (0, common_1.Patch)(':id/status'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
-    __param(2, (0, common_1.Body)('status')),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:paramtypes", [Object, String, vehicle_dto_1.UpdateVehicleStatusDto]),
     __metadata("design:returntype", Promise)
 ], VehiclesController.prototype, "updateStatus", null);
 __decorate([

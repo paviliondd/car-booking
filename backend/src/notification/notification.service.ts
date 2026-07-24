@@ -336,4 +336,41 @@ export class NotificationService {
       );
     }
   }
+
+  async createInAppNotification(
+    userId: string,
+    title: string,
+    content: string,
+    link?: string,
+  ) {
+    try {
+      return await this.prisma.notification.create({
+        data: {
+          userId,
+          title,
+          content,
+          link,
+        },
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Could not create in-app notification for user ${userId}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  async getUserNotifications(userId: string) {
+    return this.prisma.notification.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+  }
+
+  async markNotificationAsRead(id: string, userId: string) {
+    return this.prisma.notification.updateMany({
+      where: { id, userId },
+      data: { isRead: true },
+    });
+  }
 }

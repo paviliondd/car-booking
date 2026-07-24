@@ -107,6 +107,7 @@ model User {
   sentMessages              ChatMessage[]         @relation("SentMessages")
   receivedMessages          ChatMessage[]         @relation("ReceivedMessages")
   notificationLogs          NotificationLog[]
+  notifications             Notification[]
   ownerApplications         OwnerLead[]           @relation("OwnerApplicant")
   reviewedOwnerApplications OwnerLead[]           @relation("OwnerReviewer")
   handledQuickBookings      QuickBookingRequest[] @relation("QuickBookingHandler")
@@ -419,3 +420,18 @@ model QuickBookingRequest {
   @@index([status, createdAt])
   @@index([vehicleId, startDate, endDate])
 }
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  content   String   @db.Text
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+}
+

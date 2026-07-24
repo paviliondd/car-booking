@@ -5,8 +5,8 @@ export declare class ReviewsService {
     create(userId: string, vehicleId: string, rating: number, comment: string): Promise<{
         customer: {
             id: string;
-            phone: string;
-            idCardNo: string;
+            phone: string | null;
+            idCardNo: string | null;
             createdAt: Date;
             updatedAt: Date;
             fullName: string;
@@ -29,8 +29,8 @@ export declare class ReviewsService {
     findByVehicle(vehicleId: string): Promise<({
         customer: {
             id: string;
-            phone: string;
-            idCardNo: string;
+            phone: string | null;
+            idCardNo: string | null;
             createdAt: Date;
             updatedAt: Date;
             fullName: string;

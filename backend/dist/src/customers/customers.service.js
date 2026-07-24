@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CustomersService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const client_1 = require("@prisma/client");
 let CustomersService = class CustomersService {
     prisma;
     constructor(prisma) {
@@ -20,6 +21,14 @@ let CustomersService = class CustomersService {
     async findAll() {
         const customers = await this.prisma.customer.findMany({
             include: {
+                user: {
+                    select: {
+                        id: true,
+                        email: true,
+                        name: true,
+                        role: true,
+                    },
+                },
                 bookings: {
                     where: { status: 'COMPLETED' },
                     select: {
@@ -46,6 +55,7 @@ let CustomersService = class CustomersService {
                 idCardNo: c.idCardNo,
                 segment: c.segment,
                 notes: c.notes,
+                user: c.user,
                 totalBookings,
                 totalRevenue,
                 lastRentalDate,
@@ -68,15 +78,59 @@ let CustomersService = class CustomersService {
         }
         return customer;
     }
-    async updateSegmentAndNotes(id, segment, notes) {
-        await this.findOne(id);
-        return await this.prisma.customer.update({
-            where: { id },
-            data: {
-                segment,
-                ...(notes !== undefined ? { notes } : {}),
-            },
-        });
+    async update(id, dto, actorId) {
+        const current = await this.findOne(id);
+        try {
+            return await this.prisma.$transaction(async (tx) => {
+                const updated = await tx.customer.update({
+                    where: { id },
+                    data: dto,
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                email: true,
+                                name: true,
+                                role: true,
+                            },
+                        },
+                    },
+                });
+                if (current.userId && (dto.fullName || dto.phone)) {
+                    await tx.user.update({
+                        where: { id: current.userId },
+                        data: {
+                            ...(dto.fullName ? { name: dto.fullName } : {}),
+                            ...(dto.phone ? { phone: dto.phone } : {}),
+                        },
+                    });
+                }
+                await tx.auditLog.create({
+                    data: {
+                        userId: actorId,
+                        action: 'UPDATE_CUSTOMER',
+                        targetTable: 'Customer',
+                        targetId: id,
+                        oldValue: {
+                            fullName: current.fullName,
+                            phone: current.phone,
+                            idCardNo: current.idCardNo,
+                            segment: current.segment,
+                            notes: current.notes,
+                        },
+                        newValue: { ...dto },
+                    },
+                });
+                return updated;
+            });
+        }
+        catch (error) {
+            if (error instanceof client_1.Prisma.PrismaClientKnownRequestError &&
+                error.code === 'P2002') {
+                throw new common_1.BadRequestException('Số điện thoại hoặc CCCD đã được sử dụng');
+            }
+            throw error;
+        }
     }
 };
 exports.CustomersService = CustomersService;

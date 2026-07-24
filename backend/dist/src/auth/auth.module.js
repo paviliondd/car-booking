@@ -14,6 +14,8 @@ const passport_1 = require("@nestjs/passport");
 const jwt_1 = require("@nestjs/jwt");
 const config_1 = require("@nestjs/config");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
+const notification_module_1 = require("../notification/notification.module");
+const redis_module_1 = require("../redis/redis.module");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -29,6 +31,8 @@ exports.AuthModule = AuthModule = __decorate([
                     signOptions: { expiresIn: '7d' },
                 }),
             }),
+            notification_module_1.NotificationModule,
+            redis_module_1.RedisModule,
         ],
         providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy],
         controllers: [auth_controller_1.AuthController],

@@ -115,7 +115,6 @@ Bên A đồng ý cho Bên B thuê xe tự lái với các thông tin sau:
         const user = await this.prisma.user.findFirst({
             where: { customer: { id: booking.customerId } },
         });
-        const targetEmail = user?.email || 'customer@gmail.com';
         const emailBody = `
       <h3>Hợp đồng thuê xe điện tử số ${booking.bookingNumber}</h3>
       <p>Chào bạn ${booking.customer.fullName},</p>
@@ -125,8 +124,27 @@ Bên A đồng ý cho Bên B thuê xe tự lái với các thông tin sau:
       <p>Trân trọng,<br/>Đội ngũ datxe</p>
     `;
         const mockPdfBase64 = 'JVBERi0xLjQKJdPr6eEKMSAwIG9iago8PAovVGl0bGUgKEhvcCBkb25nIERBVFhFKQovQXV0aG9yIChEQVRYRSkKPj4KZW5kb2JqCnhyZWYKMCAxCjAwMDAwMDAwMDAgNjU1MzUgZiAKdHJhaWxlcgo8PAovU2l6ZSAyCj4+CnN0YXJ0eHJlZgoxMTYKJSVFT0Y=';
-        await this.notificationService.sendEmailWithAttachment(targetEmail, `[datxe] Hợp đồng điện tử ${booking.bookingNumber} đã ký kết`, emailBody, mockPdfBase64, `HopDong_datxe_${booking.bookingNumber}.pdf`);
+        if (user?.email) {
+            await this.notificationService.sendEmailWithAttachment(user.email, `[datxe] Hợp đồng điện tử ${booking.bookingNumber} đã ký kết`, emailBody, mockPdfBase64, `HopDong_datxe_${booking.bookingNumber}.pdf`);
+        }
         return updatedContract;
+    }
+    async ownerSignContract(bookingId, ownerSignature, actor) {
+        const { contract, booking } = await this.getOrCreateContract(bookingId, actor);
+        const isOwner = booking.vehicle.ownerId === actor.id;
+        const isStaffOrAdmin = actor.role === client_1.Role.ADMIN || actor.role === client_1.Role.STAFF;
+        if (!isOwner && !isStaffOrAdmin) {
+            throw new common_1.ForbiddenException('Chỉ chủ sở hữu xe hoặc quản trị viên mới có thể ký đối ứng hợp đồng này');
+        }
+        if (contract.ownerSignature) {
+            throw new common_1.BadRequestException('Hợp đồng này đã được chủ xe ký trước đó.');
+        }
+        return await this.prisma.contract.update({
+            where: { bookingId },
+            data: {
+                ownerSignature,
+            },
+        });
     }
 };
 exports.ContractsService = ContractsService;

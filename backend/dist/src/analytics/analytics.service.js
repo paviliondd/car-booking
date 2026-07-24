@@ -79,6 +79,10 @@ let AnalyticsService = class AnalyticsService {
                 revenues: true,
                 expenses: true,
                 maintenances: true,
+                bookings: {
+                    where: { status: 'COMPLETED' },
+                    select: { totalDays: true },
+                },
             },
         });
         return vehicles.map((v) => {
@@ -87,7 +91,7 @@ let AnalyticsService = class AnalyticsService {
             const otherExpense = v.expenses.reduce((sum, e) => sum + e.amount, 0);
             const totalCost = maintenanceCost + otherExpense;
             const netProfit = totalRevenue - totalCost;
-            const totalRentedDays = v.revenues.length * 3;
+            const totalRentedDays = v.bookings.reduce((sum, booking) => sum + booking.totalDays, 0);
             const occupancyRate = (totalRentedDays / 30) * 100;
             return {
                 vehicleId: v.id,

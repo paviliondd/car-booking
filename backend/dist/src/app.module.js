@@ -29,6 +29,9 @@ const core_1 = require("@nestjs/core");
 const throttler_1 = require("@nestjs/throttler");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
+const storage_module_1 = require("./storage/storage.module");
+const account_module_1 = require("./account/account.module");
+const quick_bookings_module_1 = require("./quick-bookings/quick-bookings.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -60,6 +63,9 @@ exports.AppModule = AppModule = __decorate([
             tickets_module_1.TicketsModule,
             chat_module_1.ChatModule,
             dashboard_module_1.DashboardModule,
+            storage_module_1.StorageModule,
+            account_module_1.AccountModule,
+            quick_bookings_module_1.QuickBookingsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [

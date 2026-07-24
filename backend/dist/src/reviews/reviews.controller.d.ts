@@ -7,8 +7,8 @@ export declare class ReviewsController {
     create(req: AuthenticatedRequest, dto: CreateReviewDto): Promise<{
         customer: {
             id: string;
-            phone: string;
-            idCardNo: string;
+            phone: string | null;
+            idCardNo: string | null;
             createdAt: Date;
             updatedAt: Date;
             fullName: string;
@@ -31,8 +31,8 @@ export declare class ReviewsController {
     findByVehicle(vehicleId: string): Promise<({
         customer: {
             id: string;
-            phone: string;
-            idCardNo: string;
+            phone: string | null;
+            idCardNo: string | null;
             createdAt: Date;
             updatedAt: Date;
             fullName: string;

@@ -12,12 +12,13 @@ const bookings_service_1 = require("./bookings.service");
 const bookings_controller_1 = require("./bookings.controller");
 const vehicles_module_1 = require("../vehicles/vehicles.module");
 const payments_module_1 = require("../payments/payments.module");
+const storage_module_1 = require("../storage/storage.module");
 let BookingsModule = class BookingsModule {
 };
 exports.BookingsModule = BookingsModule;
 exports.BookingsModule = BookingsModule = __decorate([
     (0, common_1.Module)({
-        imports: [vehicles_module_1.VehiclesModule, payments_module_1.PaymentsModule],
+        imports: [vehicles_module_1.VehiclesModule, payments_module_1.PaymentsModule, storage_module_1.StorageModule],
         providers: [bookings_service_1.BookingsService],
         controllers: [bookings_controller_1.BookingsController],
         exports: [bookings_service_1.BookingsService],

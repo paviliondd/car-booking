@@ -184,4 +184,36 @@ Bên A đồng ý cho Bên B thuê xe tự lái với các thông tin sau:
 
     return updatedContract;
   }
+
+  async ownerSignContract(
+    bookingId: string,
+    ownerSignature: string,
+    actor: { id: string; role: Role },
+  ) {
+    const { contract, booking } = await this.getOrCreateContract(
+      bookingId,
+      actor,
+    );
+
+    const isOwner = booking.vehicle.ownerId === actor.id;
+    const isStaffOrAdmin =
+      actor.role === Role.ADMIN || actor.role === Role.STAFF;
+
+    if (!isOwner && !isStaffOrAdmin) {
+      throw new ForbiddenException(
+        'Chỉ chủ sở hữu xe hoặc quản trị viên mới có thể ký đối ứng hợp đồng này',
+      );
+    }
+
+    if (contract.ownerSignature) {
+      throw new BadRequestException('Hợp đồng này đã được chủ xe ký trước đó.');
+    }
+
+    return await this.prisma.contract.update({
+      where: { bookingId },
+      data: {
+        ownerSignature,
+      },
+    });
+  }
 }

@@ -8,7 +8,12 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { OwnerApplicationStatus, Prisma, Role } from '@prisma/client';
+import {
+  OwnerApplicationStatus,
+  Prisma,
+  Role,
+  VehicleStatus,
+} from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
 import { createHash, randomInt } from 'node:crypto';
@@ -278,11 +283,29 @@ export class AuthService {
           where: { id: userId },
           data: { phone, phoneVerifiedAt: new Date() },
         });
-        await tx.customer.upsert({
-          where: { userId },
-          create: { userId, phone, fullName: current.name },
-          update: { phone },
+        const existingCustomerWithPhone = await tx.customer.findUnique({
+          where: { phone },
         });
+        if (
+          existingCustomerWithPhone &&
+          existingCustomerWithPhone.userId &&
+          existingCustomerWithPhone.userId !== userId
+        ) {
+          throw new ConflictException('Số điện thoại đã thuộc tài khoản khác');
+        }
+
+        if (existingCustomerWithPhone && !existingCustomerWithPhone.userId) {
+          await tx.customer.update({
+            where: { id: existingCustomerWithPhone.id },
+            data: { userId, fullName: current.name },
+          });
+        } else {
+          await tx.customer.upsert({
+            where: { userId },
+            create: { userId, phone, fullName: current.name },
+            update: { phone },
+          });
+        }
         await tx.auditLog.create({
           data: {
             userId,
@@ -622,6 +645,40 @@ export class AuthService {
           where: { id: application.userId! },
           data: { role: Role.OWNER, isVerifiedOwner: true },
         });
+
+        // Tự động tạo bản thảo xe cho chủ xe để không cần nhập lại thông tin
+        const plate =
+          application.plateNumber?.trim().toUpperCase() ||
+          `DRAFT-${Date.now().toString().slice(-6)}`;
+        const existingVehicle = await tx.vehicle.findFirst({
+          where: {
+            OR: [{ plateNumber: plate }, { ownerId: application.userId }],
+          },
+        });
+        if (!existingVehicle) {
+          const parts = application.carName.trim().split(' ');
+          const brand = parts[0] || 'Khác';
+          const model = parts.slice(1).join(' ') || application.carName.trim();
+          await tx.vehicle.create({
+            data: {
+              plateNumber: plate,
+              brand,
+              model,
+              year: application.vehicleYear || new Date().getFullYear(),
+              seats: 5,
+              transmission: 'AUTO',
+              fuel: 'GASOLINE',
+              color: 'Trắng',
+              dailyPrice: 800000,
+              weekendPrice: 1000000,
+              holidayPrice: 1200000,
+              penaltyRate: 100000,
+              status: VehicleStatus.LOCKED,
+              ownerId: application.userId,
+              images: ['/images/placeholder-car.png'],
+            },
+          });
+        }
       }
       const updated = await tx.ownerLead.update({
         where: { id: application.id },

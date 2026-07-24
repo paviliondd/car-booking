@@ -28,6 +28,9 @@ let ContractsController = class ContractsController {
     async signContract(bookingId, req, dto) {
         return this.contractsService.signContract(bookingId, dto.renterSignature, req.user);
     }
+    async ownerSignContract(bookingId, req, dto) {
+        return this.contractsService.ownerSignContract(bookingId, dto.renterSignature, req.user);
+    }
 };
 exports.ContractsController = ContractsController;
 __decorate([
@@ -49,6 +52,16 @@ __decorate([
     __metadata("design:paramtypes", [String, Object, contract_dto_1.SignContractDto]),
     __metadata("design:returntype", Promise)
 ], ContractsController.prototype, "signContract", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)(':bookingId/owner-sign'),
+    __param(0, (0, common_1.Param)('bookingId')),
+    __param(1, (0, common_1.Req)()),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, contract_dto_1.SignContractDto]),
+    __metadata("design:returntype", Promise)
+], ContractsController.prototype, "ownerSignContract", null);
 exports.ContractsController = ContractsController = __decorate([
     (0, common_1.Controller)('contracts'),
     __metadata("design:paramtypes", [contracts_service_1.ContractsService])

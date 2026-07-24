@@ -25,12 +25,12 @@ export declare class ChatGateway {
     handleMessage(client: Socket<ClientEvents, ServerEvents, Record<string, never>, SocketData>, data: SendMessageDto): Promise<({
         sender: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
         };
         receiver: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
         };
     } & {

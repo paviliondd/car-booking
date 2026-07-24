@@ -1,6 +1,7 @@
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateVehicleDto } from './dto/vehicle.dto';
+import { CreateVehicleDto, UpdateVehicleDto } from './dto/vehicle.dto';
 import { Vehicle, VehicleStatus } from '@prisma/client';
+import { AuthenticatedUser } from '../auth/types/authenticated-user';
 export declare class VehiclesService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -17,53 +18,41 @@ export declare class VehiclesService {
         brand?: string;
         seats?: number;
     }): Promise<Vehicle[]>;
+    findAvailableNow(filters: {
+        brand?: string;
+        seats?: number;
+    }): Promise<Vehicle[]>;
     findAvailable(startDateStr: string, endDateStr: string, filters: {
         brand?: string;
         seats?: number;
     }): Promise<Vehicle[]>;
     findOne(id: string): Promise<Vehicle>;
-    getCalendar(id: string): Promise<{
+    getCalendar(id: string, fromValue?: string, toValue?: string): Promise<{
         vehicle: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            limitKmPerDay: number | null;
-            plateNumber: string;
             brand: string;
             model: string;
-            year: number;
-            seats: number;
-            transmission: string;
-            fuel: string;
-            color: string;
-            dailyPrice: number;
-            weekendPrice: number;
-            holidayPrice: number;
-            penaltyRate: number;
-            images: string[];
-            videoUrl: string | null;
             status: import("@prisma/client").$Enums.VehicleStatus;
-            overLimitFee: number | null;
-            pickupLocation: string;
-            latitude: number | null;
-            longitude: number | null;
-            terms: string | null;
-            ownerId: string | null;
         };
-        bookings: {
-            id: string;
-            status: import("@prisma/client").$Enums.BookingStatus;
+        range: {
+            from: Date;
+            to: Date;
+        };
+        busyPeriods: ({
+            type: "BOOKING";
+            label: string;
             startDate: Date;
             endDate: Date;
-        }[];
-        maintenances: {
-            id: string;
-            type: string;
-            scheduledDate: Date;
-        }[];
+        } | {
+            type: "MAINTENANCE";
+            label: string;
+            startDate: Date;
+            endDate: Date;
+        })[];
     }>;
-    update(id: string, dto: Partial<CreateVehicleDto>): Promise<Vehicle>;
-    updateStatus(id: string, status: VehicleStatus): Promise<Vehicle>;
-    delete(id: string): Promise<void>;
+    private assertCanManage;
+    update(id: string, dto: UpdateVehicleDto, actor: AuthenticatedUser): Promise<Vehicle>;
+    updateStatus(id: string, status: VehicleStatus, actor: AuthenticatedUser): Promise<Vehicle>;
+    delete(id: string, actor: AuthenticatedUser): Promise<void>;
     findSuggestions(brand: string, seats: number, startDateStr: string, endDateStr: string): Promise<Vehicle[]>;
 }

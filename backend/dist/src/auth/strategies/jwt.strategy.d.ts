@@ -14,12 +14,17 @@ export declare class JwtStrategy extends JwtStrategy_base {
         role: Role;
     }): Promise<{
         id: string;
-        email: string;
-        phone: string | null;
-        idCardNo: string | null;
+        email: string | null;
         name: string;
         role: import("@prisma/client").$Enums.Role;
+        avatar: string | null;
+        phone: string | null;
+        phoneVerifiedAt: Date | null;
+        emailVerifiedAt: Date | null;
+        idCardNo: string | null;
         address: string | null;
+        birthDate: Date | null;
+        gender: import("@prisma/client").$Enums.Gender | null;
         isVerifiedOwner: boolean;
         ownerRequestAt: Date | null;
     }>;

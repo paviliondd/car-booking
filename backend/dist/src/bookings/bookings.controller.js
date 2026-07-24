@@ -25,11 +25,17 @@ let BookingsController = class BookingsController {
     constructor(bookingsService) {
         this.bookingsService = bookingsService;
     }
-    async create(dto) {
-        return await this.bookingsService.createBooking(dto);
+    async quote(dto) {
+        return await this.bookingsService.quote(dto);
     }
-    async track(phone) {
-        return await this.bookingsService.trackBookings(phone);
+    async create(dto, req) {
+        return await this.bookingsService.createBooking(dto, req.user);
+    }
+    async createByAdmin(dto, req) {
+        return await this.bookingsService.createAdminBooking(dto, req.user);
+    }
+    async track(phone, bookingCode) {
+        return await this.bookingsService.trackBookings(phone, bookingCode);
     }
     async findAll() {
         return await this.bookingsService.findAll();
@@ -40,23 +46,44 @@ let BookingsController = class BookingsController {
     async findOne(id) {
         return await this.bookingsService.findOne(id);
     }
-    async updateStatus(id, status, req) {
-        return await this.bookingsService.updateStatus(id, status, req.user);
+    async updateStatus(id, dto, req) {
+        return await this.bookingsService.updateStatus(id, dto.status, req.user);
     }
 };
 exports.BookingsController = BookingsController;
 __decorate([
-    (0, common_1.Post)(),
+    (0, common_1.Post)('quote'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [booking_dto_1.CreateBookingDto]),
+    __metadata("design:paramtypes", [booking_dto_1.BookingQuoteDto]),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "quote", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.OWNER),
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [booking_dto_1.CreateBookingDto, Object]),
     __metadata("design:returntype", Promise)
 ], BookingsController.prototype, "create", null);
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF),
+    (0, common_1.Post)('admin'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [booking_dto_1.CreateAdminBookingDto, Object]),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "createByAdmin", null);
+__decorate([
     (0, common_1.Get)('track'),
     __param(0, (0, common_1.Query)('phone')),
+    __param(1, (0, common_1.Query)('bookingCode')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], BookingsController.prototype, "track", null);
 __decorate([
@@ -90,10 +117,10 @@ __decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF, client_1.Role.OWNER),
     (0, common_1.Patch)(':id/status'),
     __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)('status')),
+    __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:paramtypes", [String, booking_dto_1.UpdateBookingStatusDto, Object]),
     __metadata("design:returntype", Promise)
 ], BookingsController.prototype, "updateStatus", null);
 exports.BookingsController = BookingsController = __decorate([

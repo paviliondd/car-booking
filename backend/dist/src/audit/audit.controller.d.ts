@@ -5,7 +5,7 @@ export declare class AuditController {
     findAll(): Promise<({
         user: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
             role: import("@prisma/client").$Enums.Role;
         } | null;
@@ -15,8 +15,8 @@ export declare class AuditController {
         userId: string | null;
         action: string;
         targetTable: string;
+        targetId: string;
         oldValue: import("@prisma/client/runtime/client").JsonValue | null;
         newValue: import("@prisma/client/runtime/client").JsonValue | null;
-        targetId: string;
     })[]>;
 }

@@ -1,11 +1,14 @@
+import { OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { PaymentsService } from '../payments/payments.service';
 import { NotificationService } from '../notification/notification.service';
-import { CreateBookingDto } from './dto/booking.dto';
+import { BookingQuoteDto, CreateAdminBookingDto, CreateBookingDto } from './dto/booking.dto';
 import { BookingStatus, Prisma } from '@prisma/client';
 import { AuthenticatedUser } from '../auth/types/authenticated-user';
+import { LocalStorageService } from '../storage/local-storage.service';
+import { ConfigService } from '@nestjs/config';
 type BookingDetails = Prisma.BookingGetPayload<{
     include: {
         customer: {
@@ -17,15 +20,32 @@ type BookingDetails = Prisma.BookingGetPayload<{
         payment: true;
     };
 }>;
-export declare class BookingsService {
+export declare class BookingsService implements OnModuleInit {
     private prisma;
     private redisService;
     private vehiclesService;
     private paymentsService;
     private notificationService;
+    private localStorage;
+    private config;
     private readonly logger;
-    constructor(prisma: PrismaService, redisService: RedisService, vehiclesService: VehiclesService, paymentsService: PaymentsService, notificationService: NotificationService);
-    createBooking(dto: CreateBookingDto): Promise<{
+    constructor(prisma: PrismaService, redisService: RedisService, vehiclesService: VehiclesService, paymentsService: PaymentsService, notificationService: NotificationService, localStorage: LocalStorageService, config: ConfigService);
+    onModuleInit(): void;
+    cancelExpiredPendingBookings(): Promise<void>;
+    quote(dto: BookingQuoteDto): Promise<{
+        available: boolean;
+        vehicleId: string;
+        totalDays: number;
+        basePrice: number;
+        priceDetails: any[];
+        discountAmount: number;
+        insuranceFee: number;
+        totalPrice: number;
+        depositPercent: number;
+        depositAmount: number;
+        couponMessage: string | null;
+    }>;
+    createBooking(dto: CreateBookingDto, actor: AuthenticatedUser): Promise<{
         booking: {
             id: string;
             createdAt: Date;
@@ -53,7 +73,121 @@ export declare class BookingsService {
         paymentUrl: string;
         transactionId: string;
     }>;
-    trackBookings(phone: string): Promise<({
+    createAdminBooking(dto: CreateAdminBookingDto, actor: AuthenticatedUser): Promise<{
+        booking: {
+            customer: {
+                id: string;
+                phone: string | null;
+                idCardNo: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                fullName: string;
+                idCardFront: string | null;
+                idCardBack: string | null;
+                driverLicense: string | null;
+                segment: import("@prisma/client").$Enums.CustomerSegment;
+                notes: string | null;
+                affiliateId: string | null;
+                userId: string | null;
+            };
+            vehicle: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                limitKmPerDay: number | null;
+                plateNumber: string;
+                brand: string;
+                model: string;
+                year: number;
+                seats: number;
+                transmission: string;
+                fuel: string;
+                color: string;
+                dailyPrice: number;
+                weekendPrice: number;
+                holidayPrice: number;
+                penaltyRate: number;
+                images: string[];
+                videoUrl: string | null;
+                status: import("@prisma/client").$Enums.VehicleStatus;
+                overLimitFee: number | null;
+                pickupLocation: string;
+                latitude: number | null;
+                longitude: number | null;
+                terms: string | null;
+                ownerId: string | null;
+            };
+            payment: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                status: import("@prisma/client").$Enums.PaymentStatus;
+                amount: number;
+                bookingId: string;
+                transactionId: string | null;
+                method: import("@prisma/client").$Enums.PaymentMethod;
+                paidAt: Date | null;
+            };
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            notes: string | null;
+            status: import("@prisma/client").$Enums.BookingStatus;
+            pickupLocation: string;
+            startDate: Date;
+            endDate: Date;
+            vehicleId: string;
+            customerId: string;
+            bookingNumber: string;
+            dropoffLocation: string;
+            totalDays: number;
+            basePrice: number;
+            discountAmount: number;
+            totalPrice: number;
+            couponCode: string | null;
+            staffId: string | null;
+            insuranceType: string;
+            insuranceFee: number;
+            depositPercent: number;
+            depositAmount: number | null;
+        };
+        quickBookingRequest: ({
+            vehicle: {
+                id: string;
+                plateNumber: string;
+                brand: string;
+                model: string;
+                images: string[];
+            };
+            booking: {
+                id: string;
+                status: import("@prisma/client").$Enums.BookingStatus;
+                bookingNumber: string;
+            } | null;
+            handledBy: {
+                id: string;
+                name: string;
+            } | null;
+        } & {
+            id: string;
+            phone: string;
+            createdAt: Date;
+            updatedAt: Date;
+            status: import("@prisma/client").$Enums.QuickBookingStatus;
+            startDate: Date;
+            endDate: Date;
+            vehicleId: string;
+            bookingId: string | null;
+            adminNotes: string | null;
+            requestNumber: string;
+            smsStatus: import("@prisma/client").$Enums.QuickBookingSmsStatus;
+            handledById: string | null;
+            contactedAt: Date | null;
+            smsSentAt: Date | null;
+            smsLastAttemptAt: Date | null;
+        }) | null;
+    }>;
+    trackBookings(phone: string, bookingCode?: string): Promise<({
         vehicle: {
             id: string;
             createdAt: Date;
@@ -119,8 +253,8 @@ export declare class BookingsService {
     findAll(): Promise<({
         customer: {
             id: string;
-            phone: string;
-            idCardNo: string;
+            phone: string | null;
+            idCardNo: string | null;
             createdAt: Date;
             updatedAt: Date;
             fullName: string;
@@ -198,8 +332,8 @@ export declare class BookingsService {
     findOwnerBookings(ownerId: string): Promise<({
         customer: {
             id: string;
-            phone: string;
-            idCardNo: string;
+            phone: string | null;
+            idCardNo: string | null;
             createdAt: Date;
             updatedAt: Date;
             fullName: string;

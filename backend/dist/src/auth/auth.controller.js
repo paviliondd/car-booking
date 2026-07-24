@@ -15,53 +15,98 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
-const auth_service_1 = require("./auth.service");
-const auth_dto_1 = require("./dto/auth.dto");
 const roles_decorator_1 = require("./decorators/roles.decorator");
+const auth_dto_1 = require("./dto/auth.dto");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
 const roles_guard_1 = require("./guards/roles.guard");
+const auth_service_1 = require("./auth.service");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
         this.authService = authService;
     }
-    async register(dto) {
+    requestRegistrationCode(dto) {
+        return this.authService.requestRegistrationCode(dto.phone);
+    }
+    register(dto) {
         return this.authService.register(dto);
     }
-    async login(dto) {
+    login(dto) {
         return this.authService.login(dto);
+    }
+    requestPasswordResetCode(dto) {
+        return this.authService.requestPasswordResetCode(dto.phone);
+    }
+    resetPassword(dto) {
+        return this.authService.resetPassword(dto);
     }
     getMe(req) {
         return req.user;
     }
-    async googleLogin(dto) {
+    googleLogin(dto) {
         return this.authService.googleLogin(dto.credential);
     }
-    async upgradeOwner(req, dto) {
-        return this.authService.upgradeOwner(req.user.id, dto);
+    facebookLogin(dto) {
+        return this.authService.facebookLogin(dto.accessToken);
     }
-    async getOwnerRequests() {
+    requestPhoneLinkCode(req, dto) {
+        return this.authService.requestPhoneLinkCode(req.user.id, dto.phone);
+    }
+    verifyPhoneLinkCode(req, dto) {
+        return this.authService.verifyPhoneLinkCode(req.user.id, dto.phone, dto.code);
+    }
+    getMyOwnerApplication(req) {
+        return this.authService.getMyOwnerApplication(req.user.id);
+    }
+    createOwnerApplication(req, dto) {
+        return this.authService.createOwnerApplication(req.user.id, dto);
+    }
+    getOwnerRequests() {
         return this.authService.getOwnerRequests();
     }
-    async verifyOwner(userId, dto) {
+    reviewOwnerApplication(req, applicationId, dto) {
+        return this.authService.reviewOwnerApplication(applicationId, req.user.id, dto);
+    }
+    verifyOwner(userId, dto) {
         return this.authService.verifyOwner(userId, dto.approve);
     }
 };
 exports.AuthController = AuthController;
 __decorate([
-    (0, common_1.Post)('register'),
+    (0, common_1.Post)('register/request-code'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [auth_dto_1.RequestPhoneCodeDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "requestRegistrationCode", null);
+__decorate([
+    (0, common_1.Post)('register/verify-code'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [auth_dto_1.RegisterDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], AuthController.prototype, "register", null);
 __decorate([
     (0, common_1.Post)('login'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [auth_dto_1.LoginDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Post)('password/request-reset-code'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [auth_dto_1.RequestPhoneCodeDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "requestPasswordResetCode", null);
+__decorate([
+    (0, common_1.Post)('password/reset'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [auth_dto_1.ResetPasswordDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "resetPassword", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Get)('me'),
@@ -75,25 +120,71 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [auth_dto_1.GoogleLoginDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], AuthController.prototype, "googleLogin", null);
 __decorate([
+    (0, common_1.Post)('facebook'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [auth_dto_1.FacebookLoginDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "facebookLogin", null);
+__decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, common_1.Post)('upgrade-owner'),
+    (0, common_1.Post)('phone/request-link-code'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, auth_dto_1.UpgradeOwnerDto]),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "upgradeOwner", null);
+    __metadata("design:paramtypes", [Object, auth_dto_1.RequestPhoneCodeDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "requestPhoneLinkCode", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('phone/verify-link-code'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, auth_dto_1.VerifyPhoneCodeDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "verifyPhoneLinkCode", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.OWNER),
+    (0, common_1.Get)('owner-application'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "getMyOwnerApplication", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER),
+    (0, common_1.Post)('owner-applications'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, auth_dto_1.OwnerApplicationDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "createOwnerApplication", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF),
     (0, common_1.Get)('owner-requests'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], AuthController.prototype, "getOwnerRequests", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF),
+    (0, common_1.Post)('owner-applications/:applicationId/review'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('applicationId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, auth_dto_1.ReviewOwnerApplicationDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "reviewOwnerApplication", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF),
@@ -102,7 +193,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, auth_dto_1.VerifyOwnerDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], AuthController.prototype, "verifyOwner", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),

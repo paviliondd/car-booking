@@ -41,4 +41,18 @@ export class ContractsController {
       req.user,
     );
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':bookingId/owner-sign')
+  async ownerSignContract(
+    @Param('bookingId') bookingId: string,
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: SignContractDto,
+  ) {
+    return this.contractsService.ownerSignContract(
+      bookingId,
+      dto.renterSignature,
+      req.user,
+    );
+  }
 }

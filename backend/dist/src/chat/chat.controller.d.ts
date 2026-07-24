@@ -12,7 +12,7 @@ export declare class ChatController {
     getPartners(req: AuthenticatedRequest): Promise<{
         id: string;
         name: string;
-        email: string;
+        email: string | null;
     }[]>;
     getHistory(req: AuthenticatedRequest, partnerId: string): Promise<{
         id: string;
@@ -24,12 +24,12 @@ export declare class ChatController {
     sendMessage(req: AuthenticatedRequest, dto: SendMessageDto): Promise<{
         sender: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
         };
         receiver: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
         };
     } & {

@@ -1,15 +1,21 @@
 import { PrismaService } from '../prisma/prisma.service';
-import { Customer, CustomerSegment } from '@prisma/client';
+import { UpdateCustomerDto } from './dto/customer.dto';
 export declare class CustomersService {
     private prisma;
     constructor(prisma: PrismaService);
     findAll(): Promise<{
         id: string;
         fullName: string;
-        phone: string;
-        idCardNo: string;
+        phone: string | null;
+        idCardNo: string | null;
         segment: import("@prisma/client").$Enums.CustomerSegment;
         notes: string | null;
+        user: {
+            id: string;
+            email: string | null;
+            name: string;
+            role: import("@prisma/client").$Enums.Role;
+        } | null;
         totalBookings: number;
         totalRevenue: number;
         lastRentalDate: Date | null;
@@ -81,8 +87,8 @@ export declare class CustomersService {
         })[];
     } & {
         id: string;
-        phone: string;
-        idCardNo: string;
+        phone: string | null;
+        idCardNo: string | null;
         createdAt: Date;
         updatedAt: Date;
         fullName: string;
@@ -94,5 +100,26 @@ export declare class CustomersService {
         affiliateId: string | null;
         userId: string | null;
     }>;
-    updateSegmentAndNotes(id: string, segment: CustomerSegment, notes?: string): Promise<Customer>;
+    update(id: string, dto: UpdateCustomerDto, actorId: string): Promise<{
+        user: {
+            id: string;
+            email: string | null;
+            name: string;
+            role: import("@prisma/client").$Enums.Role;
+        } | null;
+    } & {
+        id: string;
+        phone: string | null;
+        idCardNo: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        fullName: string;
+        idCardFront: string | null;
+        idCardBack: string | null;
+        driverLicense: string | null;
+        segment: import("@prisma/client").$Enums.CustomerSegment;
+        notes: string | null;
+        affiliateId: string | null;
+        userId: string | null;
+    }>;
 }

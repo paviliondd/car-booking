@@ -55,12 +55,15 @@ export declare class DashboardService {
         bookingsCount: number;
         revenue: number;
     }[]>;
-    getNotifications(limit: number): {
+    getNotifications(limit: number, actor: {
+        id: string;
+        role: Role;
+    }): Promise<{
         id: string;
         title: string;
         desc: string;
         date: string;
-    }[];
+    }[]>;
     getCarNotifyList(): Promise<{
         id: string;
         plateNumber: string;

@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   Logger,
+  OnModuleInit,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
@@ -41,7 +42,7 @@ type BookingDetails = Prisma.BookingGetPayload<{
 }>;
 
 @Injectable()
-export class BookingsService {
+export class BookingsService implements OnModuleInit {
   private readonly logger = new Logger(BookingsService.name);
 
   constructor(
@@ -53,6 +54,58 @@ export class BookingsService {
     private localStorage: LocalStorageService,
     private config: ConfigService,
   ) {}
+
+  onModuleInit() {
+    setInterval(() => {
+      this.cancelExpiredPendingBookings().catch((err) =>
+        this.logger.error('Lỗi khi quét dọn đơn PENDING quá hạn:', err),
+      );
+    }, 120_000);
+  }
+
+  async cancelExpiredPendingBookings() {
+    const cutoff = new Date(Date.now() - 15 * 60_000);
+    const expiredBookings = await this.prisma.booking.findMany({
+      where: {
+        status: BookingStatus.PENDING,
+        createdAt: { lte: cutoff },
+        payment: { status: PaymentStatus.UNPAID },
+      },
+      select: { id: true, bookingNumber: true },
+    });
+
+    for (const booking of expiredBookings) {
+      try {
+        await this.prisma.$transaction([
+          this.prisma.booking.update({
+            where: { id: booking.id },
+            data: { status: BookingStatus.CANCELLED },
+          }),
+          this.prisma.auditLog.create({
+            data: {
+              action: 'AUTO_CANCEL_EXPIRED_UNPAID_BOOKING',
+              targetTable: 'Booking',
+              targetId: booking.id,
+              oldValue: { status: BookingStatus.PENDING },
+              newValue: {
+                status: BookingStatus.CANCELLED,
+                reason:
+                  'Tự động hủy do quá thời hạn 15 phút chưa cọc thanh toán',
+              },
+            },
+          }),
+        ]);
+        this.logger.log(
+          `Tự động hủy đơn PENDING quá hạn thanh toán cọc: ${booking.bookingNumber}`,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Không thể tự động hủy đơn ${booking.bookingNumber}`,
+          error,
+        );
+      }
+    }
+  }
 
   async quote(dto: BookingQuoteDto) {
     const start = new Date(dto.startDate);
@@ -739,8 +792,13 @@ export class BookingsService {
   }
 
   async trackBookings(phone: string, bookingCode?: string) {
+    if (!bookingCode || !bookingCode.trim()) {
+      throw new BadRequestException(
+        'Bạn cần cung cấp cả số điện thoại và mã đặt xe (Booking Code) để tra cứu thông tin đơn',
+      );
+    }
     const customer = await this.prisma.customer.findUnique({
-      where: { phone },
+      where: { phone: normalizeVietnamesePhone(phone) },
     });
     if (!customer) {
       return [];
@@ -749,7 +807,7 @@ export class BookingsService {
     return await this.prisma.booking.findMany({
       where: {
         customerId: customer.id,
-        ...(bookingCode ? { bookingNumber: bookingCode.trim() } : {}),
+        bookingNumber: bookingCode.trim(),
       },
       include: {
         vehicle: true,

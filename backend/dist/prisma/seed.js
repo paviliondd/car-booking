@@ -34,6 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
+const rental_location_1 = require("../src/common/rental-location");
 const adapter_pg_1 = require("@prisma/adapter-pg");
 const pg_1 = require("pg");
 const bcrypt = __importStar(require("bcrypt"));
@@ -43,20 +44,30 @@ const dbUrl = process.env.DATABASE_URL;
 if (!dbUrl) {
     throw new Error('DATABASE_URL environment variable is required to run seed script.');
 }
+if (process.env.ENABLE_DEMO_DATA !== 'true') {
+    throw new Error('Demo seed is disabled. Set ENABLE_DEMO_DATA=true explicitly in a non-production environment.');
+}
 const pool = new pg_1.Pool({ connectionString: dbUrl });
 const adapter = new adapter_pg_1.PrismaPg(pool);
 const prisma = new client_1.PrismaClient({ adapter });
 async function main() {
     console.log('Seeding database...');
-    const adminPassword = await bcrypt.hash('adminpassword123', 10);
-    const staffPassword = await bcrypt.hash('staffpassword123', 10);
-    const customerPassword = await bcrypt.hash('customerpassword123', 10);
-    const ownerPassword = await bcrypt.hash('ownerpassword123', 10);
+    const adminPassword = await bcrypt.hash('adminpassword123', 12);
+    const staffPassword = await bcrypt.hash('staffpassword123', 12);
+    const customerPassword = await bcrypt.hash('customerpassword123', 12);
+    const ownerPassword = await bcrypt.hash('ownerpassword123', 12);
     const admin = await prisma.user.upsert({
         where: { email: 'admin@datxe.linuxunity.com' },
-        update: {},
+        update: {
+            phone: '+84900000001',
+            phoneVerifiedAt: new Date(),
+            password: adminPassword,
+            role: client_1.Role.ADMIN,
+        },
         create: {
             email: 'admin@datxe.linuxunity.com',
+            phone: '+84900000001',
+            phoneVerifiedAt: new Date(),
             password: adminPassword,
             name: 'Chủ Xe Admin',
             role: client_1.Role.ADMIN,
@@ -64,9 +75,16 @@ async function main() {
     });
     const staff = await prisma.user.upsert({
         where: { email: 'staff@datxe.linuxunity.com' },
-        update: {},
+        update: {
+            phone: '+84900000002',
+            phoneVerifiedAt: new Date(),
+            password: staffPassword,
+            role: client_1.Role.STAFF,
+        },
         create: {
             email: 'staff@datxe.linuxunity.com',
+            phone: '+84900000002',
+            phoneVerifiedAt: new Date(),
             password: staffPassword,
             name: 'Nhân Viên CSKH',
             role: client_1.Role.STAFF,
@@ -74,13 +92,20 @@ async function main() {
     });
     const owner = await prisma.user.upsert({
         where: { email: 'owner@datxe.linuxunity.com' },
-        update: {},
+        update: {
+            phone: '+84900000003',
+            phoneVerifiedAt: new Date(),
+            password: ownerPassword,
+            role: client_1.Role.OWNER,
+            isVerifiedOwner: true,
+        },
         create: {
             email: 'owner@datxe.linuxunity.com',
             password: ownerPassword,
             name: 'Chủ Xe Nguyễn Văn B',
             role: client_1.Role.OWNER,
-            phone: '0961234567',
+            phone: '+84900000003',
+            phoneVerifiedAt: new Date(),
             idCardNo: '037200987654',
             address: 'Số 20 Cầu Giấy, Hà Nội',
             isVerifiedOwner: true,
@@ -88,22 +113,33 @@ async function main() {
     });
     const customerUser = await prisma.user.upsert({
         where: { email: 'customer@gmail.com' },
-        update: {},
+        update: {
+            phone: '+84900000004',
+            phoneVerifiedAt: new Date(),
+            password: customerPassword,
+            role: client_1.Role.CUSTOMER,
+        },
         create: {
             email: 'customer@gmail.com',
+            phone: '+84900000004',
+            phoneVerifiedAt: new Date(),
             password: customerPassword,
             name: 'Nguyễn Văn Khách',
             role: client_1.Role.CUSTOMER,
             customer: {
                 create: {
-                    phone: '0987654321',
+                    phone: '+84900000004',
                     fullName: 'Nguyễn Văn Khách',
                     idCardNo: '037200123456',
                 },
             },
         },
     });
-    console.log('Users seeded:', { admin: admin.email, staff: staff.email, owner: owner.email });
+    console.log('Demo users seeded:', {
+        admin: admin.phone,
+        staff: staff.phone,
+        owner: owner.phone,
+    });
     const vehiclesData = [
         {
             plateNumber: '30A-999.99',
@@ -120,9 +156,9 @@ async function main() {
             penaltyRate: 150000,
             images: ['https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=600&q=80'],
             status: client_1.VehicleStatus.AVAILABLE,
-            pickupLocation: 'Showroom Cầu Giấy, Hà Nội',
-            latitude: 21.028511,
-            longitude: 105.798123,
+            pickupLocation: rental_location_1.RENTAL_LOCATION.address,
+            latitude: rental_location_1.RENTAL_LOCATION.latitude,
+            longitude: rental_location_1.RENTAL_LOCATION.longitude,
             ownerId: null,
         },
         {
@@ -140,9 +176,9 @@ async function main() {
             penaltyRate: 80000,
             images: ['https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80'],
             status: client_1.VehicleStatus.AVAILABLE,
-            pickupLocation: 'Showroom Khuất Duy Tiến, Hà Nội',
-            latitude: 20.999123,
-            longitude: 105.801234,
+            pickupLocation: rental_location_1.RENTAL_LOCATION.address,
+            latitude: rental_location_1.RENTAL_LOCATION.latitude,
+            longitude: rental_location_1.RENTAL_LOCATION.longitude,
             ownerId: null,
         },
         {
@@ -160,9 +196,9 @@ async function main() {
             penaltyRate: 200000,
             images: ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80'],
             status: client_1.VehicleStatus.AVAILABLE,
-            pickupLocation: 'Số 20 Cầu Giấy, Hà Nội',
-            latitude: 21.029876,
-            longitude: 105.792345,
+            pickupLocation: rental_location_1.RENTAL_LOCATION.address,
+            latitude: rental_location_1.RENTAL_LOCATION.latitude,
+            longitude: rental_location_1.RENTAL_LOCATION.longitude,
             limitKmPerDay: 300,
             overLimitFee: 3000,
             ownerId: owner.id,
@@ -182,14 +218,15 @@ async function main() {
             penaltyRate: 90000,
             images: ['https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=600&q=80'],
             status: client_1.VehicleStatus.AVAILABLE,
-            pickupLocation: 'Số 20 Cầu Giấy, Hà Nội',
-            latitude: 21.029876,
-            longitude: 105.792345,
+            pickupLocation: rental_location_1.RENTAL_LOCATION.address,
+            latitude: rental_location_1.RENTAL_LOCATION.latitude,
+            longitude: rental_location_1.RENTAL_LOCATION.longitude,
             limitKmPerDay: 250,
             overLimitFee: 2500,
             ownerId: owner.id,
         },
     ];
+    vehiclesData.splice(0, vehiclesData.length);
     const vehicles = [];
     for (const v of vehiclesData) {
         const dbVehicle = await prisma.vehicle.upsert({

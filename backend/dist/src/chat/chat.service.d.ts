@@ -5,12 +5,12 @@ export declare class ChatService {
     saveMessage(senderId: string, receiverId: string, message: string): Promise<{
         sender: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
         };
         receiver: {
             id: string;
-            email: string;
+            email: string | null;
             name: string;
         };
     } & {
@@ -30,6 +30,6 @@ export declare class ChatService {
     getRecentChatPartners(userId: string): Promise<{
         id: string;
         name: string;
-        email: string;
+        email: string | null;
     }[]>;
 }

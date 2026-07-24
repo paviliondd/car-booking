@@ -26,8 +26,8 @@ export declare class ContractsController {
         booking: {
             customer: {
                 id: string;
-                phone: string;
-                idCardNo: string;
+                phone: string | null;
+                idCardNo: string | null;
                 createdAt: Date;
                 updatedAt: Date;
                 fullName: string;
@@ -42,14 +42,19 @@ export declare class ContractsController {
             vehicle: {
                 owner: {
                     id: string;
-                    email: string;
-                    phone: string | null;
-                    idCardNo: string | null;
-                    password: string;
+                    email: string | null;
+                    facebookId: string | null;
+                    password: string | null;
                     name: string;
                     role: import("@prisma/client").$Enums.Role;
                     avatar: string | null;
+                    phone: string | null;
+                    phoneVerifiedAt: Date | null;
+                    emailVerifiedAt: Date | null;
+                    idCardNo: string | null;
                     address: string | null;
+                    birthDate: Date | null;
+                    gender: import("@prisma/client").$Enums.Gender | null;
                     isVerifiedOwner: boolean;
                     ownerRequestAt: Date | null;
                     createdAt: Date;
@@ -108,6 +113,17 @@ export declare class ContractsController {
         };
     }>;
     signContract(bookingId: string, req: AuthenticatedRequest, dto: SignContractDto): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        terms: string;
+        bookingId: string;
+        renterSignature: string | null;
+        ownerSignature: string | null;
+        signedAt: Date | null;
+        pdfUrl: string | null;
+    }>;
+    ownerSignContract(bookingId: string, req: AuthenticatedRequest, dto: SignContractDto): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;

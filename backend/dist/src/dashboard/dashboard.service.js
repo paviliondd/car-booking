@@ -89,6 +89,7 @@ let DashboardService = DashboardService_1 = class DashboardService {
                 select: {
                     totalPrice: true,
                     status: true,
+                    payment: { select: { amount: true, status: true } },
                 },
             });
             const expenses = await this.prisma.expense.aggregate({
@@ -105,7 +106,14 @@ let DashboardService = DashboardService_1 = class DashboardService {
             });
             const totalContract = bookings.length;
             const totalMoneyContract = bookings.reduce((sum, booking) => sum + booking.totalPrice, 0);
-            const totalMoneyForward = Math.round(totalMoneyContract * 0.12);
+            const recognizedPaymentStatuses = [
+                client_1.PaymentStatus.DEPOSITED,
+                client_1.PaymentStatus.PAID,
+            ];
+            const totalMoneyForward = bookings
+                .filter((booking) => booking.payment &&
+                recognizedPaymentStatuses.includes(booking.payment.status))
+                .reduce((sum, booking) => sum + (booking.payment?.amount || 0), 0);
             const collectibleStatuses = [
                 client_1.BookingStatus.CONFIRMED,
                 client_1.BookingStatus.RENTING,
@@ -235,7 +243,6 @@ let DashboardService = DashboardService_1 = class DashboardService {
         try {
             const vehicles = await this.prisma.vehicle.findMany({
                 where: { ownerId: this.ownerId(actor) },
-                take: limit,
                 include: {
                     bookings: {
                         where: { status: client_1.BookingStatus.COMPLETED },
@@ -280,39 +287,19 @@ let DashboardService = DashboardService_1 = class DashboardService {
             return this.useDemoOrThrow(cars.map((car) => ({ ...car, maxRevenue })), error);
         }
     }
-    getNotifications(limit) {
-        return [
-            {
-                id: '1',
-                title: 'Hợp đồng mới chờ duyệt',
-                desc: 'Khách hàng Nguyễn Văn Khách vừa đặt xe VinFast VF8 30A-999.99.',
-                date: '2026-06-24',
-            },
-            {
-                id: '2',
-                title: 'Yêu cầu bảo dưỡng định kỳ',
-                desc: 'Xe Toyota Vios 30A-888.88 đến hạn thay dầu động cơ.',
-                date: '2026-06-23',
-            },
-            {
-                id: '3',
-                title: 'Cập nhật chính sách mới',
-                desc: 'Áp dụng bảo hiểm tự nguyện mở rộng cho tất cả xe từ tháng 7.',
-                date: '2026-06-22',
-            },
-            {
-                id: '4',
-                title: 'Phản hồi khiếu nại',
-                desc: 'Nhân viên đã trả lời ticket hỗ trợ mã TK-90123.',
-                date: '2026-06-21',
-            },
-            {
-                id: '5',
-                title: 'Đăng ký chủ xe đối tác mới',
-                desc: 'Chủ xe Trần Văn C vừa gửi yêu cầu duyệt thông tin xe.',
-                date: '2026-06-20',
-            },
-        ].slice(0, limit);
+    async getNotifications(limit, actor) {
+        const logs = await this.prisma.auditLog.findMany({
+            where: actor.role === client_1.Role.OWNER ? { userId: actor.id } : undefined,
+            include: { user: { select: { name: true } } },
+            orderBy: { createdAt: 'desc' },
+            take: Math.min(Math.max(limit, 1), 20),
+        });
+        return logs.map((log) => ({
+            id: log.id,
+            title: log.action.replaceAll('_', ' '),
+            desc: `${log.user?.name || 'Hệ thống'} · ${log.targetTable} ${log.targetId}`,
+            date: log.createdAt.toISOString(),
+        }));
     }
     async getCarNotifyList() {
         try {

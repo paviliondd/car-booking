@@ -35,10 +35,11 @@ let RedisService = RedisService_1 = class RedisService {
             this.isReady = false;
             this.logger.warn(`Redis unavailable: ${err.message}`);
         });
+        let connectionTimer;
         try {
             await Promise.race([
                 client.connect(),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Redis connection timeout')), 2000)),
+                new Promise((_, reject) => (connectionTimer = setTimeout(() => reject(new Error('Redis connection timeout')), 2000))),
             ]);
             this.client = client;
             this.isReady = true;
@@ -53,6 +54,10 @@ let RedisService = RedisService_1 = class RedisService {
             }
             catch {
             }
+        }
+        finally {
+            if (connectionTimer)
+                clearTimeout(connectionTimer);
         }
     }
     async onModuleDestroy() {
@@ -79,6 +84,14 @@ let RedisService = RedisService_1 = class RedisService {
         if (!this.client || !this.isReady)
             return;
         await this.client.del(key);
+    }
+    async increment(key, ttlSeconds) {
+        if (!this.client || !this.isReady)
+            return null;
+        const value = await this.client.incr(key);
+        if (value === 1)
+            await this.client.expire(key, ttlSeconds);
+        return value;
     }
     async acquireLock(key, ttlMs) {
         if (!this.client || !this.isReady) {

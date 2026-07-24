@@ -9,56 +9,78 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VerifyOwnerDto = exports.UpgradeOwnerDto = exports.GoogleLoginDto = exports.LoginDto = exports.RegisterDto = void 0;
+exports.ReviewOwnerApplicationDto = exports.VerifyOwnerDto = exports.OwnerApplicationDto = exports.FacebookLoginDto = exports.GoogleLoginDto = exports.VerifyPhoneCodeDto = exports.ResetPasswordDto = exports.LoginDto = exports.RegisterDto = exports.RequestPhoneCodeDto = void 0;
+const client_1 = require("@prisma/client");
 const class_validator_1 = require("class-validator");
-class RegisterDto {
-    email;
-    password;
-    name;
+const phone_1 = require("../../common/phone");
+const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d).+$/;
+class RequestPhoneCodeDto {
     phone;
-    idCardNo;
+}
+exports.RequestPhoneCodeDto = RequestPhoneCodeDto;
+__decorate([
+    (0, class_validator_1.Matches)(phone_1.VIETNAM_PHONE_PATTERN, {
+        message: 'Số điện thoại Việt Nam không hợp lệ',
+    }),
+    __metadata("design:type", String)
+], RequestPhoneCodeDto.prototype, "phone", void 0);
+class RegisterDto extends RequestPhoneCodeDto {
+    code;
+    name;
+    password;
 }
 exports.RegisterDto = RegisterDto;
 __decorate([
-    (0, class_validator_1.IsEmail)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.Matches)(/^\d{6}$/),
     __metadata("design:type", String)
-], RegisterDto.prototype, "email", void 0);
+], RegisterDto.prototype, "code", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.Length)(6, 50),
-    __metadata("design:type", String)
-], RegisterDto.prototype, "password", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.Length)(2, 80),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "name", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Length)(8, 72),
+    (0, class_validator_1.Matches)(PASSWORD_PATTERN, {
+        message: 'Mật khẩu phải có ít nhất một chữ cái và một chữ số',
+    }),
     __metadata("design:type", String)
-], RegisterDto.prototype, "phone", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], RegisterDto.prototype, "idCardNo", void 0);
-class LoginDto {
-    email;
+], RegisterDto.prototype, "password", void 0);
+class LoginDto extends RequestPhoneCodeDto {
     password;
 }
 exports.LoginDto = LoginDto;
-__decorate([
-    (0, class_validator_1.IsEmail)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], LoginDto.prototype, "email", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], LoginDto.prototype, "password", void 0);
+class ResetPasswordDto extends RequestPhoneCodeDto {
+    code;
+    password;
+}
+exports.ResetPasswordDto = ResetPasswordDto;
+__decorate([
+    (0, class_validator_1.Matches)(/^\d{6}$/),
+    __metadata("design:type", String)
+], ResetPasswordDto.prototype, "code", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(8, 72),
+    (0, class_validator_1.Matches)(PASSWORD_PATTERN, {
+        message: 'Mật khẩu phải có ít nhất một chữ cái và một chữ số',
+    }),
+    __metadata("design:type", String)
+], ResetPasswordDto.prototype, "password", void 0);
+class VerifyPhoneCodeDto extends RequestPhoneCodeDto {
+    code;
+}
+exports.VerifyPhoneCodeDto = VerifyPhoneCodeDto;
+__decorate([
+    (0, class_validator_1.Matches)(/^\d{6}$/),
+    __metadata("design:type", String)
+], VerifyPhoneCodeDto.prototype, "code", void 0);
 class GoogleLoginDto {
     credential;
 }
@@ -68,27 +90,46 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], GoogleLoginDto.prototype, "credential", void 0);
-class UpgradeOwnerDto {
-    phone;
-    idCardNo;
-    address;
+class FacebookLoginDto {
+    accessToken;
 }
-exports.UpgradeOwnerDto = UpgradeOwnerDto;
+exports.FacebookLoginDto = FacebookLoginDto;
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.Length)(20, 4096),
     __metadata("design:type", String)
-], UpgradeOwnerDto.prototype, "phone", void 0);
+], FacebookLoginDto.prototype, "accessToken", void 0);
+class OwnerApplicationDto {
+    carName;
+    plateNumber;
+    vehicleYear;
+    applicantNotes;
+}
+exports.OwnerApplicationDto = OwnerApplicationDto;
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.Length)(2, 100),
     __metadata("design:type", String)
-], UpgradeOwnerDto.prototype, "idCardNo", void 0);
+], OwnerApplicationDto.prototype, "carName", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Length)(4, 20),
     __metadata("design:type", String)
-], UpgradeOwnerDto.prototype, "address", void 0);
+], OwnerApplicationDto.prototype, "plateNumber", void 0);
+__decorate([
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1980),
+    (0, class_validator_1.Max)(2100),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], OwnerApplicationDto.prototype, "vehicleYear", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Length)(0, 1000),
+    __metadata("design:type", String)
+], OwnerApplicationDto.prototype, "applicantNotes", void 0);
 class VerifyOwnerDto {
     approve;
 }
@@ -97,4 +138,24 @@ __decorate([
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], VerifyOwnerDto.prototype, "approve", void 0);
+class ReviewOwnerApplicationDto {
+    status;
+    adminNotes;
+    rejectionReason;
+}
+exports.ReviewOwnerApplicationDto = ReviewOwnerApplicationDto;
+__decorate([
+    (0, class_validator_1.IsEnum)(client_1.OwnerApplicationStatus),
+    __metadata("design:type", String)
+], ReviewOwnerApplicationDto.prototype, "status", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ReviewOwnerApplicationDto.prototype, "adminNotes", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ReviewOwnerApplicationDto.prototype, "rejectionReason", void 0);
 //# sourceMappingURL=auth.dto.js.map

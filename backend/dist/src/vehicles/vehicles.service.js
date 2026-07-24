@@ -13,6 +13,7 @@ exports.VehiclesService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const client_1 = require("@prisma/client");
+const rental_location_1 = require("../common/rental-location");
 let VehiclesService = class VehiclesService {
     prisma;
     constructor(prisma) {
@@ -68,6 +69,9 @@ let VehiclesService = class VehiclesService {
                 images: dto.images || [],
                 status: client_1.VehicleStatus.AVAILABLE,
                 ownerId: ownerId || null,
+                pickupLocation: rental_location_1.RENTAL_LOCATION.address,
+                latitude: rental_location_1.RENTAL_LOCATION.latitude,
+                longitude: rental_location_1.RENTAL_LOCATION.longitude,
             },
         });
     }
@@ -84,6 +88,31 @@ let VehiclesService = class VehiclesService {
                     : {}),
                 ...(filters.seats ? { seats: filters.seats } : {}),
             },
+        });
+    }
+    async findAvailableNow(filters) {
+        const now = new Date();
+        const busyBookings = await this.prisma.booking.findMany({
+            where: {
+                status: { in: ['CONFIRMED', 'RENTING', 'PENDING'] },
+                startDate: { lte: now },
+                endDate: { gt: now },
+            },
+            select: { vehicleId: true },
+        });
+        return await this.prisma.vehicle.findMany({
+            where: {
+                status: {
+                    notIn: [client_1.VehicleStatus.LOCKED, client_1.VehicleStatus.MAINTENANCE],
+                },
+                id: { notIn: busyBookings.map((booking) => booking.vehicleId) },
+                images: { isEmpty: false },
+                ...(filters.brand
+                    ? { brand: { contains: filters.brand, mode: 'insensitive' } }
+                    : {}),
+                ...(filters.seats ? { seats: filters.seats } : {}),
+            },
+            orderBy: [{ updatedAt: 'desc' }],
         });
     }
     async findAvailable(startDateStr, endDateStr, filters) {
@@ -110,13 +139,17 @@ let VehiclesService = class VehiclesService {
         const bookedIds = bookedVehicles.map((b) => b.vehicleId);
         return await this.prisma.vehicle.findMany({
             where: {
-                status: client_1.VehicleStatus.AVAILABLE,
+                status: {
+                    notIn: [client_1.VehicleStatus.LOCKED, client_1.VehicleStatus.MAINTENANCE],
+                },
                 id: { notIn: bookedIds },
+                images: { isEmpty: false },
                 ...(filters.brand
                     ? { brand: { contains: filters.brand, mode: 'insensitive' } }
                     : {}),
                 ...(filters.seats ? { seats: filters.seats } : {}),
             },
+            orderBy: [{ updatedAt: 'desc' }],
         });
     }
     async findOne(id) {
@@ -126,53 +159,153 @@ let VehiclesService = class VehiclesService {
         }
         return vehicle;
     }
-    async getCalendar(id) {
+    async getCalendar(id, fromValue, toValue) {
         const vehicle = await this.findOne(id);
+        const from = fromValue ? new Date(fromValue) : new Date();
+        const to = toValue
+            ? new Date(toValue)
+            : new Date(from.getTime() + 180 * 86_400_000);
+        if (Number.isNaN(from.getTime()) ||
+            Number.isNaN(to.getTime()) ||
+            from >= to) {
+            throw new common_1.BadRequestException('Khoảng thời gian xem lịch không hợp lệ');
+        }
+        if (to.getTime() - from.getTime() > 366 * 86_400_000) {
+            throw new common_1.BadRequestException('Chỉ có thể xem lịch tối đa 366 ngày');
+        }
         const bookings = await this.prisma.booking.findMany({
             where: {
                 vehicleId: id,
                 status: { in: ['CONFIRMED', 'RENTING', 'PENDING'] },
+                startDate: { lt: to },
+                endDate: { gt: from },
             },
             select: {
-                id: true,
                 startDate: true,
                 endDate: true,
-                status: true,
             },
+            orderBy: { startDate: 'asc' },
         });
         const maintenances = await this.prisma.maintenance.findMany({
             where: {
                 vehicleId: id,
                 completedDate: null,
+                scheduledDate: { gte: from, lt: to },
             },
             select: {
-                id: true,
                 scheduledDate: true,
-                type: true,
             },
+            orderBy: { scheduledDate: 'asc' },
         });
         return {
-            vehicle,
-            bookings,
-            maintenances,
+            vehicle: {
+                id: vehicle.id,
+                brand: vehicle.brand,
+                model: vehicle.model,
+                status: vehicle.status,
+            },
+            range: { from, to },
+            busyPeriods: [
+                ...bookings.map((booking) => ({
+                    type: 'BOOKING',
+                    label: 'Đã có lịch thuê',
+                    startDate: booking.startDate,
+                    endDate: booking.endDate,
+                })),
+                ...maintenances.map((maintenance) => ({
+                    type: 'MAINTENANCE',
+                    label: 'Lịch bảo dưỡng',
+                    startDate: maintenance.scheduledDate,
+                    endDate: new Date(maintenance.scheduledDate.getTime() + 86_400_000),
+                })),
+            ].sort((left, right) => left.startDate.getTime() - right.startDate.getTime()),
         };
     }
-    async update(id, dto) {
-        await this.findOne(id);
-        return await this.prisma.vehicle.update({
-            where: { id },
-            data: dto,
+    assertCanManage(vehicle, actor) {
+        if (actor.role === client_1.Role.OWNER && vehicle.ownerId !== actor.id) {
+            throw new common_1.BadRequestException('Bạn không sở hữu phương tiện này');
+        }
+    }
+    async update(id, dto, actor) {
+        const current = await this.findOne(id);
+        this.assertCanManage(current, actor);
+        const operationalFields = [
+            'plateNumber',
+            'brand',
+            'model',
+            'year',
+            'seats',
+            'transmission',
+            'fuel',
+            'dailyPrice',
+            'weekendPrice',
+            'holidayPrice',
+            'penaltyRate',
+            'limitKmPerDay',
+            'overLimitFee',
+        ];
+        if (current.status === client_1.VehicleStatus.RENTED &&
+            operationalFields.some((field) => dto[field] !== undefined)) {
+            throw new common_1.BadRequestException('Không thể đổi thông tin vận hành hoặc giá khi xe đang được thuê');
+        }
+        try {
+            return await this.prisma.$transaction(async (tx) => {
+                const updated = await tx.vehicle.update({
+                    where: { id },
+                    data: dto,
+                });
+                await tx.auditLog.create({
+                    data: {
+                        userId: actor.id,
+                        action: 'UPDATE_VEHICLE',
+                        targetTable: 'Vehicle',
+                        targetId: id,
+                        oldValue: current,
+                        newValue: { ...dto },
+                    },
+                });
+                return updated;
+            });
+        }
+        catch (error) {
+            if (error instanceof client_1.Prisma.PrismaClientKnownRequestError &&
+                error.code === 'P2002') {
+                throw new common_1.BadRequestException('Biển số xe đã tồn tại');
+            }
+            throw error;
+        }
+    }
+    async updateStatus(id, status, actor) {
+        const current = await this.findOne(id);
+        this.assertCanManage(current, actor);
+        if (current.status === client_1.VehicleStatus.RENTED &&
+            status !== client_1.VehicleStatus.RENTED) {
+            throw new common_1.BadRequestException('Trạng thái xe đang thuê được cập nhật theo vòng đời đơn thuê');
+        }
+        return await this.prisma.$transaction(async (tx) => {
+            const updated = await tx.vehicle.update({
+                where: { id },
+                data: { status },
+            });
+            await tx.auditLog.create({
+                data: {
+                    userId: actor.id,
+                    action: 'UPDATE_VEHICLE_STATUS',
+                    targetTable: 'Vehicle',
+                    targetId: id,
+                    oldValue: { status: current.status },
+                    newValue: { status },
+                },
+            });
+            return updated;
         });
     }
-    async updateStatus(id, status) {
-        await this.findOne(id);
-        return await this.prisma.vehicle.update({
-            where: { id },
-            data: { status },
-        });
-    }
-    async delete(id) {
-        await this.findOne(id);
+    async delete(id, actor) {
+        const current = await this.findOne(id);
+        this.assertCanManage(current, actor);
+        if (current.status === client_1.VehicleStatus.RENTED) {
+            throw new common_1.BadRequestException('Không thể xóa xe đang được thuê');
+        }
         await this.prisma.vehicle.delete({ where: { id } });
     }
     async findSuggestions(brand, seats, startDateStr, endDateStr) {

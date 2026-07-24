@@ -19,6 +19,7 @@ const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
 const client_1 = require("@prisma/client");
+const customer_dto_1 = require("./dto/customer.dto");
 let CustomersController = class CustomersController {
     customersService;
     constructor(customersService) {
@@ -30,11 +31,8 @@ let CustomersController = class CustomersController {
     async findOne(id) {
         return await this.customersService.findOne(id);
     }
-    async updateSegment(id, segment, notes) {
-        return await this.prismaCustomerUpdate(id, segment, notes);
-    }
-    async prismaCustomerUpdate(id, segment, notes) {
-        return await this.customersService.updateSegmentAndNotes(id, segment, notes);
+    async update(id, dto, req) {
+        return await this.customersService.update(id, dto, req.user.id);
     }
 };
 exports.CustomersController = CustomersController;
@@ -54,12 +52,12 @@ __decorate([
 __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)('segment')),
-    __param(2, (0, common_1.Body)('notes')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:paramtypes", [String, customer_dto_1.UpdateCustomerDto, Object]),
     __metadata("design:returntype", Promise)
-], CustomersController.prototype, "updateSegment", null);
+], CustomersController.prototype, "update", null);
 exports.CustomersController = CustomersController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF),
