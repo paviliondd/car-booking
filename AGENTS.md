@@ -97,7 +97,7 @@ Trạng thái chính:
 - Payment method: `MOMO`, `BANK_TRANSFER`, `CASH`.
 - Quick booking request: `NEW`, `CONTACTING`, `CONTACTED`, `CLOSED`, `CANCELLED`. Đây là yêu cầu liên hệ, không giữ xe và không thay thế `Booking`.
 
-## Auth và Google OAuth
+## Auth và social OAuth
 
 Mật khẩu dùng bcrypt (12 rounds) và JWT. Đăng nhập chính dùng số điện thoại Việt Nam đã chuẩn hóa + mật khẩu; email chỉ là thông tin liên hệ tùy chọn. Frontend hiện lưu `token`/`user` trong `localStorage`; nếu chuyển sang HttpOnly cookie phải đổi toàn bộ API client, guards, Socket.IO handshake và hydration trong một thay đổi có migration rõ ràng.
 
@@ -109,22 +109,30 @@ Google dùng Google Identity Services ID token flow:
 - Flow này cần **OAuth 2.0 Web Client ID**, không phải API key và không cần Client Secret.
 - Khi cấu hình Google Console, thêm origin `https://datxe.linuxunity.com` và origin local cần dùng.
 
+Facebook dùng Meta JavaScript SDK ở frontend và xác minh access token ở backend:
+
+- Frontend: `NEXT_PUBLIC_FACEBOOK_APP_ID`.
+- Backend: `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`; App Secret không bao giờ được đưa vào frontend, log hoặc Git.
+- Backend gọi Meta `debug_token`, bắt buộc token hợp lệ, đúng App ID và Facebook user ID phải khớp profile trước khi cấp JWT.
+- Tài khoản liên kết bằng `User.facebookId`; không phụ thuộc email Facebook và tài khoản mới vẫn phải xác minh số điện thoại trước khi gửi hồ sơ chủ xe.
+
 ## Env và production deploy
 
 Tạo `/opt/datxe/.env` từ `.env.production.example`, permission hạn chế. Tối thiểu cần:
 
 - Core: `POSTGRES_*`, `DATABASE_URL` (Compose tự dựng), `JWT_SECRET` dài/ngẫu nhiên, `CORS_ORIGINS`.
-- Google: `GOOGLE_CLIENT_ID`; GitHub Actions variable `NEXT_PUBLIC_GOOGLE_CLIENT_ID` để bake vào frontend image.
+- Social login: `GOOGLE_CLIENT_ID`, `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`; GitHub Actions variables `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, `NEXT_PUBLIC_FACEBOOK_APP_ID` để bake public ID vào frontend image.
 - Storage: `UPLOAD_HOST_DIR`, `UPLOAD_DIR`, `FILE_PUBLIC_BASE_URL`. Ảnh xe public qua API; CCCD/GPLX private và cần JWT. AWS credentials chỉ dành cho SES/SNS notification hiện tại.
 - PayOS: `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY`.
 - MoMo: `MOMO_PARTNER_CODE`, `MOMO_ACCESS_KEY`, `MOMO_SECRET_KEY`, `MOMO_API_URL`, `MOMO_REDIRECT_URL`, `MOMO_IPN_URL`.
 - Email: `PUBLIC_APP_URL`, `ADMIN_NOTIFICATION_EMAIL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`; bỏ trống SMTP để integration fail-soft và ghi log thất bại.
+- SMS: `SMS_PROVIDER=AWS_SNS`, `SMS_ENABLED`, `SMS_SENDER_ID` tùy chọn và AWS credentials/region. Origination identity được quản lý trong AWS, không truyền bằng env riêng trong SNS Publish.
 - Bootstrap admin: chạy thủ công với `ADMIN_PHONE`, `ADMIN_PASSWORD` và tùy chọn `ADMIN_EMAIL`/`ADMIN_NAME`; không lưu `ADMIN_PASSWORD` lâu dài trong `.env`.
 
 GitHub repository/environment cần:
 
 - Secrets: `VPS_HOST`, `VPS_PORT`, `VPS_USER`, `VPS_SSH_PRIVATE_KEY`, `VPS_SSH_KNOWN_HOSTS`.
-- Variables: `VPS_DEPLOY_PATH` (khuyến nghị `/opt/datxe`), `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
+- Variables: `VPS_DEPLOY_PATH` (khuyến nghị `/opt/datxe`), `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, `NEXT_PUBLIC_FACEBOOK_APP_ID`.
 - Production environment protection/rules tùy chính sách vận hành.
 - VPS phải có Docker Compose v2, quyền pull GHCR, `.env`, và certificate ở `/etc/letsencrypt/live/datxe.linuxunity.com/`.
 
@@ -188,15 +196,17 @@ docker compose up --build
 Baseline xác nhận ngày 2026-07-24:
 
 - Backend lint check: 0 lỗi; build pass.
-- Backend unit: 4 suites, 21 tests pass.
+- Backend unit: 5 suites, 26 tests pass.
 - Backend e2e: 1 suite, 2 tests pass, không cần DB thật vì health/root test override Prisma.
-- Frontend lint: 0 lỗi, 0 warning; production build pass 24 trang tĩnh cùng các route động.
+- Frontend lint: 0 lỗi, 0 warning; production build pass 25 trang tĩnh cùng các route động.
 
 Migration `0002_single_rental_location` đổi default và cập nhật toàn bộ xe hiện có sang điểm La Gi cố định. Booking lịch sử không bị sửa. Rollback vận hành chỉ nên đổi default/tọa độ xe sang địa điểm mới được doanh nghiệp phê duyệt; không khôi phục các địa chỉ xe cũ không còn đáng tin.
 
 Migration `0005_phone_password_account_profile` bổ sung ngày sinh/giới tính cho `User` và cho phép `Customer.phone`/`Customer.idCardNo` null để tài khoản Google không cần dữ liệu placeholder. Forward deploy chạy `prisma migrate deploy`; rollback chỉ an toàn khi không còn bản ghi Google thiếu phone/CCCD và phải backfill trước khi đặt lại NOT NULL.
 
 Migration `0006_quick_booking_requests` tạo yêu cầu đặt xe nhanh độc lập với `Booking` và gỡ khóa ngoại sai từ `AuditLog.targetId` sang `Booking` để audit tiếp tục là polymorphic. Forward deploy chạy `prisma migrate deploy`; rollback phải lưu/xuất toàn bộ yêu cầu nhanh trước khi xóa bảng/enum và chỉ nên khôi phục khóa ngoại audit sau khi chắc chắn không có audit cho target khác Booking.
+
+Migration `0007_facebook_login` thêm `User.facebookId` nullable/unique để đăng nhập Facebook không phụ thuộc email. Forward deploy chạy `prisma migrate deploy`; rollback chỉ được xóa unique index/cột sau khi đã xuất mapping Facebook và chấp nhận các tài khoản Facebook không thể đăng nhập lại.
 
 Task chỉ hoàn tất khi authorization/ownership/validation đúng, API/UI typed, không thêm mock ẩn, lint/build/test liên quan pass và giới hạn còn lại được báo rõ.
 

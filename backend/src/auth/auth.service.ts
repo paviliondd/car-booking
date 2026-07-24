@@ -27,6 +27,22 @@ import {
 
 type OtpPurpose = 'register' | 'password-reset' | `phone-link:${string}`;
 
+type FacebookTokenDebugResponse = {
+  data?: {
+    app_id?: string;
+    is_valid?: boolean;
+    user_id?: string;
+  };
+  error?: { message?: string };
+};
+
+type FacebookProfileResponse = {
+  id?: string;
+  name?: string;
+  picture?: { data?: { url?: string } };
+  error?: { message?: string };
+};
+
 @Injectable()
 export class AuthService {
   private readonly googleClient: OAuth2Client;
@@ -336,6 +352,108 @@ export class AuthService {
       });
     }
     return this.signUser(user);
+  }
+
+  async facebookLogin(accessToken: string) {
+    const appId = this.configService.get<string>('FACEBOOK_APP_ID')?.trim();
+    const appSecret = this.configService
+      .get<string>('FACEBOOK_APP_SECRET')
+      ?.trim();
+    if (!appId || !appSecret) {
+      throw new ServiceUnavailableException(
+        'Đăng nhập Facebook chưa được cấu hình. Vui lòng thử lại sau.',
+      );
+    }
+
+    const debugUrl = new URL('https://graph.facebook.com/debug_token');
+    debugUrl.searchParams.set('input_token', accessToken);
+    debugUrl.searchParams.set('access_token', `${appId}|${appSecret}`);
+    const debug =
+      await this.fetchFacebookJson<FacebookTokenDebugResponse>(debugUrl);
+    if (
+      !debug.data?.is_valid ||
+      debug.data.app_id !== appId ||
+      !debug.data.user_id
+    ) {
+      throw new UnauthorizedException(
+        'Facebook access token không hợp lệ hoặc đã hết hạn',
+      );
+    }
+
+    const profileUrl = new URL('https://graph.facebook.com/me');
+    profileUrl.searchParams.set('fields', 'id,name,picture.type(large)');
+    profileUrl.searchParams.set('access_token', accessToken);
+    const profile =
+      await this.fetchFacebookJson<FacebookProfileResponse>(profileUrl);
+    if (!profile.id || profile.id !== debug.data.user_id || !profile.name) {
+      throw new UnauthorizedException(
+        'Không thể xác minh thông tin tài khoản Facebook',
+      );
+    }
+
+    const avatar = profile.picture?.data?.url;
+    let user = await this.prisma.user.findUnique({
+      where: { facebookId: profile.id },
+    });
+    if (!user) {
+      try {
+        user = await this.prisma.user.create({
+          data: {
+            facebookId: profile.id,
+            name: profile.name.trim(),
+            avatar,
+            role: Role.CUSTOMER,
+            customer: { create: { fullName: profile.name.trim() } },
+          },
+        });
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002'
+        ) {
+          user = await this.prisma.user.findUnique({
+            where: { facebookId: profile.id },
+          });
+        } else {
+          throw error;
+        }
+      }
+    } else if (avatar && avatar !== user.avatar) {
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: { avatar },
+      });
+    }
+    if (!user) {
+      throw new ServiceUnavailableException(
+        'Không thể hoàn tất đăng nhập Facebook. Vui lòng thử lại.',
+      );
+    }
+    return this.signUser(user);
+  }
+
+  private async fetchFacebookJson<T>(url: URL): Promise<T> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const response = await fetch(url, {
+        headers: { Accept: 'application/json' },
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        throw new UnauthorizedException(
+          'Không thể xác minh phiên đăng nhập Facebook',
+        );
+      }
+      return (await response.json()) as T;
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
+      throw new ServiceUnavailableException(
+        'Không thể kết nối Facebook. Vui lòng thử lại.',
+      );
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
   async getMyOwnerApplication(userId: string) {

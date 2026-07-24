@@ -77,19 +77,20 @@ enum QuickBookingSmsStatus {
 }
 
 model User {
-  id       String  @id @default(uuid())
-  email    String? @unique
-  password String?
-  name     String
-  role     Role    @default(CUSTOMER)
-  avatar   String?
-  phone    String? @unique
+  id              String    @id @default(uuid())
+  email           String?   @unique
+  facebookId      String?   @unique
+  password        String?
+  name            String
+  role            Role      @default(CUSTOMER)
+  avatar          String?
+  phone           String?   @unique
   phoneVerifiedAt DateTime?
   emailVerifiedAt DateTime?
-  idCardNo String? @unique
-  address  String?
-  birthDate DateTime?
-  gender    Gender?
+  idCardNo        String?   @unique
+  address         String?
+  birthDate       DateTime?
+  gender          Gender?
 
   // Owner Verification
   isVerifiedOwner Boolean   @default(false)
@@ -98,17 +99,17 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  customer         Customer?
-  vehicles         Vehicle[]         @relation("OwnerVehicles")
-  bookings         Booking[]         @relation("StaffBookings")
-  auditLogs        AuditLog[]
-  tickets          SupportTicket[]
-  sentMessages     ChatMessage[]     @relation("SentMessages")
-  receivedMessages ChatMessage[]     @relation("ReceivedMessages")
-  notificationLogs NotificationLog[]
-  ownerApplications OwnerLead[] @relation("OwnerApplicant")
-  reviewedOwnerApplications OwnerLead[] @relation("OwnerReviewer")
-  handledQuickBookings QuickBookingRequest[] @relation("QuickBookingHandler")
+  customer                  Customer?
+  vehicles                  Vehicle[]             @relation("OwnerVehicles")
+  bookings                  Booking[]             @relation("StaffBookings")
+  auditLogs                 AuditLog[]
+  tickets                   SupportTicket[]
+  sentMessages              ChatMessage[]         @relation("SentMessages")
+  receivedMessages          ChatMessage[]         @relation("ReceivedMessages")
+  notificationLogs          NotificationLog[]
+  ownerApplications         OwnerLead[]           @relation("OwnerApplicant")
+  reviewedOwnerApplications OwnerLead[]           @relation("OwnerReviewer")
+  handledQuickBookings      QuickBookingRequest[] @relation("QuickBookingHandler")
 }
 
 model Customer {
@@ -165,11 +166,11 @@ model Vehicle {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  bookings     Booking[]
-  maintenances Maintenance[]
-  expenses     Expense[]
-  revenues     Revenue[]
-  reviews      Review[]
+  bookings             Booking[]
+  maintenances         Maintenance[]
+  expenses             Expense[]
+  revenues             Revenue[]
+  reviews              Review[]
   quickBookingRequests QuickBookingRequest[]
 }
 
@@ -200,12 +201,12 @@ model Booking {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  customer  Customer   @relation(fields: [customerId], references: [id])
-  vehicle   Vehicle    @relation(fields: [vehicleId], references: [id])
-  staff     User?      @relation("StaffBookings", fields: [staffId], references: [id])
-  payment   Payment?
-  coupon    Coupon?    @relation(fields: [couponCode], references: [code])
-  contract  Contract?
+  customer Customer  @relation(fields: [customerId], references: [id])
+  vehicle  Vehicle   @relation(fields: [vehicleId], references: [id])
+  staff    User?     @relation("StaffBookings", fields: [staffId], references: [id])
+  payment  Payment?
+  coupon   Coupon?   @relation(fields: [couponCode], references: [code])
+  contract Contract?
 }
 
 model Payment {
@@ -349,23 +350,23 @@ model AuditLog {
 }
 
 model OwnerLead {
-  id               String                 @id @default(uuid())
-  applicationNumber String                @unique
-  name             String
-  phone            String
-  carName          String
-  plateNumber      String?
-  vehicleYear      Int?
-  applicantNotes   String?
-  adminNotes       String?
-  status           OwnerApplicationStatus @default(PENDING_REVIEW)
-  rejectionReason  String?
-  assignedStaffId  String?
-  userId           String?
-  reviewedById     String?
-  reviewedAt       DateTime?
-  createdAt        DateTime               @default(now())
-  updatedAt        DateTime               @updatedAt
+  id                String                 @id @default(uuid())
+  applicationNumber String                 @unique
+  name              String
+  phone             String
+  carName           String
+  plateNumber       String?
+  vehicleYear       Int?
+  applicantNotes    String?
+  adminNotes        String?
+  status            OwnerApplicationStatus @default(PENDING_REVIEW)
+  rejectionReason   String?
+  assignedStaffId   String?
+  userId            String?
+  reviewedById      String?
+  reviewedAt        DateTime?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
 
   user       User? @relation("OwnerApplicant", fields: [userId], references: [id])
   reviewedBy User? @relation("OwnerReviewer", fields: [reviewedById], references: [id])
@@ -375,38 +376,38 @@ model OwnerLead {
 }
 
 model NotificationLog {
-  id           String   @id @default(uuid())
-  userId       String?
-  channel      String
-  recipient    String
-  template     String
-  status       String
-  errorMessage String?
+  id                String   @id @default(uuid())
+  userId            String?
+  channel           String
+  recipient         String
+  template          String
+  status            String
+  errorMessage      String?
   providerMessageId String?
-  idempotencyKey String? @unique
-  attemptCount Int @default(1)
-  lastAttemptAt DateTime @default(now())
-  createdAt    DateTime @default(now())
+  idempotencyKey    String?  @unique
+  attemptCount      Int      @default(1)
+  lastAttemptAt     DateTime @default(now())
+  createdAt         DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id])
 }
 
 model QuickBookingRequest {
-  id             String                @id @default(uuid())
-  requestNumber  String                @unique
-  phone          String
-  vehicleId      String
-  startDate      DateTime
-  endDate        DateTime
-  status         QuickBookingStatus    @default(NEW)
-  smsStatus      QuickBookingSmsStatus @default(PENDING)
-  adminNotes     String?               @db.Text
-  handledById    String?
-  contactedAt    DateTime?
-  smsSentAt      DateTime?
+  id               String                @id @default(uuid())
+  requestNumber    String                @unique
+  phone            String
+  vehicleId        String
+  startDate        DateTime
+  endDate          DateTime
+  status           QuickBookingStatus    @default(NEW)
+  smsStatus        QuickBookingSmsStatus @default(PENDING)
+  adminNotes       String?               @db.Text
+  handledById      String?
+  contactedAt      DateTime?
+  smsSentAt        DateTime?
   smsLastAttemptAt DateTime?
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
 
   vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
   handledBy User?   @relation("QuickBookingHandler", fields: [handledById], references: [id])

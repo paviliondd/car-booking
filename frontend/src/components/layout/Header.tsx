@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -20,7 +16,6 @@ import {
 } from "@/lib/auth-session";
 
 const navItems = [
-  { href: "/vehicles", label: "Xe sẵn sàng" },
   { href: "/about", label: "Về datxe" },
   { href: "/become-owner", label: "Trở thành chủ xe" },
 ];

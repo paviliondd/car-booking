@@ -220,11 +220,7 @@ export type AccountProfile = {
 };
 
 export type QuickBookingStatus =
-  | "NEW"
-  | "CONTACTING"
-  | "CONTACTED"
-  | "CLOSED"
-  | "CANCELLED";
+  "NEW" | "CONTACTING" | "CONTACTED" | "CLOSED" | "CANCELLED";
 
 export type QuickBookingRequest = {
   id: string;
@@ -239,10 +235,7 @@ export type QuickBookingRequest = {
   contactedAt?: string | null;
   createdAt: string;
   updatedAt: string;
-  vehicle: Pick<
-    Vehicle,
-    "id" | "brand" | "model" | "plateNumber" | "images"
-  >;
+  vehicle: Pick<Vehicle, "id" | "brand" | "model" | "plateNumber" | "images">;
   handledBy?: { id: string; name: string } | null;
 };
 
@@ -317,10 +310,13 @@ export const api = {
         body: JSON.stringify(dto),
       }),
     requestRegistrationCode: (phone: string) =>
-      request<{ sent: true; expiresIn: number }>("/auth/register/request-code", {
-        method: "POST",
-        body: JSON.stringify({ phone }),
-      }),
+      request<{ sent: true; expiresIn: number }>(
+        "/auth/register/request-code",
+        {
+          method: "POST",
+          body: JSON.stringify({ phone }),
+        },
+      ),
     register: (dto: {
       phone: string;
       code: string;
@@ -337,6 +333,11 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ credential }),
       }),
+    facebookLogin: (accessToken: string) =>
+      request<AuthResponse>("/auth/facebook", {
+        method: "POST",
+        body: JSON.stringify({ accessToken }),
+      }),
     requestPasswordResetCode: (phone: string) =>
       request<{ sent: true; expiresIn: number }>(
         "/auth/password/request-reset-code",
@@ -345,11 +346,7 @@ export const api = {
           body: JSON.stringify({ phone }),
         },
       ),
-    resetPassword: (dto: {
-      phone: string;
-      code: string;
-      password: string;
-    }) =>
+    resetPassword: (dto: { phone: string; code: string; password: string }) =>
       request<{ reset: true }>("/auth/password/reset", {
         method: "POST",
         body: JSON.stringify(dto),
@@ -378,10 +375,13 @@ export const api = {
         rejectionReason?: string;
       },
     ) =>
-      request<OwnerRequest>(`/auth/owner-applications/${applicationId}/review`, {
-        method: "POST",
-        body: JSON.stringify(dto),
-      }),
+      request<OwnerRequest>(
+        `/auth/owner-applications/${applicationId}/review`,
+        {
+          method: "POST",
+          body: JSON.stringify(dto),
+        },
+      ),
     createOwnerApplication: (dto: {
       carName: string;
       plateNumber?: string;
@@ -407,10 +407,7 @@ export const api = {
         method: "PATCH",
         body: JSON.stringify(dto),
       }),
-    changePassword: (dto: {
-      currentPassword: string;
-      newPassword: string;
-    }) =>
+    changePassword: (dto: { currentPassword: string; newPassword: string }) =>
       request<{ changed: true }>("/account/change-password", {
         method: "POST",
         body: JSON.stringify(dto),
@@ -539,18 +536,25 @@ export const api = {
         body,
       });
     },
-    uploadCustomerDocuments: (files: Partial<Record<keyof CustomerDocumentKeys, File>>) => {
+    uploadCustomerDocuments: (
+      files: Partial<Record<keyof CustomerDocumentKeys, File>>,
+    ) => {
       const body = new FormData();
       if (files.idCardFront) body.append("idCardFront", files.idCardFront);
       if (files.idCardBack) body.append("idCardBack", files.idCardBack);
-      if (files.driverLicense) body.append("driverLicense", files.driverLicense);
+      if (files.driverLicense)
+        body.append("driverLicense", files.driverLicense);
       return request<CustomerDocumentKeys>("/storage/customer-documents", {
         method: "POST",
         body,
       });
     },
     getPrivateDocument: async (key: string) => {
-      if (!/^private\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|pdf)$/i.test(key)) {
+      if (
+        !/^private\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|pdf)$/i.test(
+          key,
+        )
+      ) {
         throw new Error("Tệp hồ sơ không hợp lệ.");
       }
       const token =

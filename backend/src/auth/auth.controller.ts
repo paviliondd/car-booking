@@ -11,6 +11,7 @@ import { Role } from '@prisma/client';
 import type { Request } from 'express';
 import { Roles } from './decorators/roles.decorator';
 import {
+  FacebookLoginDto,
   GoogleLoginDto,
   LoginDto,
   OwnerApplicationDto,
@@ -67,6 +68,11 @@ export class AuthController {
   @Post('google')
   googleLogin(@Body() dto: GoogleLoginDto) {
     return this.authService.googleLogin(dto.credential);
+  }
+
+  @Post('facebook')
+  facebookLogin(@Body() dto: FacebookLoginDto) {
+    return this.authService.facebookLogin(dto.accessToken);
   }
 
   @UseGuards(JwtAuthGuard)

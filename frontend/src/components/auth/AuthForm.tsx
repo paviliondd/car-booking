@@ -14,6 +14,7 @@ import {
   User,
 } from "lucide-react";
 import { api, type AuthResponse } from "@/lib/api";
+import FacebookSignInButton from "./FacebookSignInButton";
 import GoogleSignInButton from "./GoogleSignInButton";
 import { setAuthSession } from "@/lib/auth-session";
 
@@ -70,7 +71,11 @@ export default function AuthForm({
   };
 
   const validatePassword = () => {
-    if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+    if (
+      password.length < 8 ||
+      !/[A-Za-z]/.test(password) ||
+      !/\d/.test(password)
+    ) {
       setError("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ và số.");
       return false;
     }
@@ -159,6 +164,22 @@ export default function AuthForm({
         caught instanceof Error
           ? caught.message
           : "Không thể đăng nhập bằng Google.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFacebook = async (accessToken: string) => {
+    setLoading(true);
+    setError("");
+    try {
+      finishLogin(await api.auth.facebookLogin(accessToken));
+    } catch (caught: unknown) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Không thể đăng nhập bằng Facebook.",
       );
     } finally {
       setLoading(false);
@@ -365,17 +386,14 @@ export default function AuthForm({
             Hoặc
             <span className="h-px flex-1 bg-app-border" />
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <button
-              type="button"
-              disabled
-              title="Tính năng sẽ hoạt động sau khi cấu hình Facebook API"
-              className="min-h-11 cursor-not-allowed rounded-xl border border-app-border px-4 text-sm font-bold text-content-secondary opacity-60"
-            >
-              Facebook · Sắp ra mắt
-            </button>
+          <div className="flex min-w-0 flex-col gap-3">
             <GoogleSignInButton
               onCredential={handleGoogle}
+              disabled={loading}
+            />
+            <FacebookSignInButton
+              onAccessToken={handleFacebook}
+              onError={setError}
               disabled={loading}
             />
           </div>

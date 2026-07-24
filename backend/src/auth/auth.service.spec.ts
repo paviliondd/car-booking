@@ -10,6 +10,7 @@ import type { JwtService } from '@nestjs/jwt';
 
 describe('AuthService phone authentication', () => {
   const storedOtp = new Map<string, string>();
+  const configValues = new Map<string, string>();
   let lastSms = '';
   const user = {
     id: 'user-1',
@@ -28,11 +29,13 @@ describe('AuthService phone authentication', () => {
     user: {
       findUnique: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
     },
   };
   const jwtMock = { sign: jest.fn(() => 'signed-token') };
   const configMock = {
     get: jest.fn((key: string) => {
+      if (configValues.has(key)) return configValues.get(key);
       if (key === 'OTP_TTL_SECONDS') return '300';
       if (key === 'OTP_RESEND_SECONDS') return '60';
       if (key === 'OTP_MAX_ATTEMPTS') return '5';
@@ -70,14 +73,21 @@ describe('AuthService phone authentication', () => {
     notificationMock as unknown as NotificationService,
     redisMock as unknown as RedisService,
   );
+  const fetchMock = jest.spyOn(global, 'fetch');
 
   beforeEach(() => {
     storedOtp.clear();
+    configValues.clear();
     lastSms = '';
     jest.clearAllMocks();
+    fetchMock.mockReset();
     jwtMock.sign.mockReturnValue('signed-token');
     redisMock.increment.mockResolvedValue(1);
     redisMock.acquireLock.mockResolvedValue(true);
+  });
+
+  afterAll(() => {
+    fetchMock.mockRestore();
   });
 
   it('đăng nhập bằng số điện thoại đã chuẩn hóa và mật khẩu đúng', async () => {
@@ -154,5 +164,78 @@ describe('AuthService phone authentication', () => {
     expect(createCalls[0]?.[0].data.phone).toBe('+84901234567');
     expect(createCalls[0]?.[0].data.phoneVerifiedAt).toBeInstanceOf(Date);
     expect(createCalls[0]?.[0].data.role).toBe(Role.CUSTOMER);
+  });
+
+  it('xác minh access token Facebook ở backend trước khi tạo tài khoản', async () => {
+    configValues.set('FACEBOOK_APP_ID', 'facebook-app-id');
+    configValues.set('FACEBOOK_APP_SECRET', 'facebook-app-secret');
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: {
+              app_id: 'facebook-app-id',
+              is_valid: true,
+              user_id: 'facebook-user-1',
+            },
+          }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: 'facebook-user-1',
+            name: 'Khách Facebook',
+            picture: { data: { url: 'https://example.com/avatar.jpg' } },
+          }),
+          { status: 200 },
+        ),
+      );
+    prismaMock.user.findUnique.mockResolvedValue(null);
+    prismaMock.user.create.mockResolvedValue({
+      ...user,
+      facebookId: 'facebook-user-1',
+      name: 'Khách Facebook',
+      avatar: 'https://example.com/avatar.jpg',
+    });
+
+    await expect(
+      service.facebookLogin('facebook-access-token-value'),
+    ).resolves.toMatchObject({
+      accessToken: 'signed-token',
+      user: { name: 'Khách Facebook', role: Role.CUSTOMER },
+    });
+    expect(prismaMock.user.create).toHaveBeenCalledWith({
+      data: {
+        facebookId: 'facebook-user-1',
+        name: 'Khách Facebook',
+        avatar: 'https://example.com/avatar.jpg',
+        role: Role.CUSTOMER,
+        customer: { create: { fullName: 'Khách Facebook' } },
+      },
+    });
+  });
+
+  it('từ chối token Facebook được cấp cho ứng dụng khác', async () => {
+    configValues.set('FACEBOOK_APP_ID', 'facebook-app-id');
+    configValues.set('FACEBOOK_APP_SECRET', 'facebook-app-secret');
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          data: {
+            app_id: 'another-app-id',
+            is_valid: true,
+            user_id: 'facebook-user-1',
+          },
+        }),
+        { status: 200 },
+      ),
+    );
+
+    await expect(
+      service.facebookLogin('facebook-access-token-value'),
+    ).rejects.toThrow(UnauthorizedException);
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
   });
 });

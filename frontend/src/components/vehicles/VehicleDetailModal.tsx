@@ -6,11 +6,9 @@ import Link from "next/link";
 import {
   CalendarDays,
   Car,
-  Clock3,
   ExternalLink,
   Fuel,
   Gauge,
-  MapPin,
   Palette,
   Settings2,
   ShieldCheck,
@@ -18,13 +16,13 @@ import {
   X,
 } from "lucide-react";
 import type { Vehicle } from "@/lib/api";
-import { rentalPolicies, storeInfo } from "@/lib/store";
+import { rentalPolicies } from "@/lib/store";
 import {
   vehicleFuelLabel,
   vehicleTransmissionLabel,
 } from "@/lib/vehicle-labels";
 
-const tabs = ["Đặc điểm", "Giấy tờ thuê xe", "Vị trí xe", "Chủ xe"] as const;
+const tabs = ["Đặc điểm", "Giấy tờ thuê xe"] as const;
 type Tab = (typeof tabs)[number];
 
 const money = (value: number) => `${value.toLocaleString("vi-VN")} đ`;
@@ -108,9 +106,7 @@ export default function VehicleDetailModal({
   return (
     <div
       className="fixed inset-0 z-[90] overflow-y-auto bg-night-surface/70 p-0 sm:p-6"
-      onMouseDown={(event) =>
-        event.target === event.currentTarget && onClose()
-      }
+      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
     >
       <section
         ref={dialogRef}
@@ -203,7 +199,10 @@ export default function VehicleDetailModal({
                 <p className="text-sm font-bold uppercase tracking-wide text-brand">
                   Xe tự lái
                 </p>
-                <h2 id="vehicle-modal-title" className="mt-1 text-3xl font-black">
+                <h2
+                  id="vehicle-modal-title"
+                  className="mt-1 text-3xl font-black"
+                >
                   {vehicle.brand} {vehicle.model}
                 </h2>
               </div>
@@ -236,7 +235,9 @@ export default function VehicleDetailModal({
                   </dl>
                   {vehicle.terms && (
                     <div className="mt-4 rounded-xl border border-warning/30 bg-warning-muted p-4">
-                      <p className="font-bold text-warning">Lưu ý riêng của xe</p>
+                      <p className="font-bold text-warning">
+                        Lưu ý riêng của xe
+                      </p>
                       <p className="mt-1 whitespace-pre-line leading-6 text-warning">
                         {vehicle.terms}
                       </p>
@@ -256,37 +257,6 @@ export default function VehicleDetailModal({
                       <p className="mt-1 leading-6">{policy.description}</p>
                     </div>
                   ))}
-                </div>
-              )}
-
-              {tab === "Vị trí xe" && (
-                <div className="space-y-3">
-                  <p className="flex gap-3 rounded-xl border border-app-border/40 bg-app-surface p-4">
-                    <MapPin className="h-5 w-5 shrink-0 text-brand" />
-                    <span>
-                      <strong className="block text-content">Điểm nhận và trả xe</strong>
-                      {storeInfo.address}
-                    </span>
-                  </p>
-                  <p className="flex gap-3 rounded-xl border border-app-border/40 bg-app-surface p-4">
-                    <Clock3 className="h-5 w-5 shrink-0 text-brand" />
-                    <span>
-                      <strong className="block text-content">Thời gian phục vụ</strong>
-                      {storeInfo.hours}
-                    </span>
-                  </p>
-                </div>
-              )}
-
-              {tab === "Chủ xe" && (
-                <div className="rounded-xl border border-app-border/40 bg-app-surface p-4">
-                  <p className="font-bold text-content">
-                    {vehicle.owner?.name || "Đội ngũ datxe"}
-                  </p>
-                  <p className="mt-1 leading-6">
-                    Thông tin xe và lịch thuê được xác nhận trước khi bạn thanh toán
-                    khoản cọc.
-                  </p>
                 </div>
               )}
             </div>

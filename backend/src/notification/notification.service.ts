@@ -16,6 +16,10 @@ export class NotificationService {
   private senderEmail: string;
   private smtp: nodemailer.Transporter | null = null;
   private readonly logger = new Logger(NotificationService.name);
+  private readonly smsEnabled: boolean;
+  private readonly smsProvider: string;
+  private readonly smsSenderId?: string;
+  private readonly smsConfigurationError?: string;
 
   constructor(
     private configService: ConfigService,
@@ -29,6 +33,24 @@ export class NotificationService {
       'AWS_SECRET_ACCESS_KEY',
     );
     const region = this.configService.get<string>('AWS_REGION') || 'us-east-1';
+    this.smsEnabled =
+      this.configService.get<string>('SMS_ENABLED')?.toLowerCase() === 'true';
+    this.smsProvider = (
+      this.configService.get<string>('SMS_PROVIDER') || 'AWS_SNS'
+    )
+      .trim()
+      .toUpperCase();
+    const senderId = this.configService.get<string>('SMS_SENDER_ID')?.trim();
+    this.smsSenderId = senderId || undefined;
+    if (this.smsProvider !== 'AWS_SNS') {
+      this.smsConfigurationError = `SMS_PROVIDER không được hỗ trợ: ${this.smsProvider}`;
+    } else if (
+      this.smsSenderId &&
+      !/^[A-Za-z0-9]{1,11}$/.test(this.smsSenderId)
+    ) {
+      this.smsConfigurationError =
+        'SMS_SENDER_ID chỉ được gồm 1-11 ký tự chữ hoặc số';
+    }
 
     if (accessKeyId && secretAccessKey) {
       this.sesClient = new SESClient({
@@ -196,19 +218,26 @@ export class NotificationService {
       if (delivered?.status === 'SENT') return true;
     }
     this.logger.log(`Sending SMS template ${template} to ${phoneNumber}...`);
-    const smsEnabled =
-      this.configService.get<string>('SMS_ENABLED')?.toLowerCase() === 'true';
-    if (this.snsClient && smsEnabled) {
+    if (this.snsClient && this.smsEnabled && !this.smsConfigurationError) {
       try {
+        const messageAttributes = {
+          'AWS.SNS.SMS.SMSType': {
+            DataType: 'String',
+            StringValue: 'Transactional',
+          },
+          ...(this.smsSenderId
+            ? {
+                'AWS.SNS.SMS.SenderID': {
+                  DataType: 'String',
+                  StringValue: this.smsSenderId,
+                },
+              }
+            : {}),
+        };
         const command = new PublishCommand({
           PhoneNumber: phoneNumber,
           Message: message,
-          MessageAttributes: {
-            'AWS.SNS.SMS.SMSType': {
-              DataType: 'String',
-              StringValue: 'Transactional',
-            },
-          },
+          MessageAttributes: messageAttributes,
         });
         const result = await this.snsClient.send(command);
         await this.logSmsDelivery({
@@ -239,9 +268,11 @@ export class NotificationService {
         return false;
       }
     }
-    const errorMessage = smsEnabled
-      ? 'AWS SNS chưa được cấu hình'
-      : 'Gửi SMS chưa được bật';
+    const errorMessage =
+      this.smsConfigurationError ||
+      (this.smsEnabled
+        ? 'AWS SNS chưa được cấu hình'
+        : 'Gửi SMS chưa được bật');
     await this.logSmsDelivery({
       phoneNumber,
       template,

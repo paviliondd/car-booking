@@ -7,10 +7,11 @@
 - API base URL lấy từ `NEXT_PUBLIC_API_URL`, fallback `http://localhost:5000/api`.
 - Auth hiện dùng `localStorage` keys `token` và `user`; đừng đổi contract này một phần hoặc tạo cơ chế auth thứ hai.
 - Google Sign-In dùng Google Identity Services qua `NEXT_PUBLIC_GOOGLE_CLIENT_ID`; gửi credential tới `/api/auth/google`. Không thêm social-login mock hoặc decode token phía client.
+- Facebook Login dùng Meta JavaScript SDK qua `NEXT_PUBLIC_FACEBOOK_APP_ID`; frontend chỉ chuyển access token tới `/api/auth/facebook`, còn backend xác minh token bằng App Secret và đối chiếu App ID. Không đưa `FACEBOOK_APP_SECRET` vào frontend.
 - Dùng `src/lib/api.ts` hoặc helper typed dùng chung; không nhân bản request/auth/error logic mới.
 - Không thêm `any`, effect chỉ để mirror state, raw `<img>` hoặc hard-coded color mới nếu có thể dùng type, derived state, `next/image` và semantic token.
 - Với mọi thay đổi UI/UX, dùng global Codex skill `ui-ux-pro-max` theo workflow ghi trong root `AGENTS.md`; giữ Lucide làm icon family của repo.
-- Trước khi bàn giao chạy `npm run lint:check` và `npm run build`. Baseline 2026-07-24 là lint 0 lỗi/0 warning và build pass 24 trang tĩnh cùng các route động; không làm baseline thoái lui hoặc tắt rule hàng loạt.
+- Trước khi bàn giao chạy `npm run lint:check` và `npm run build`. Baseline 2026-07-24 là lint 0 lỗi/0 warning và build pass 25 trang tĩnh cùng các route động; không làm baseline thoái lui hoặc tắt rule hàng loạt.
 
 ## Semantic color system
 

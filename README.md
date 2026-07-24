@@ -80,6 +80,8 @@ POSTGRES_DB=datxe
 JWT_SECRET=generate-at-least-32-random-bytes
 CORS_ORIGINS=http://localhost:3000
 GOOGLE_CLIENT_ID=
+FACEBOOK_APP_ID=
+FACEBOOK_APP_SECRET=
 ENABLE_DEMO_DATA=false
 ENABLE_PAYMENT_MOCKS=false
 ```
@@ -106,6 +108,8 @@ cd frontend
 npm ci
 $env:NEXT_PUBLIC_API_URL='http://localhost:5000/api'
 $env:NEXT_PUBLIC_WS_URL='http://localhost:5000'
+$env:NEXT_PUBLIC_GOOGLE_CLIENT_ID=''
+$env:NEXT_PUBLIC_FACEBOOK_APP_ID=''
 npm run dev
 ```
 
@@ -134,9 +138,13 @@ Nhóm biến bắt buộc:
 Nhóm integration:
 
 - Google: `GOOGLE_CLIENT_ID` phải là OAuth 2.0 Web Client ID; GitHub variable `NEXT_PUBLIC_GOOGLE_CLIENT_ID` phải cùng giá trị.
+- Facebook: lấy App ID/App Secret tại `https://developers.facebook.com/apps/`. Đặt `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` trên VPS và
+  GitHub variable `NEXT_PUBLIC_FACEBOOK_APP_ID`; App Secret chỉ tồn tại ở backend.
 - PayOS: `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY`.
 - MoMo: `MOMO_PARTNER_CODE`, `MOMO_ACCESS_KEY`, `MOMO_SECRET_KEY`, URL redirect/IPN.
-- Email/SMS AWS: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `AWS_SES_EMAIL_SENDER`. Để trống nếu chưa sử dụng; không điền credential giả.
+- Email/SMS AWS: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `AWS_SES_EMAIL_SENDER`. SMS dùng
+  `SMS_PROVIDER=AWS_SNS`, chỉ bật `SMS_ENABLED=true` sau khi SNS đã cấu hình; `SMS_SENDER_ID` là tùy chọn 1-11 ký tự
+  chữ/số. Origination identity được cấu hình trong AWS. Để trống credential nếu chưa sử dụng; không điền giá trị giả.
 
 `NEXT_PUBLIC_*` được bake lúc build frontend và phải cấu hình bằng GitHub Actions variables, không chỉ trong `.env` trên VPS.
 
@@ -146,15 +154,24 @@ Không chạy seed demo trên production. Sau migration, chạy bootstrap một 
 
 ```bash
 cd /opt/datxe
+export ADMIN_PHONE='0901234567'
+read -rsp 'Mật khẩu admin mới (tối thiểu 12 ký tự): ' ADMIN_PASSWORD
+echo
+export ADMIN_PASSWORD
 docker compose -f docker-compose.prod.yml run --rm \
-  -e ADMIN_PHONE='0901234567' \
-  -e ADMIN_EMAIL='admin@your-domain.com' \
+  -e ADMIN_PHONE \
+  -e ADMIN_PASSWORD \
+  -e ADMIN_EMAIL= \
   -e ADMIN_NAME='Quản trị datxe' \
-  -e ADMIN_PASSWORD='a-unique-strong-password' \
   backend npm run admin:bootstrap
+unset ADMIN_PHONE ADMIN_PASSWORD
 ```
 
-`ADMIN_PHONE` là bắt buộc và phải là số điện thoại Việt Nam thật; `ADMIN_EMAIL` là tùy chọn. Không dùng placeholder như `09xxxxxxxx`. Sau đó bỏ `ADMIN_PASSWORD` khỏi shell history/file env nếu đã lưu tạm. Đăng nhập bằng số điện thoại + mật khẩu tại `https://datxe.linuxunity.com/auth`, rồi mở `/dashboard`. Người dùng đăng ký bình thường luôn là `CUSTOMER` và không thể tự chọn role.
+Lệnh này có thể chạy lại để khôi phục admin: tài khoản cùng số điện thoại sẽ được xác minh, đặt lại mật khẩu và gán
+role `ADMIN`. `ADMIN_PHONE` là bắt buộc và phải là số điện thoại Việt Nam thật; `ADMIN_EMAIL` là tùy chọn. Không dùng
+placeholder như `09xxxxxxxx`. Không lưu `ADMIN_PASSWORD` trong file env hoặc command history. Đăng nhập bằng số điện
+thoại + mật khẩu tại `https://datxe.linuxunity.com/auth`, rồi mở `/dashboard`. Người dùng đăng ký bình thường luôn là
+`CUSTOMER` và không thể tự chọn role.
 
 Seed phát triển chỉ chạy khi đặt rõ `ENABLE_DEMO_DATA=true`; tài khoản demo admin là `0900000001` / `adminpassword123`. Không dùng tài khoản demo trên production.
 
@@ -168,7 +185,9 @@ Push `main` chạy theo thứ tự:
 4. PostgreSQL/Redis được health-check, `prisma migrate deploy` chạy trước app.
 5. Health check `https://datxe.linuxunity.com/api/health/ready`; lỗi sẽ rollback image trước.
 
-GitHub environment `production` cần secrets `VPS_HOST`, `VPS_PORT`, `VPS_USER`, `VPS_SSH_PRIVATE_KEY`, `VPS_SSH_KNOWN_HOSTS`; variables `VPS_DEPLOY_PATH=/opt/datxe` và `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
+GitHub environment `production` cần secrets `VPS_HOST`, `VPS_PORT`, `VPS_USER`, `VPS_SSH_PRIVATE_KEY`,
+`VPS_SSH_KNOWN_HOSTS`; variables `VPS_DEPLOY_PATH=/opt/datxe`, `NEXT_PUBLIC_GOOGLE_CLIENT_ID` và
+`NEXT_PUBLIC_FACEBOOK_APP_ID`.
 
 Production dùng `docker-compose.prod.yml` và `nginx.prod.conf`. Không deploy thủ công song song với workflow.
 

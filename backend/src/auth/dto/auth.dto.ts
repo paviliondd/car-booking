@@ -67,6 +67,12 @@ export class GoogleLoginDto {
   credential: string;
 }
 
+export class FacebookLoginDto {
+  @IsString()
+  @Length(20, 4096)
+  accessToken: string;
+}
+
 export class OwnerApplicationDto {
   @IsString()
   @Length(2, 100)
