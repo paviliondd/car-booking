@@ -67,9 +67,9 @@ scripts/bootstrap-admin-vps.sh khôi phục admin bằng đúng image backend đ
 design-system/datxe/MASTER.md design-system do ui-ux-pro-max sinh
 ```
 
-Backend domains: `auth`, `vehicles`, `bookings`, `payments`, `contracts`, `reviews`, `chat`, `tickets`, `customers`, `maintenance`, `analytics`, `dashboard`, `audit`, `notification`, `redis`, `prisma`.
+Backend domains: `auth`, `vehicles`, `bookings`, `payments`, `contracts`, `reviews`, `chat`, `tickets`, `customers`, `maintenance`, `analytics`, `dashboard`, `audit`, `notification`, `redis`, `prisma`, `payouts`, `inspections`.
 
-`account` cung cấp hồ sơ cá nhân, cập nhật thông tin, đổi mật khẩu, lịch sử booking/hợp đồng theo JWT và luôn giới hạn qua `Customer.userId`. CCCD/GPLX được lưu ở private storage, storage key được ghi ngay vào `Customer` và chỉ chủ tài khoản hoặc ADMIN/STAFF được đọc. Notification hỗ trợ SMTP (`SMTP_*`) với SES fallback và AWS SNS cho SMS; mọi lần gửi được ghi vào `NotificationLog`. Hồ sơ chủ xe yêu cầu đăng nhập và số điện thoại đã xác minh, liên kết trực tiếp `OwnerLead.userId`; OTP chỉ dùng cho kích hoạt đăng ký, đặt lại mật khẩu và liên kết/xác minh số điện thoại cho tài khoản Google.
+`account` cung cấp hồ sơ cá nhân, cập nhật thông tin, đổi mật khẩu, lịch sử booking/hợp đồng theo JWT và luôn giới hạn qua `Customer.userId`. CCCD/GPLX được lưu ở private storage, storage key được ghi ngay vào `Customer` và chỉ chủ tài khoản hoặc ADMIN/STAFF được đọc. Notification hỗ trợ SMTP (`SMTP_*`) với SES fallback và AWS SNS cho SMS; mọi lần gửi được ghi vào `NotificationLog`. Bảng `Notification` hỗ trợ thông báo in-app persistent cho người dùng với trạng thái `isRead`. Hồ sơ chủ xe yêu cầu đăng nhập và số điện thoại đã xác minh, liên kết trực tiếp `OwnerLead.userId`; khi ADMIN/STAFF duyệt `OwnerLead`, hệ thống tự động khởi tạo 1 bản ghi `Vehicle` dạng draft (`LOCKED`) cho chủ xe. OTP chỉ dùng cho kích hoạt đăng ký, đặt lại mật khẩu và liên kết/xác minh số điện thoại cho tài khoản Google/Facebook. Khi liên kết số điện thoại mới cho tài khoản Social, nếu đã tồn tại bản ghi `Customer` chưa gán `userId`, hệ thống tự động hợp nhất tài khoản.
 
 ## Domain và các invariant bắt buộc
 
@@ -77,17 +77,22 @@ Roles: `ADMIN`, `STAFF`, `CUSTOMER`, `OWNER`.
 
 - Client không bao giờ được chọn role khi đăng ký; đăng ký mới luôn là `CUSTOMER`.
 - Tài khoản đăng ký bằng số điện thoại phải xác minh OTP trước khi được tạo/kích hoạt; đăng nhập hằng ngày dùng số điện thoại + mật khẩu. OTP lưu hash theo mục đích trong Redis, hết hạn, giới hạn thử/gửi lại và phải fail rõ ràng nếu Redis/SNS chưa cấu hình; không log hoặc mock OTP production.
-- Hồ sơ chủ xe không tự cấp quyền OWNER. Chỉ tài khoản CUSTOMER có số điện thoại đã xác minh được gửi hồ sơ; chỉ ADMIN/STAFF được duyệt, đổi role và ghi audit trong transaction.
+- Hồ sơ chủ xe không tự cấp quyền OWNER. Chỉ tài khoản CUSTOMER có số điện thoại đã xác minh được gửi hồ sơ; chỉ ADMIN/STAFF được duyệt, đổi role và ghi audit trong transaction. Khi duyệt `OwnerLead` thành công, tự động khởi tạo `Vehicle` trạng thái `LOCKED` thuộc sở hữu của chủ xe mới.
+- Tra cứu đơn công khai (`trackBookings`) bắt buộc phải có đồng thời Số điện thoại VÀ Mã đặt xe (`bookingCode`) để phòng chống lộ dữ liệu PII.
+- Các đơn đặt xe `PENDING` quá 15 phút chưa thanh toán cọc sẽ bị hệ thống tự động hủy (`CANCELLED`) để giải phóng xe.
 - Tìm xe là public; tạo booking và upload/xem CCCD/GPLX của chính mình yêu cầu JWT `CUSTOMER` hoặc `OWNER`, đồng thời liên kết hồ sơ Customer với user hiện tại. `OWNER` vẫn có thể thuê xe như khách; `ADMIN`/`STAFF` không tạo đơn từ luồng khách.
+- Đánh giá xe (`ReviewsService`) bắt buộc khách hàng phải có ít nhất 1 đơn thuê xe ở trạng thái `COMPLETED` cho chiếc xe đó; cấm spam đánh giá từ tài khoản chưa từng thuê.
+- Biên bản kiểm tra xe (`VehicleInspection`): Hỗ trợ lập biên bản giao xe (`CHECK_OUT`) và nhận lại xe (`CHECK_IN`). Nhận lại xe tự động tính số km quá định mức (`overLimitFee`) và số giờ quá hạn (`penaltyRate`).
+- Rút tiền (`PayoutRequest`): Cho phép Chủ xe và CTV gửi yêu cầu rút tiền từ số dư khả dụng (`balance`), chỉ ADMIN/STAFF được duyệt và chuyển khoản qua VietQR/Bank.
 - OWNER chỉ truy cập vehicle, booking, dashboard thuộc xe có `ownerId` của chính họ.
 - Duyệt yêu cầu owner chỉ dành cho ADMIN/STAFF.
 - JWT phải kiểm tra user/role hiện tại trong DB và fail closed khi DB lỗi.
-- Chỉ customer của booking được ký hợp đồng; owner/admin/staff chỉ có quyền xem theo policy.
+- Hợp đồng điện tử cho phép người thuê ký (`signContract`) và Chủ xe / ADMIN / STAFF ký đối ứng (`ownerSignContract`).
 - Chat Socket.IO lấy sender từ JWT handshake, dùng room riêng theo user; không tin `senderId` từ payload và không broadcast toàn cục.
 - Webhook PayOS/MoMo phải xác minh chữ ký trước khi đổi payment/booking. Ghi nhận doanh thu phải idempotent.
 - Mock/demo chỉ được chạy khi flag explicit là `true`; production luôn đặt `ENABLE_DEMO_DATA=false` và `ENABLE_PAYMENT_MOCKS=false`.
 - Availability, giá, cọc và state transition phải được xác thực ở backend; không tin giá/status client gửi.
-- `POST /api/bookings/quote` là báo giá public, read-only trước khi đặt; lúc tạo booking backend vẫn phải kiểm tra lại availability và tự tính lại toàn bộ giá.
+- `POST /api/bookings/quote` là báo giá public, read-only trước khi đặt; lúc tạo booking backend vẫn phải kiểm tra lại availability và tự tính lại toàn bộ giá (bao gồm kiểm tra trùng lịch bảo dưỡng `Maintenance`).
 - Hệ thống chỉ phục vụ tại `Số 87A Nguyễn Công Trứ, Phường La Gi, Tỉnh Lâm Đồng` (khu vực La Gi/Bình Thuận), 24/7. Điểm nhận/trả và tọa độ do backend gán cố định; client không được gửi hoặc sửa theo từng booking/xe.
 
 Trạng thái chính:
@@ -96,6 +101,8 @@ Trạng thái chính:
 - Booking: `PENDING`, `CONFIRMED`, `RENTING`, `COMPLETED`, `CANCELLED`.
 - Payment: `UNPAID`, `DEPOSITED`, `PAID`, `REFUNDED`.
 - Payment method: `MOMO`, `BANK_TRANSFER`, `CASH`.
+- Inspection type: `CHECK_OUT`, `CHECK_IN`.
+- Payout status: `PENDING`, `APPROVED`, `REJECTED`, `COMPLETED`.
 - Quick booking request: `NEW`, `CONTACTING`, `CONTACTED`, `CLOSED`, `CANCELLED`. Đây là yêu cầu liên hệ, không giữ xe và không thay thế `Booking`.
 
 ## Auth và social OAuth

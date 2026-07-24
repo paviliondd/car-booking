@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Maintenance, VehicleStatus } from '@prisma/client';
 
@@ -13,6 +17,22 @@ export class MaintenanceService {
     description?: string;
     cost?: number;
   }): Promise<Maintenance> {
+    const scheduled = new Date(data.scheduledDate);
+    const activeBooking = await this.prisma.booking.findFirst({
+      where: {
+        vehicleId: data.vehicleId,
+        status: { in: ['PENDING', 'CONFIRMED', 'RENTING'] },
+        startDate: { lte: scheduled },
+        endDate: { gte: scheduled },
+      },
+    });
+
+    if (activeBooking) {
+      throw new BadRequestException(
+        `Xe đang có đơn thuê ${activeBooking.bookingNumber} trùng ngày bảo dưỡng`,
+      );
+    }
+
     // Tự động tạm khóa xe chuyển sang bảo dưỡng
     await this.prisma.vehicle.update({
       where: { id: data.vehicleId },

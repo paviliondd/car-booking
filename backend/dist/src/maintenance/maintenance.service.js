@@ -19,6 +19,18 @@ let MaintenanceService = class MaintenanceService {
         this.prisma = prisma;
     }
     async create(data) {
+        const scheduled = new Date(data.scheduledDate);
+        const activeBooking = await this.prisma.booking.findFirst({
+            where: {
+                vehicleId: data.vehicleId,
+                status: { in: ['PENDING', 'CONFIRMED', 'RENTING'] },
+                startDate: { lte: scheduled },
+                endDate: { gte: scheduled },
+            },
+        });
+        if (activeBooking) {
+            throw new common_1.BadRequestException(`Xe đang có đơn thuê ${activeBooking.bookingNumber} trùng ngày bảo dưỡng`);
+        }
         await this.prisma.vehicle.update({
             where: { id: data.vehicleId },
             data: { status: client_1.VehicleStatus.MAINTENANCE },

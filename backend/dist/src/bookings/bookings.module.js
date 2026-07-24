@@ -10,6 +10,8 @@ exports.BookingsModule = void 0;
 const common_1 = require("@nestjs/common");
 const bookings_service_1 = require("./bookings.service");
 const bookings_controller_1 = require("./bookings.controller");
+const inspections_service_1 = require("./inspections.service");
+const inspections_controller_1 = require("./inspections.controller");
 const vehicles_module_1 = require("../vehicles/vehicles.module");
 const payments_module_1 = require("../payments/payments.module");
 const storage_module_1 = require("../storage/storage.module");
@@ -19,9 +21,9 @@ exports.BookingsModule = BookingsModule;
 exports.BookingsModule = BookingsModule = __decorate([
     (0, common_1.Module)({
         imports: [vehicles_module_1.VehiclesModule, payments_module_1.PaymentsModule, storage_module_1.StorageModule],
-        providers: [bookings_service_1.BookingsService],
-        controllers: [bookings_controller_1.BookingsController],
-        exports: [bookings_service_1.BookingsService],
+        providers: [bookings_service_1.BookingsService, inspections_service_1.InspectionsService],
+        controllers: [bookings_controller_1.BookingsController, inspections_controller_1.InspectionsController],
+        exports: [bookings_service_1.BookingsService, inspections_service_1.InspectionsService],
     })
 ], BookingsModule);
 //# sourceMappingURL=bookings.module.js.map

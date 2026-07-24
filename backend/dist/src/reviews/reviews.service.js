@@ -34,6 +34,16 @@ let ReviewsService = class ReviewsService {
         if (!vehicle) {
             throw new common_1.NotFoundException(`Không tìm thấy xe với ID ${vehicleId}`);
         }
+        const completedBooking = await this.prisma.booking.findFirst({
+            where: {
+                vehicleId,
+                customerId: user.customer.id,
+                status: 'COMPLETED',
+            },
+        });
+        if (!completedBooking) {
+            throw new common_1.BadRequestException('Bạn chỉ có thể gửi đánh giá cho chiếc xe mà bạn đã hoàn thành chuyến đi thực tế.');
+        }
         return await this.prisma.review.create({
             data: {
                 vehicleId,

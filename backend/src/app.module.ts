@@ -23,6 +23,7 @@ import { AppService } from './app.service';
 import { StorageModule } from './storage/storage.module';
 import { AccountModule } from './account/account.module';
 import { QuickBookingsModule } from './quick-bookings/quick-bookings.module';
+import { PayoutsModule } from './payouts/payouts.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { QuickBookingsModule } from './quick-bookings/quick-bookings.module';
     StorageModule,
     AccountModule,
     QuickBookingsModule,
+    PayoutsModule,
   ],
   controllers: [AppController],
   providers: [

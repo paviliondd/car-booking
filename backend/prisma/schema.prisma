@@ -76,6 +76,18 @@ enum QuickBookingSmsStatus {
   FAILED
 }
 
+enum InspectionType {
+  CHECK_OUT
+  CHECK_IN
+}
+
+enum PayoutStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
 model User {
   id              String    @id @default(uuid())
   email           String?   @unique
@@ -111,6 +123,9 @@ model User {
   ownerApplications         OwnerLead[]           @relation("OwnerApplicant")
   reviewedOwnerApplications OwnerLead[]           @relation("OwnerReviewer")
   handledQuickBookings      QuickBookingRequest[] @relation("QuickBookingHandler")
+  inspections               VehicleInspection[]   @relation("InspectorUser")
+  payouts                   PayoutRequest[]       @relation("UserPayouts")
+  processedPayouts          PayoutRequest[]       @relation("AdminProcessedPayouts")
 }
 
 model Customer {
@@ -209,6 +224,7 @@ model Booking {
   coupon              Coupon?              @relation(fields: [couponCode], references: [code])
   contract            Contract?
   quickBookingRequest QuickBookingRequest?
+  inspections         VehicleInspection[]
 }
 
 model Payment {
@@ -434,4 +450,47 @@ model Notification {
 
   @@index([userId, isRead, createdAt])
 }
+
+model VehicleInspection {
+  id             String         @id @default(uuid())
+  bookingId      String
+  type           InspectionType
+  odometer       Float
+  fuelLevel      Int            // 0 - 100%
+  frontImageUrl  String?
+  backImageUrl   String?
+  leftImageUrl   String?
+  rightImageUrl  String?
+  notes          String?        @db.Text
+  inspectorId    String
+  createdAt      DateTime       @default(now())
+
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  inspector User    @relation("InspectorUser", fields: [inspectorId], references: [id])
+
+  @@index([bookingId, type])
+}
+
+model PayoutRequest {
+  id            String       @id @default(uuid())
+  requestNumber String       @unique
+  userId        String
+  amount        Float
+  bankName      String
+  accountNumber String
+  accountHolder String
+  status        PayoutStatus @default(PENDING)
+  adminNotes    String?      @db.Text
+  processedById String?
+  processedAt   DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  user        User  @relation("UserPayouts", fields: [userId], references: [id])
+  processedBy User? @relation("AdminProcessedPayouts", fields: [processedById], references: [id])
+
+  @@index([userId, status])
+  @@index([status, createdAt])
+}
+
 
