@@ -1,9 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   CalendarDays,
   Car,
@@ -25,7 +33,15 @@ import {
   type AccountProfile,
   type Booking,
   type CustomerDocumentKeys,
+  type AuthUser,
 } from "@/lib/api";
+import {
+  clearAuthSession,
+  getAuthIdentitySnapshot,
+  getServerAuthSnapshot,
+  subscribeToAuth,
+  updateStoredAuthUser,
+} from "@/lib/auth-session";
 
 type Section = "profile" | "trips" | "rentals" | "password";
 
@@ -54,6 +70,13 @@ const documentLabels: Record<keyof CustomerDocumentKeys, string> = {
 
 export default function AccountPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const loadVersion = useRef(0);
+  const authIdentity = useSyncExternalStore(
+    subscribeToAuth,
+    getAuthIdentitySnapshot,
+    getServerAuthSnapshot,
+  );
   const [section, setSection] = useState<Section>("profile");
   const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -97,11 +120,14 @@ export default function AccountPage() {
     const stored = localStorage.getItem("user");
     if (stored) {
       try {
-        localStorage.setItem(
-          "user",
-          JSON.stringify({ ...JSON.parse(stored), name: next.name, email: next.email }),
-        );
-        window.dispatchEvent(new Event("datxe-auth"));
+        const current = JSON.parse(stored) as AuthUser;
+        updateStoredAuthUser({
+          ...current,
+          name: next.name,
+          email: next.email,
+          phone: next.phone,
+          phoneVerifiedAt: next.phoneVerifiedAt,
+        });
       } catch {
         // A malformed local cache is replaced at the next login.
       }
@@ -109,34 +135,51 @@ export default function AccountPage() {
   }, []);
 
   const load = useCallback(async () => {
-    if (!localStorage.getItem("token")) {
+    const requestVersion = ++loadVersion.current;
+    const identityAtStart = getAuthIdentitySnapshot();
+    setProfile(null);
+    setBookings([]);
+    setDocuments({});
+    setError("");
+    setMessage("");
+    if (!identityAtStart) {
+      setLoading(false);
       router.replace("/auth");
       return;
     }
     setLoading(true);
-    setError("");
     try {
       const [nextProfile, nextBookings] = await Promise.all([
         api.account.profile(),
         api.account.bookings(),
       ]);
+      if (
+        requestVersion !== loadVersion.current ||
+        identityAtStart !== getAuthIdentitySnapshot()
+      ) {
+        return;
+      }
       syncProfile(nextProfile);
       setBookings(nextBookings);
     } catch (caught: unknown) {
+      if (requestVersion !== loadVersion.current) return;
       setError(
         caught instanceof Error
           ? caught.message
           : "Không thể tải thông tin tài khoản.",
       );
     } finally {
-      setLoading(false);
+      if (requestVersion === loadVersion.current) setLoading(false);
     }
   }, [router, syncProfile]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 0);
-    return () => window.clearTimeout(timer);
-  }, [load]);
+    return () => {
+      loadVersion.current += 1;
+      window.clearTimeout(timer);
+    };
+  }, [authIdentity, load]);
 
   const activeBookings = useMemo(
     () =>
@@ -282,10 +325,11 @@ export default function AccountPage() {
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    window.dispatchEvent(new Event("datxe-auth"));
+    loadVersion.current += 1;
+    queryClient.clear();
+    clearAuthSession();
     router.replace("/");
+    router.refresh();
   };
 
   const nav = [

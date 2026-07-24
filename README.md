@@ -147,13 +147,16 @@ Không chạy seed demo trên production. Sau migration, chạy bootstrap một 
 ```bash
 cd /opt/datxe
 docker compose -f docker-compose.prod.yml run --rm \
+  -e ADMIN_PHONE='0901234567' \
   -e ADMIN_EMAIL='admin@your-domain.com' \
   -e ADMIN_NAME='Quản trị datxe' \
   -e ADMIN_PASSWORD='a-unique-strong-password' \
   backend npm run admin:bootstrap
 ```
 
-Sau đó bỏ `ADMIN_PASSWORD` khỏi shell history/file env nếu đã lưu tạm. Đăng nhập tại `https://datxe.linuxunity.com/auth`, rồi mở `/dashboard`. Người dùng đăng ký bình thường luôn là `CUSTOMER` và không thể tự chọn role.
+`ADMIN_PHONE` là bắt buộc và phải là số điện thoại Việt Nam thật; `ADMIN_EMAIL` là tùy chọn. Không dùng placeholder như `09xxxxxxxx`. Sau đó bỏ `ADMIN_PASSWORD` khỏi shell history/file env nếu đã lưu tạm. Đăng nhập bằng số điện thoại + mật khẩu tại `https://datxe.linuxunity.com/auth`, rồi mở `/dashboard`. Người dùng đăng ký bình thường luôn là `CUSTOMER` và không thể tự chọn role.
+
+Seed phát triển chỉ chạy khi đặt rõ `ENABLE_DEMO_DATA=true`; tài khoản demo admin là `0900000001` / `adminpassword123`. Không dùng tài khoản demo trên production.
 
 ## GitHub Actions và deploy VPS
 

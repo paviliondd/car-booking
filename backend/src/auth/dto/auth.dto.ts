@@ -11,12 +11,12 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { VIETNAM_PHONE_PATTERN } from '../../common/phone';
 
-const PHONE_PATTERN = /^(0|\+84|84)\d{9}$/;
 const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d).+$/;
 
 export class RequestPhoneCodeDto {
-  @Matches(PHONE_PATTERN, {
+  @Matches(VIETNAM_PHONE_PATTERN, {
     message: 'Số điện thoại Việt Nam không hợp lệ',
   })
   phone: string;

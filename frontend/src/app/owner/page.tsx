@@ -2,18 +2,21 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import Link from 'next/link';
 import { api, type AuthUser, type Booking, type ChatMessage, type ChatPartner, type Vehicle } from '@/lib/api';
 import { io, type Socket } from 'socket.io-client';
 import {
-  Car, DollarSign, Calendar, MessageSquare,
+  Car, DollarSign, Calendar, MessageSquare, ChevronLeft,
   Check,
   Activity, Loader2, Plus, LogOut, Send
 } from 'lucide-react';
+import { clearAuthSession, updateStoredAuthUser } from '@/lib/auth-session';
 
 export default function OwnerDashboard() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [token, setToken] = useState<string | null>(() =>
     typeof window === 'undefined' ? null : localStorage.getItem('token'),
   );
@@ -36,12 +39,13 @@ export default function OwnerDashboard() {
   const wsRef = useRef<Socket | null>(null);
 
   const handleLogout = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    queryClient.clear();
+    clearAuthSession();
     setToken(null);
     setUser(null);
     router.replace('/auth');
-  }, [router]);
+    router.refresh();
+  }, [queryClient, router]);
 
   const loadOwnerData = useCallback(async () => {
     try {
@@ -66,7 +70,7 @@ export default function OwnerDashboard() {
     try {
       const me = await api.auth.me();
       setUser(me);
-      localStorage.setItem('user', JSON.stringify(me));
+      updateStoredAuthUser(me);
       if (me.role === 'OWNER' && me.isVerifiedOwner) {
         await loadOwnerData();
       } else {
@@ -198,7 +202,7 @@ export default function OwnerDashboard() {
   return (
     <div className="dark min-h-screen bg-night-surface flex flex-col md:flex-row">
       {/* Sidebar Trái */}
-      <aside className="w-full md:w-64 glass-panel border-r border-app-border/30 p-6 flex flex-col justify-between gap-8">
+      <aside className="glass-panel flex w-full flex-col justify-between gap-6 border-r border-app-border/30 p-4 sm:p-6 md:w-64 md:gap-8">
         <div className="flex flex-col gap-8">
           <div className="flex items-center gap-2 text-2xl font-bold tracking-wider text-brand">
             <Car className="h-7 w-7 text-brand" />
@@ -257,7 +261,7 @@ export default function OwnerDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-grow p-6 md:p-12 overflow-y-auto max-w-7xl mx-auto w-full">
+      <main className="mx-auto w-full max-w-7xl flex-grow overflow-y-auto p-4 sm:p-6 md:p-12">
 
         {/* TAB 1: TỔNG QUAN */}
         {activeTab === 'overview' && (
@@ -339,11 +343,11 @@ export default function OwnerDashboard() {
         {/* TAB 2: XE CỦA TÔI */}
         {activeTab === 'vehicles' && (
           <div className="flex flex-col gap-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
               <h2 className="text-2xl font-bold text-content font-black">Danh sách phương tiện</h2>
               <button
                 onClick={() => router.push('/owner/add-car')}
-                className="gradient-btn text-on-brand px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 cursor-pointer"
+                className="gradient-btn flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold text-on-brand cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
                 <span>Đăng xe cho thuê</span>
@@ -379,11 +383,11 @@ export default function OwnerDashboard() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2 mt-2">
-                      <button onClick={() => router.push(`/owner/vehicles/${car.id}/edit`)} className="rounded-lg bg-app-muted px-3 py-2 text-xs font-semibold text-content transition hover:bg-app-muted">Sửa</button>
+                    <div className="mt-2 grid grid-cols-2 gap-2 sm:flex">
+                      <button onClick={() => router.push(`/owner/vehicles/${car.id}/edit`)} className="min-h-11 rounded-lg bg-app-muted px-3 text-xs font-semibold text-content transition hover:bg-app-muted">Sửa</button>
                       <button
                         onClick={() => handleToggleCarStatus(car.id, car.status)}
-                        className={`flex-1 text-center py-2 rounded-lg text-xs font-semibold cursor-pointer transition ${
+                        className={`min-h-11 flex-1 rounded-lg text-center text-xs font-semibold cursor-pointer transition ${
                           car.status === 'AVAILABLE' ? 'bg-warning-muted text-warning' : 'bg-brand hover:bg-brand-hover text-on-brand'
                         }`}
                       >
@@ -395,7 +399,7 @@ export default function OwnerDashboard() {
                             api.vehicles.delete(car.id).then(() => loadOwnerData());
                           }
                         }}
-                        className="bg-danger-muted text-danger hover:bg-danger-muted hover:text-content px-3 py-2 rounded-lg text-xs font-semibold cursor-pointer transition"
+                        className="min-h-11 rounded-lg bg-danger-muted px-3 text-xs font-semibold text-danger transition hover:bg-danger-muted hover:text-content cursor-pointer"
                       >
                         Xóa
                       </button>
@@ -412,8 +416,43 @@ export default function OwnerDashboard() {
           <div className="flex flex-col gap-6">
             <h2 className="text-2xl font-bold text-content">Yêu Cầu Thuê Xe Gửi Tới</h2>
 
-            <div className="glass-panel rounded-xl border border-app-border/30 overflow-hidden">
-              <table className="w-full text-sm text-left text-content-secondary">
+            <div className="grid gap-3 md:hidden">
+              {bookingRequests.map((booking) => (
+                <article key={booking.id} className="glass-panel rounded-xl border border-app-border/30 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <strong className="text-content">{booking.bookingNumber}</strong>
+                      <p className="mt-1 text-sm text-content-secondary">
+                        {booking.vehicle?.brand} {booking.vehicle?.model}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-app-muted px-2.5 py-1 text-xs font-bold text-content-secondary">
+                      {booking.status === 'PENDING' ? 'Chờ duyệt' : booking.status === 'CONFIRMED' ? 'Đã cọc' : booking.status === 'RENTING' ? 'Đang đi' : booking.status === 'COMPLETED' ? 'Hoàn thành' : 'Đã hủy'}
+                    </span>
+                  </div>
+                  <div className="mt-3 space-y-1 text-sm text-content-secondary">
+                    <p><span className="font-semibold text-content">{booking.customer?.fullName}</span> · {booking.customer?.phone}</p>
+                    <p>{booking.startDate ? new Date(booking.startDate).toLocaleDateString('vi-VN') : '—'} → {booking.endDate ? new Date(booking.endDate).toLocaleDateString('vi-VN') : '—'}</p>
+                    <p className="font-bold text-brand">{booking.totalPrice.toLocaleString('vi-VN')}đ</p>
+                  </div>
+                  {booking.status === 'PENDING' && (
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <button onClick={() => handleRequestStatus(booking.id, 'CONFIRMED')} className="min-h-11 rounded-lg bg-brand px-3 text-xs font-bold text-on-brand hover:bg-brand-hover">Duyệt</button>
+                      <button onClick={() => handleRequestStatus(booking.id, 'CANCELLED')} className="min-h-11 rounded-lg bg-danger-muted px-3 text-xs font-bold text-danger">Từ chối</button>
+                    </div>
+                  )}
+                  {booking.status === 'CONFIRMED' && (
+                    <button onClick={() => handleRequestStatus(booking.id, 'RENTING')} className="mt-4 min-h-11 w-full rounded-lg bg-brand px-3 text-xs font-bold text-on-brand hover:bg-brand-hover">Giao xe</button>
+                  )}
+                  {booking.status === 'RENTING' && (
+                    <button onClick={() => handleRequestStatus(booking.id, 'COMPLETED')} className="mt-4 min-h-11 w-full rounded-lg bg-brand px-3 text-xs font-bold text-on-brand hover:bg-brand-hover">Nhận xe trả</button>
+                  )}
+                </article>
+              ))}
+            </div>
+
+            <div className="glass-panel hidden overflow-x-auto rounded-xl border border-app-border/30 md:block">
+              <table className="w-full min-w-[980px] text-left text-sm text-content-secondary">
                 <thead className="text-xs text-content-secondary uppercase bg-app-muted/50">
                   <tr>
                     <th className="px-6 py-4">Mã đơn</th>
@@ -450,13 +489,13 @@ export default function OwnerDashboard() {
                           <>
                             <button
                               onClick={() => handleRequestStatus(b.id, 'CONFIRMED')}
-                              className="bg-brand hover:bg-brand-hover text-on-brand px-2 py-1 rounded text-xs font-semibold cursor-pointer"
+                              className="min-h-11 rounded bg-brand px-3 text-xs font-semibold text-on-brand hover:bg-brand-hover cursor-pointer"
                             >
                               Duyệt
                             </button>
                             <button
                               onClick={() => handleRequestStatus(b.id, 'CANCELLED')}
-                              className="bg-danger-muted text-danger px-2 py-1 rounded text-xs hover:bg-danger-muted hover:text-content transition cursor-pointer"
+                              className="min-h-11 rounded bg-danger-muted px-3 text-xs text-danger transition hover:bg-danger-muted hover:text-content cursor-pointer"
                             >
                               Từ chối
                             </button>
@@ -465,7 +504,7 @@ export default function OwnerDashboard() {
                         {b.status === 'CONFIRMED' && (
                           <button
                             onClick={() => handleRequestStatus(b.id, 'RENTING')}
-                            className="bg-brand px-2 py-1 text-xs font-semibold text-on-brand transition hover:bg-brand-hover cursor-pointer"
+                            className="min-h-11 rounded bg-brand px-3 text-xs font-semibold text-on-brand transition hover:bg-brand-hover cursor-pointer"
                           >
                             Giao xe
                           </button>
@@ -473,7 +512,7 @@ export default function OwnerDashboard() {
                         {b.status === 'RENTING' && (
                           <button
                             onClick={() => handleRequestStatus(b.id, 'COMPLETED')}
-                            className="bg-brand hover:bg-brand-hover text-on-brand px-2 py-1 rounded text-xs font-semibold cursor-pointer"
+                            className="min-h-11 rounded bg-brand px-3 text-xs font-semibold text-on-brand hover:bg-brand-hover cursor-pointer"
                           >
                             Nhận xe trả
                           </button>
@@ -489,17 +528,17 @@ export default function OwnerDashboard() {
 
         {/* TAB 4: HỘP THƯ CHAT */}
         {activeTab === 'chat' && (
-          <div className="flex flex-col gap-6 h-[600px] glass-panel border border-app-border/30 rounded-xl overflow-hidden">
-            <div className="flex h-full">
+          <div className="glass-panel flex h-[70dvh] min-h-[520px] flex-col gap-6 overflow-hidden rounded-xl border border-app-border/30">
+            <div className="flex h-full min-h-0 flex-col sm:flex-row">
               {/* Cột trái: danh sách đối tác chat */}
-              <div className="w-1/3 border-r border-app-border/30 flex flex-col">
+              <div className={`${selectedPartner ? 'hidden sm:flex' : 'flex'} w-full flex-col border-r border-app-border/30 sm:w-1/3`}>
                 <div className="p-4 border-b border-app-border/30 font-bold text-content">Liên hệ gần đây</div>
                 <div className="flex-grow overflow-y-auto divide-y divide-app-border/30">
                   {chatPartners.map((partner) => (
                     <button
                       key={partner.id}
                       onClick={() => setSelectedPartner(partner)}
-                      className={`w-full text-left p-4 hover:bg-app-muted/50 transition block ${selectedPartner?.id === partner.id ? 'bg-app-muted/60' : ''}`}
+                      className={`block min-h-14 w-full p-4 text-left transition hover:bg-app-muted/50 ${selectedPartner?.id === partner.id ? 'bg-app-muted/60' : ''}`}
                     >
                       <div className="font-bold text-content">{partner.name}</div>
                       <div className="text-xs text-content-secondary truncate mt-1">{partner.email}</div>
@@ -509,18 +548,21 @@ export default function OwnerDashboard() {
               </div>
 
               {/* Cột phải: khung chat */}
-              <div className="w-2/3 flex flex-col h-full bg-night-muted">
+              <div className={`${selectedPartner ? 'flex' : 'hidden sm:flex'} h-full w-full flex-col bg-night-muted sm:w-2/3`}>
                 {selectedPartner ? (
                   <>
-                    <div className="p-4 border-b border-app-border/30 font-bold text-content flex justify-between items-center">
-                      <span>Đang nhắn với: {selectedPartner.name}</span>
+                    <div className="flex min-h-14 items-center gap-2 border-b border-app-border/30 p-2 font-bold text-content sm:p-4">
+                      <button type="button" onClick={() => setSelectedPartner(null)} className="flex min-h-11 min-w-11 items-center justify-center rounded-lg hover:bg-app-muted sm:hidden" aria-label="Quay lại danh sách hội thoại">
+                        <ChevronLeft className="h-5 w-5" />
+                      </button>
+                      <span className="min-w-0 truncate">Đang nhắn với: {selectedPartner.name}</span>
                     </div>
 
                     <div className="flex-grow overflow-y-auto p-4 flex flex-col gap-3">
                       {chatHistory.map((chat, idx) => (
                         <div
                           key={idx}
-                          className={`max-w-[70%] p-3 rounded-xl text-sm ${
+                          className={`max-w-[88%] rounded-xl p-3 text-sm sm:max-w-[70%] ${
                             chat.senderId === user.id
                               ? 'bg-brand text-on-brand self-end rounded-br-none'
                               : 'bg-app-muted/60 text-content-secondary self-start rounded-bl-none border border-app-border/30'
@@ -534,17 +576,17 @@ export default function OwnerDashboard() {
                       ))}
                     </div>
 
-                    <form onSubmit={handleSendMessage} className="p-4 border-t border-app-border/30 flex gap-2">
+                    <form onSubmit={handleSendMessage} className="flex gap-2 border-t border-app-border/30 p-3 sm:p-4">
                       <input
                         type="text"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Nhập tin nhắn phản hồi..."
-                        className="flex-grow bg-app-surface border border-app-border/50 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-brand text-content"
+                        className="min-h-11 min-w-0 flex-grow rounded-lg border border-app-border/50 bg-app-surface px-3 text-sm text-content focus:border-brand focus:outline-none"
                       />
                       <button
                         type="submit"
-                        className="bg-brand hover:bg-brand-hover text-on-brand p-2 rounded-lg transition cursor-pointer"
+                        className="flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-brand text-on-brand transition hover:bg-brand-hover cursor-pointer"
                       >
                         <Send className="h-4 w-4" />
                       </button>

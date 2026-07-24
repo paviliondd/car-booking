@@ -62,6 +62,20 @@ enum OwnerApplicationStatus {
   CANCELLED
 }
 
+enum QuickBookingStatus {
+  NEW
+  CONTACTING
+  CONTACTED
+  CLOSED
+  CANCELLED
+}
+
+enum QuickBookingSmsStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
 model User {
   id       String  @id @default(uuid())
   email    String? @unique
@@ -94,6 +108,7 @@ model User {
   notificationLogs NotificationLog[]
   ownerApplications OwnerLead[] @relation("OwnerApplicant")
   reviewedOwnerApplications OwnerLead[] @relation("OwnerReviewer")
+  handledQuickBookings QuickBookingRequest[] @relation("QuickBookingHandler")
 }
 
 model Customer {
@@ -155,6 +170,7 @@ model Vehicle {
   expenses     Expense[]
   revenues     Revenue[]
   reviews      Review[]
+  quickBookingRequests QuickBookingRequest[]
 }
 
 model Booking {
@@ -190,7 +206,6 @@ model Booking {
   payment   Payment?
   coupon    Coupon?    @relation(fields: [couponCode], references: [code])
   contract  Contract?
-  auditLogs AuditLog[]
 }
 
 model Payment {
@@ -330,8 +345,7 @@ model AuditLog {
   newValue    Json?
   createdAt   DateTime @default(now())
 
-  user    User?    @relation(fields: [userId], references: [id])
-  booking Booking? @relation(fields: [targetId], references: [id], map: "AuditLog_booking_fk")
+  user User? @relation(fields: [userId], references: [id])
 }
 
 model OwnerLead {
@@ -375,4 +389,29 @@ model NotificationLog {
   createdAt    DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id])
+}
+
+model QuickBookingRequest {
+  id             String                @id @default(uuid())
+  requestNumber  String                @unique
+  phone          String
+  vehicleId      String
+  startDate      DateTime
+  endDate        DateTime
+  status         QuickBookingStatus    @default(NEW)
+  smsStatus      QuickBookingSmsStatus @default(PENDING)
+  adminNotes     String?               @db.Text
+  handledById    String?
+  contactedAt    DateTime?
+  smsSentAt      DateTime?
+  smsLastAttemptAt DateTime?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+  handledBy User?   @relation("QuickBookingHandler", fields: [handledById], references: [id])
+
+  @@index([phone, createdAt])
+  @@index([status, createdAt])
+  @@index([vehicleId, startDate, endDate])
 }

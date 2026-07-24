@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Award, CalendarClock, Car, ChevronRight, Clock, Fuel, HelpCircle, MapPin, Phone, ShieldCheck, Users } from 'lucide-react';
+import { Award, CalendarClock, Car, ChevronRight, Clock, Fuel, HelpCircle, MapPin, Phone, ShieldCheck, Users, Zap } from 'lucide-react';
 import SearchBar from '@/components/search/SearchBar';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -11,6 +11,7 @@ import VehicleDetailModal from '@/components/vehicles/VehicleDetailModal';
 import { api, type Vehicle } from '@/lib/api';
 import { storeInfo } from '@/lib/store';
 import { vehicleFuelLabel, vehicleTransmissionLabel } from '@/lib/vehicle-labels';
+import QuickBookingModal from '@/components/quick-booking/QuickBookingModal';
 
 const money = (value: number) => `${value.toLocaleString('vi-VN')} đ`;
 
@@ -34,6 +35,7 @@ export default function HomePage() {
   const [loadingCars, setLoadingCars] = useState(true);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
+  const [quickBookingOpen, setQuickBookingOpen] = useState(false);
 
   const loadFeaturedCars = useCallback(async () => {
     setLoadingCars(true);
@@ -72,7 +74,15 @@ export default function HomePage() {
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Link href="/vehicles" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-brand px-6 text-base font-bold text-on-brand transition hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/25">
+                <button
+                  type="button"
+                  onClick={() => setQuickBookingOpen(true)}
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-brand px-6 text-base font-bold text-on-brand transition hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/25"
+                >
+                  <Zap className="h-5 w-5" />
+                  Đặt xe nhanh
+                </button>
+                <Link href="/vehicles" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-brand px-6 text-base font-bold text-brand transition hover:bg-utility focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/25">
                   Xem xe sẵn sàng
                   <ChevronRight className="h-5 w-5" />
                 </Link>
@@ -222,6 +232,10 @@ export default function HomePage() {
           onClose={() => setSelectedVehicle(null)}
         />
       )}
+      <QuickBookingModal
+        open={quickBookingOpen}
+        onClose={() => setQuickBookingOpen(false)}
+      />
     </div>
   );
 }

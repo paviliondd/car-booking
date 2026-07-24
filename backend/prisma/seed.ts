@@ -11,6 +11,11 @@ const dbUrl = process.env.DATABASE_URL;
 if (!dbUrl) {
   throw new Error('DATABASE_URL environment variable is required to run seed script.');
 }
+if (process.env.ENABLE_DEMO_DATA !== 'true') {
+  throw new Error(
+    'Demo seed is disabled. Set ENABLE_DEMO_DATA=true explicitly in a non-production environment.',
+  );
+}
 
 const pool = new Pool({ connectionString: dbUrl });
 const adapter = new PrismaPg(pool);
@@ -20,16 +25,23 @@ async function main() {
   console.log('Seeding database...');
 
   // 1. Tạo Users
-  const adminPassword = await bcrypt.hash('adminpassword123', 10);
-  const staffPassword = await bcrypt.hash('staffpassword123', 10);
-  const customerPassword = await bcrypt.hash('customerpassword123', 10);
-  const ownerPassword = await bcrypt.hash('ownerpassword123', 10);
+  const adminPassword = await bcrypt.hash('adminpassword123', 12);
+  const staffPassword = await bcrypt.hash('staffpassword123', 12);
+  const customerPassword = await bcrypt.hash('customerpassword123', 12);
+  const ownerPassword = await bcrypt.hash('ownerpassword123', 12);
 
   const admin = await prisma.user.upsert({
     where: { email: 'admin@datxe.linuxunity.com' },
-    update: {},
+    update: {
+      phone: '+84900000001',
+      phoneVerifiedAt: new Date(),
+      password: adminPassword,
+      role: Role.ADMIN,
+    },
     create: {
       email: 'admin@datxe.linuxunity.com',
+      phone: '+84900000001',
+      phoneVerifiedAt: new Date(),
       password: adminPassword,
       name: 'Chủ Xe Admin',
       role: Role.ADMIN,
@@ -38,9 +50,16 @@ async function main() {
 
   const staff = await prisma.user.upsert({
     where: { email: 'staff@datxe.linuxunity.com' },
-    update: {},
+    update: {
+      phone: '+84900000002',
+      phoneVerifiedAt: new Date(),
+      password: staffPassword,
+      role: Role.STAFF,
+    },
     create: {
       email: 'staff@datxe.linuxunity.com',
+      phone: '+84900000002',
+      phoneVerifiedAt: new Date(),
       password: staffPassword,
       name: 'Nhân Viên CSKH',
       role: Role.STAFF,
@@ -49,13 +68,20 @@ async function main() {
 
   const owner = await prisma.user.upsert({
     where: { email: 'owner@datxe.linuxunity.com' },
-    update: {},
+    update: {
+      phone: '+84900000003',
+      phoneVerifiedAt: new Date(),
+      password: ownerPassword,
+      role: Role.OWNER,
+      isVerifiedOwner: true,
+    },
     create: {
       email: 'owner@datxe.linuxunity.com',
       password: ownerPassword,
       name: 'Chủ Xe Nguyễn Văn B',
       role: Role.OWNER,
-      phone: '0961234567',
+      phone: '+84900000003',
+      phoneVerifiedAt: new Date(),
       idCardNo: '037200987654',
       address: 'Số 20 Cầu Giấy, Hà Nội',
       isVerifiedOwner: true,
@@ -64,15 +90,22 @@ async function main() {
 
   const customerUser = await prisma.user.upsert({
     where: { email: 'customer@gmail.com' },
-    update: {},
+    update: {
+      phone: '+84900000004',
+      phoneVerifiedAt: new Date(),
+      password: customerPassword,
+      role: Role.CUSTOMER,
+    },
     create: {
       email: 'customer@gmail.com',
+      phone: '+84900000004',
+      phoneVerifiedAt: new Date(),
       password: customerPassword,
       name: 'Nguyễn Văn Khách',
       role: Role.CUSTOMER,
       customer: {
         create: {
-          phone: '0987654321',
+          phone: '+84900000004',
           fullName: 'Nguyễn Văn Khách',
           idCardNo: '037200123456',
         },
@@ -80,7 +113,11 @@ async function main() {
     },
   });
 
-  console.log('Users seeded:', { admin: admin.email, staff: staff.email, owner: owner.email });
+  console.log('Demo users seeded:', {
+    admin: admin.phone,
+    staff: staff.phone,
+    owner: owner.phone,
+  });
 
   // 2. Tạo Vehicles
   const vehiclesData = [

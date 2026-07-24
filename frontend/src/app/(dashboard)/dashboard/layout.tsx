@@ -1,15 +1,18 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useToast } from '@/providers/ToastProvider';
 import DashboardSidebar from '@/components/layout/DashboardSidebar';
 import DashboardHeader from '@/components/layout/DashboardHeader';
 import type { AuthUser } from '@/lib/api';
+import { clearAuthSession, updateStoredAuthUser } from '@/lib/auth-session';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { error: showError } = useToast();
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -34,16 +37,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return;
       }
 
-      localStorage.setItem('user', JSON.stringify(me));
+      updateStoredAuthUser(me);
       setUser(me);
       setLoading(false);
     } catch {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      queryClient.clear();
+      clearAuthSession();
       showError('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
       router.replace('/auth');
     }
-  }, [router, showError]);
+  }, [queryClient, router, showError]);
 
   useEffect(() => {
     const guardTimer = window.setTimeout(() => void checkDashboardGuard(), 0);
@@ -51,9 +54,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [checkDashboardGuard]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    queryClient.clear();
+    clearAuthSession();
     router.replace('/auth');
+    router.refresh();
   };
 
   if (loading || !user) {

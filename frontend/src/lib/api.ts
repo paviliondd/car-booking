@@ -219,6 +219,46 @@ export type AccountProfile = {
   ownerApplication: OwnerRequest | null;
 };
 
+export type QuickBookingStatus =
+  | "NEW"
+  | "CONTACTING"
+  | "CONTACTED"
+  | "CLOSED"
+  | "CANCELLED";
+
+export type QuickBookingRequest = {
+  id: string;
+  requestNumber: string;
+  phone: string;
+  vehicleId: string;
+  startDate: string;
+  endDate: string;
+  status: QuickBookingStatus;
+  smsStatus: "PENDING" | "SENT" | "FAILED";
+  adminNotes?: string | null;
+  contactedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  vehicle: Pick<
+    Vehicle,
+    "id" | "brand" | "model" | "plateNumber" | "images"
+  >;
+  handledBy?: { id: string; name: string } | null;
+};
+
+export type QuickBookingPublicResponse = {
+  id: string;
+  requestNumber: string;
+  maskedPhone: string;
+  startDate: string;
+  endDate: string;
+  vehicle: Pick<Vehicle, "id" | "brand" | "model">;
+  smsSent: boolean;
+  duplicate: boolean;
+  reservationConfirmed: false;
+  message: string;
+};
+
 async function request<T>(
   endpoint: string,
   options: RequestInit = {},
@@ -238,10 +278,17 @@ async function request<T>(
     }
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+    });
+  } catch {
+    throw new Error(
+      "Không thể kết nối hệ thống. Vui lòng kiểm tra mạng và thử lại.",
+    );
+  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -373,6 +420,52 @@ export const api = {
       request<{ bookingNumber: string; contract: Booking["contract"] }>(
         `/account/bookings/${id}/contract`,
       ),
+  },
+
+  quickBookings: {
+    create: (dto: {
+      phone: string;
+      vehicleId: string;
+      startDate: string;
+      endDate: string;
+    }) =>
+      request<QuickBookingPublicResponse>("/quick-bookings", {
+        method: "POST",
+        body: JSON.stringify(dto),
+      }),
+    list: (filters?: {
+      status?: QuickBookingStatus;
+      search?: string;
+      page?: number;
+      limit?: number;
+    }) => {
+      const params = new URLSearchParams();
+      if (filters?.status) params.set("status", filters.status);
+      if (filters?.search) params.set("search", filters.search);
+      if (filters?.page) params.set("page", String(filters.page));
+      if (filters?.limit) params.set("limit", String(filters.limit));
+      const query = params.toString();
+      return request<{
+        items: QuickBookingRequest[];
+        total: number;
+        page: number;
+        limit: number;
+      }>(`/quick-bookings${query ? `?${query}` : ""}`);
+    },
+    update: (
+      id: string,
+      dto: { status?: QuickBookingStatus; adminNotes?: string },
+    ) =>
+      request<QuickBookingRequest>(`/quick-bookings/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(dto),
+      }),
+    resendSms: (id: string) =>
+      request<{
+        smsSent: boolean;
+        smsStatus: "SENT" | "FAILED";
+        message: string;
+      }>(`/quick-bookings/${id}/resend-sms`, { method: "POST" }),
   },
 
   // Vehicles

@@ -22,6 +22,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { StorageModule } from './storage/storage.module';
 import { AccountModule } from './account/account.module';
+import { QuickBookingsModule } from './quick-bookings/quick-bookings.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { AccountModule } from './account/account.module';
     DashboardModule,
     StorageModule,
     AccountModule,
+    QuickBookingsModule,
   ],
   controllers: [AppController],
   providers: [

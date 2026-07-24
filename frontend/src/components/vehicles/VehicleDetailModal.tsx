@@ -107,7 +107,7 @@ export default function VehicleDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-night-surface/70 p-3 sm:p-6"
+      className="fixed inset-0 z-[90] overflow-y-auto bg-night-surface/70 p-0 sm:p-6"
       onMouseDown={(event) =>
         event.target === event.currentTarget && onClose()
       }
@@ -117,13 +117,13 @@ export default function VehicleDetailModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="vehicle-modal-title"
-        className="mx-auto max-w-6xl overflow-hidden rounded-3xl bg-app-surface shadow-2xl"
+        className="mx-auto min-h-dvh max-w-6xl overflow-hidden bg-app-surface shadow-2xl sm:min-h-0 sm:rounded-3xl"
       >
         <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-app-border/40 bg-app-surface px-4 py-3 sm:px-6">
           <div
             role="tablist"
             aria-label="Thông tin xe"
-            className="flex gap-1 overflow-x-auto"
+            className="flex min-w-0 flex-1 gap-1 overflow-x-auto overscroll-x-contain"
           >
             {tabs.map((item) => (
               <button
@@ -132,7 +132,7 @@ export default function VehicleDetailModal({
                 role="tab"
                 aria-selected={tab === item}
                 onClick={() => setTab(item)}
-                className={`min-h-11 whitespace-nowrap rounded-lg px-3 text-sm font-bold ${
+                className={`min-h-11 shrink-0 whitespace-nowrap rounded-lg px-3 text-sm font-bold ${
                   tab === item
                     ? "bg-utility text-utility-foreground"
                     : "text-content-secondary hover:bg-app-muted"

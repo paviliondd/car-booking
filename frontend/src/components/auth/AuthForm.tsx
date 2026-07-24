@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Check,
   Eye,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import { api, type AuthResponse } from "@/lib/api";
 import GoogleSignInButton from "./GoogleSignInButton";
+import { setAuthSession } from "@/lib/auth-session";
 
 type AuthMode = "login" | "register" | "reset";
 
@@ -27,6 +29,7 @@ export default function AuthForm({
   redirectAfterAuth?: boolean;
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
@@ -41,18 +44,18 @@ export default function AuthForm({
   const [notice, setNotice] = useState("");
 
   const finishLogin = (response: AuthResponse) => {
-    localStorage.setItem("token", response.accessToken);
-    localStorage.setItem("user", JSON.stringify(response.user));
-    window.dispatchEvent(new Event("datxe-auth"));
+    queryClient.clear();
+    setAuthSession(response.accessToken, response.user);
     onAuthenticated?.(response);
     if (!redirectAfterAuth) return;
     if (response.user.role === "ADMIN" || response.user.role === "STAFF") {
-      router.push("/dashboard");
+      router.replace("/dashboard");
     } else if (response.user.role === "OWNER") {
-      router.push("/owner");
+      router.replace("/owner");
     } else {
-      router.push("/account");
+      router.replace("/account");
     }
+    router.refresh();
   };
 
   const resetFlow = (nextMode: AuthMode) => {

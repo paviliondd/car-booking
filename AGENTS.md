@@ -95,6 +95,7 @@ Trạng thái chính:
 - Booking: `PENDING`, `CONFIRMED`, `RENTING`, `COMPLETED`, `CANCELLED`.
 - Payment: `UNPAID`, `DEPOSITED`, `PAID`, `REFUNDED`.
 - Payment method: `MOMO`, `BANK_TRANSFER`, `CASH`.
+- Quick booking request: `NEW`, `CONTACTING`, `CONTACTED`, `CLOSED`, `CANCELLED`. Đây là yêu cầu liên hệ, không giữ xe và không thay thế `Booking`.
 
 ## Auth và Google OAuth
 
@@ -118,6 +119,7 @@ Tạo `/opt/datxe/.env` từ `.env.production.example`, permission hạn chế. 
 - PayOS: `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY`.
 - MoMo: `MOMO_PARTNER_CODE`, `MOMO_ACCESS_KEY`, `MOMO_SECRET_KEY`, `MOMO_API_URL`, `MOMO_REDIRECT_URL`, `MOMO_IPN_URL`.
 - Email: `PUBLIC_APP_URL`, `ADMIN_NOTIFICATION_EMAIL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`; bỏ trống SMTP để integration fail-soft và ghi log thất bại.
+- Bootstrap admin: chạy thủ công với `ADMIN_PHONE`, `ADMIN_PASSWORD` và tùy chọn `ADMIN_EMAIL`/`ADMIN_NAME`; không lưu `ADMIN_PASSWORD` lâu dài trong `.env`.
 
 GitHub repository/environment cần:
 
@@ -193,6 +195,8 @@ Baseline xác nhận ngày 2026-07-24:
 Migration `0002_single_rental_location` đổi default và cập nhật toàn bộ xe hiện có sang điểm La Gi cố định. Booking lịch sử không bị sửa. Rollback vận hành chỉ nên đổi default/tọa độ xe sang địa điểm mới được doanh nghiệp phê duyệt; không khôi phục các địa chỉ xe cũ không còn đáng tin.
 
 Migration `0005_phone_password_account_profile` bổ sung ngày sinh/giới tính cho `User` và cho phép `Customer.phone`/`Customer.idCardNo` null để tài khoản Google không cần dữ liệu placeholder. Forward deploy chạy `prisma migrate deploy`; rollback chỉ an toàn khi không còn bản ghi Google thiếu phone/CCCD và phải backfill trước khi đặt lại NOT NULL.
+
+Migration `0006_quick_booking_requests` tạo yêu cầu đặt xe nhanh độc lập với `Booking` và gỡ khóa ngoại sai từ `AuditLog.targetId` sang `Booking` để audit tiếp tục là polymorphic. Forward deploy chạy `prisma migrate deploy`; rollback phải lưu/xuất toàn bộ yêu cầu nhanh trước khi xóa bảng/enum và chỉ nên khôi phục khóa ngoại audit sau khi chắc chắn không có audit cho target khác Booking.
 
 Task chỉ hoàn tất khi authorization/ownership/validation đúng, API/UI typed, không thêm mock ẩn, lint/build/test liên quan pass và giới hạn còn lại được báo rõ.
 

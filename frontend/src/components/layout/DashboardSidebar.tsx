@@ -5,13 +5,14 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
   BarChart3, BookOpenCheck, Car, ChevronLeft, ChevronRight, ClipboardList,
-  ExternalLink, LayoutDashboard, LifeBuoy, Settings2, Users,
+  ExternalLink, LayoutDashboard, LifeBuoy, PhoneCall, Settings2, Users,
 } from 'lucide-react';
 import type { AuthUser } from '@/lib/api';
 
 const navigation = [
   { href: '/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
   { href: '/dashboard/bookings', label: 'Đơn thuê', icon: BookOpenCheck },
+  { href: '/dashboard/quick-bookings', label: 'Đặt xe nhanh', icon: PhoneCall },
   { href: '/dashboard/vehicles', label: 'Đội xe', icon: Car },
   { href: '/dashboard/customers', label: 'Khách hàng', icon: Users },
   { href: '/dashboard/maintenance', label: 'Bảo dưỡng', icon: Settings2 },

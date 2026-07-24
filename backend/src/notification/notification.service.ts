@@ -42,7 +42,7 @@ export class NotificationService {
       this.logger.log('AWS SES & SNS Clients initialized successfully.');
     } else {
       this.logger.warn(
-        'AWS Credentials missing. Notification Service will run in MOCK mode (logging to console).',
+        'AWS credentials are missing. SES/SNS delivery is disabled.',
       );
     }
     const smtpHost = this.configService.get<string>('SMTP_HOST');
@@ -175,8 +175,8 @@ export class NotificationService {
         );
       }
     } else {
-      this.logger.log(
-        `[MOCK EMAIL SENT WITH ATTACHMENT] To: ${to}\nSubject: ${subject}\nFilename: ${filename}\nBody:\n${body}\n----------------------`,
+      this.logger.warn(
+        `Email attachment "${filename}" was not sent because AWS SES is not configured.`,
       );
     }
   }

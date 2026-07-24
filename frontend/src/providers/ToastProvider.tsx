@@ -45,7 +45,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={value}>
       {children}
       {/* Floating toast stack */}
-      <div className="pointer-events-none fixed inset-x-4 bottom-4 z-50 flex flex-col gap-3 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-full sm:max-w-sm" aria-live="polite" aria-atomic="false">
+      <div className="pointer-events-none fixed inset-x-4 bottom-4 z-[200] flex flex-col gap-3 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-full sm:max-w-sm" aria-live="polite" aria-atomic="false">
         {toasts.map((t) => (
           <div
             key={t.id}

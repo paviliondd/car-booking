@@ -152,7 +152,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
 
     // Empty spaces before first day
     for (let i = 0; i < firstDay; i++) {
-      cells.push(<div key={`empty-${i}`} className="h-9" />);
+      cells.push(<div key={`empty-${i}`} className="h-11" />);
     }
 
     const today = startOfDay(new Date());
@@ -187,7 +187,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
           type="button"
           disabled={isPast}
           onClick={() => handleDayClick(cellDate)}
-          className={`h-9 w-full flex items-center justify-center text-xs font-semibold transition cursor-pointer ${btnClass}`}
+          className={`flex h-11 w-full cursor-pointer items-center justify-center text-xs font-semibold transition ${btnClass}`}
         >
           {day}
         </button>
@@ -200,10 +200,12 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
   const nextMonthDate = addMonths(currentMonth, 1);
 
   return (
-    <div ref={containerRef} className="relative flex-1 md:flex-[1.5] flex items-center gap-3 px-6 py-3 cursor-pointer select-none border-t md:border-t-0 md:border-l border-app-border/25 dark:border-app-border/30">
-      <div 
+    <div ref={containerRef} className="relative flex flex-1 items-center gap-3 border-t border-app-border/25 px-3 py-2 select-none dark:border-app-border/30 sm:px-6 md:flex-[1.5] md:border-l md:border-t-0">
+      <button
+        type="button"
         onClick={handleToggle}
-        className="flex items-center gap-3 w-full"
+        aria-expanded={isOpen}
+        className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/20"
       >
         <CalendarIcon className="h-5 w-5 text-brand flex-shrink-0" />
         <div className="flex-grow">
@@ -215,10 +217,10 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
             <ChevronDown className="h-4 w-4 text-content-secondary flex-shrink-0" />
           </div>
         </div>
-      </div>
+      </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-[102%] w-[90vw] md:w-[680px] bg-app-surface text-content border border-app-border/25 rounded-2xl shadow-2xl z-35 p-6 animate-slide-up-custom max-h-[85vh] overflow-y-auto">
+        <div className="fixed inset-x-3 top-[7dvh] z-[95] max-h-[86dvh] w-auto overflow-y-auto rounded-2xl border border-app-border/25 bg-app-surface p-4 text-content shadow-2xl animate-slide-up-custom sm:inset-x-6 sm:p-6 md:absolute md:inset-x-auto md:right-0 md:top-[102%] md:w-[680px]">
           {/* Header Picker Modal */}
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-base font-bold text-content flex items-center gap-2">
@@ -228,7 +230,8 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
             <button 
               type="button"
               onClick={handleCancel}
-              className="p-1 rounded-full hover:bg-app-muted transition cursor-pointer text-content-secondary hover:text-content-secondary"
+              className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-full text-content-secondary transition hover:bg-app-muted hover:text-content"
+              aria-label="Đóng lịch"
             >
               <X className="h-5 w-5" />
             </button>
@@ -246,7 +249,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
             {/* 1st Month */}
             <div className="flex flex-col gap-3">
               <div className="flex justify-between items-center">
-                <button type="button" onClick={prevMonth} className="p-1 text-content-secondary hover:text-content-secondary cursor-pointer">
+                <button type="button" onClick={prevMonth} className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-lg text-content-secondary hover:bg-app-muted" aria-label="Tháng trước">
                   <ChevronLeft className="h-5 w-5" />
                 </button>
                 <span className="text-sm font-bold text-content">
@@ -271,7 +274,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
                 <span className="text-sm font-bold text-content">
                   {monthNames[nextMonthDate.getMonth()]} {nextMonthDate.getFullYear()}
                 </span>
-                <button type="button" onClick={nextMonth} className="p-1 text-content-secondary hover:text-content-secondary cursor-pointer">
+                <button type="button" onClick={nextMonth} className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-lg text-content-secondary hover:bg-app-muted" aria-label="Tháng sau">
                   <ChevronRight className="h-5 w-5" />
                 </button>
               </div>
@@ -293,7 +296,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
               <select 
                 value={tempStartTime}
                 onChange={(e) => handleTimeChange('start', e.target.value)}
-                className="w-full bg-app-muted border border-app-border/35 rounded-lg p-2.5 text-sm text-content focus:outline-none focus:border-brand"
+                className="min-h-11 w-full rounded-lg border border-app-border/35 bg-app-muted p-2.5 text-sm text-content focus:border-brand focus:outline-none"
               >
                 {timeOptions.map((t) => <option key={`start-${t}`} value={t}>{t}</option>)}
               </select>
@@ -304,7 +307,7 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
               <select 
                 value={tempEndTime}
                 onChange={(e) => handleTimeChange('end', e.target.value)}
-                className="w-full bg-app-muted border border-app-border/35 rounded-lg p-2.5 text-sm text-content focus:outline-none focus:border-brand"
+                className="min-h-11 w-full rounded-lg border border-app-border/35 bg-app-muted p-2.5 text-sm text-content focus:border-brand focus:outline-none"
               >
                 {timeOptions.map((t) => <option key={`end-${t}`} value={t}>{t}</option>)}
               </select>
@@ -312,18 +315,18 @@ export default function DateTimePicker({ startDate, endDate, onChange }: DateTim
           </div>
 
           {/* Action Confirmation Buttons */}
-          <div className="flex gap-4 items-center justify-end">
+          <div className="grid grid-cols-2 items-center gap-3 sm:flex sm:justify-end">
             <button 
               type="button" 
               onClick={handleCancel}
-              className="px-6 py-2.5 rounded-lg border border-app-border/35 text-content-secondary text-sm font-semibold hover:bg-app-muted transition cursor-pointer"
+              className="min-h-11 cursor-pointer rounded-lg border border-app-border/35 px-6 text-sm font-semibold text-content-secondary transition hover:bg-app-muted"
             >
               Hủy
             </button>
             <button 
               type="button" 
               onClick={handleConfirm}
-              className="bg-brand hover:bg-brand-hover text-on-brand px-8 py-2.5 rounded-lg text-sm font-semibold transition cursor-pointer shadow-sm"
+              className="min-h-11 cursor-pointer rounded-lg bg-brand px-8 text-sm font-semibold text-on-brand shadow-sm transition hover:bg-brand-hover"
             >
               Xác nhận
             </button>

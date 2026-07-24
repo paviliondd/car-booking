@@ -13,6 +13,7 @@ import * as bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
 import { createHash, randomInt } from 'node:crypto';
 import { NotificationService } from '../notification/notification.service';
+import { normalizeVietnamesePhone } from '../common/phone';
 import { ownerAdminEmail } from '../notification/mail-templates';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
@@ -42,14 +43,6 @@ export class AuthService {
     );
   }
 
-  private normalizePhone(value: string) {
-    const compact = value.replace(/[\s.-]/g, '');
-    if (/^\+84\d{9}$/.test(compact)) return compact;
-    if (/^84\d{9}$/.test(compact)) return `+${compact}`;
-    if (/^0\d{9}$/.test(compact)) return `+84${compact.slice(1)}`;
-    throw new BadRequestException('Số điện thoại không hợp lệ');
-  }
-
   private otpHash(phone: string, code: string, purpose: OtpPurpose) {
     const secret = this.configService.getOrThrow<string>('JWT_SECRET');
     return createHash('sha256')
@@ -58,7 +51,7 @@ export class AuthService {
   }
 
   private async sendOtp(rawPhone: string, purpose: OtpPurpose) {
-    const phone = this.normalizePhone(rawPhone);
+    const phone = normalizeVietnamesePhone(rawPhone);
     const ttl = Number(
       this.configService.get<string>('OTP_TTL_SECONDS') || 300,
     );
@@ -125,7 +118,7 @@ export class AuthService {
   }
 
   private async verifyOtp(rawPhone: string, code: string, purpose: OtpPurpose) {
-    const phone = this.normalizePhone(rawPhone);
+    const phone = normalizeVietnamesePhone(rawPhone);
     const key = `otp:${purpose}:${phone}`;
     const stored = await this.redis.get(key);
     if (!stored) {
@@ -162,7 +155,7 @@ export class AuthService {
   }
 
   async requestRegistrationCode(rawPhone: string) {
-    const phone = this.normalizePhone(rawPhone);
+    const phone = normalizeVietnamesePhone(rawPhone);
     if (await this.prisma.user.findUnique({ where: { phone } })) {
       throw new ConflictException('Số điện thoại đã được đăng ký');
     }
@@ -204,7 +197,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const phone = this.normalizePhone(dto.phone);
+    const phone = normalizeVietnamesePhone(dto.phone);
     const user = await this.prisma.user.findUnique({ where: { phone } });
     if (
       !user?.password ||
@@ -219,7 +212,7 @@ export class AuthService {
   }
 
   async requestPasswordResetCode(rawPhone: string) {
-    const phone = this.normalizePhone(rawPhone);
+    const phone = normalizeVietnamesePhone(rawPhone);
     const user = await this.prisma.user.findUnique({ where: { phone } });
     if (!user?.password || !user.phoneVerifiedAt) {
       throw new BadRequestException(
@@ -251,7 +244,7 @@ export class AuthService {
   }
 
   async requestPhoneLinkCode(userId: string, rawPhone: string) {
-    const phone = this.normalizePhone(rawPhone);
+    const phone = normalizeVietnamesePhone(rawPhone);
     const existing = await this.prisma.user.findUnique({ where: { phone } });
     if (existing && existing.id !== userId) {
       throw new ConflictException('Số điện thoại đã thuộc tài khoản khác');

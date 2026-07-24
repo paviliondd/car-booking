@@ -24,6 +24,7 @@ type GoogleAccounts = {
         locale: 'vi';
       },
     ) => void;
+    disableAutoSelect?: () => void;
   };
 };
 
