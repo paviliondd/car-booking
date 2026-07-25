@@ -454,6 +454,22 @@ export class BookingsService implements OnModuleInit {
           },
         });
 
+        await tx.auditLog.create({
+          data: {
+            userId: actor.id,
+            action: 'CREATE_BOOKING',
+            targetTable: 'Booking',
+            targetId: booking.id,
+            newValue: {
+              bookingNumber: booking.bookingNumber,
+              totalPrice: booking.totalPrice,
+              customerId: booking.customerId,
+              vehicleId: booking.vehicleId,
+              status: booking.status,
+            },
+          },
+        });
+
         return { booking, payment };
       });
 

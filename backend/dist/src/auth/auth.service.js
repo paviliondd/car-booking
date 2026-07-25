@@ -522,51 +522,67 @@ let AuthService = class AuthService {
             !dto.rejectionReason?.trim()) {
             throw new common_1.BadRequestException('Cần nhập lý do từ chối');
         }
-        if (!application.userId) {
-            throw new common_1.BadRequestException('Hồ sơ cũ chưa liên kết tài khoản; cần xác minh người đăng ký trước');
+        let targetUserId = application.userId;
+        if (!targetUserId && application.phone) {
+            const normalized = (0, phone_1.normalizeVietnamesePhone)(application.phone);
+            const matchedUser = await this.prisma.user.findFirst({
+                where: {
+                    OR: [
+                        { phone: application.phone },
+                        ...(normalized ? [{ phone: normalized }] : []),
+                    ],
+                },
+            });
+            if (matchedUser) {
+                targetUserId = matchedUser.id;
+                await this.prisma.ownerLead.update({
+                    where: { id: application.id },
+                    data: { userId: targetUserId },
+                });
+            }
         }
         const result = await this.prisma.$transaction(async (tx) => {
             if (dto.status === client_1.OwnerApplicationStatus.APPROVED) {
-                const applicant = await tx.user.findUnique({
-                    where: { id: application.userId },
-                });
-                if (!applicant?.phoneVerifiedAt) {
-                    throw new common_1.BadRequestException('Tài khoản chưa xác minh số điện thoại');
-                }
-                await tx.user.update({
-                    where: { id: application.userId },
-                    data: { role: client_1.Role.OWNER, isVerifiedOwner: true },
-                });
-                const plate = application.plateNumber?.trim().toUpperCase() ||
-                    `DRAFT-${Date.now().toString().slice(-6)}`;
-                const existingVehicle = await tx.vehicle.findFirst({
-                    where: {
-                        OR: [{ plateNumber: plate }, { ownerId: application.userId }],
-                    },
-                });
-                if (!existingVehicle) {
-                    const parts = application.carName.trim().split(' ');
-                    const brand = parts[0] || 'Khác';
-                    const model = parts.slice(1).join(' ') || application.carName.trim();
-                    await tx.vehicle.create({
+                if (targetUserId) {
+                    await tx.user.update({
+                        where: { id: targetUserId },
                         data: {
-                            plateNumber: plate,
-                            brand,
-                            model,
-                            year: application.vehicleYear || new Date().getFullYear(),
-                            seats: 5,
-                            transmission: 'AUTO',
-                            fuel: 'GASOLINE',
-                            color: 'Trắng',
-                            dailyPrice: 800000,
-                            weekendPrice: 1000000,
-                            holidayPrice: 1200000,
-                            penaltyRate: 100000,
-                            status: client_1.VehicleStatus.LOCKED,
-                            ownerId: application.userId,
-                            images: ['/images/placeholder-car.png'],
+                            role: client_1.Role.OWNER,
+                            isVerifiedOwner: true,
+                            phoneVerifiedAt: new Date(),
                         },
                     });
+                    const plate = application.plateNumber?.trim().toUpperCase() ||
+                        `DRAFT-${Date.now().toString().slice(-6)}`;
+                    const existingVehicle = await tx.vehicle.findFirst({
+                        where: {
+                            OR: [{ plateNumber: plate }, { ownerId: targetUserId }],
+                        },
+                    });
+                    if (!existingVehicle) {
+                        const parts = application.carName.trim().split(' ');
+                        const brand = parts[0] || 'Khác';
+                        const model = parts.slice(1).join(' ') || application.carName.trim();
+                        await tx.vehicle.create({
+                            data: {
+                                plateNumber: plate,
+                                brand,
+                                model,
+                                year: application.vehicleYear || new Date().getFullYear(),
+                                seats: 5,
+                                transmission: 'AUTO',
+                                fuel: 'GASOLINE',
+                                color: 'Trắng',
+                                dailyPrice: 800000,
+                                weekendPrice: 1000000,
+                                holidayPrice: 1200000,
+                                penaltyRate: 100000,
+                                status: client_1.VehicleStatus.LOCKED,
+                                ownerId: targetUserId,
+                                images: ['/images/placeholder-car.png'],
+                            },
+                        });
+                    }
                 }
             }
             const updated = await tx.ownerLead.update({
@@ -577,6 +593,7 @@ let AuthService = class AuthService {
                     rejectionReason: dto.rejectionReason?.trim() || undefined,
                     reviewedById: reviewerId,
                     reviewedAt: new Date(),
+                    userId: targetUserId || undefined,
                 },
             });
             await tx.auditLog.create({
@@ -586,13 +603,17 @@ let AuthService = class AuthService {
                     targetTable: 'OwnerLead',
                     targetId: application.id,
                     oldValue: { status: application.status },
-                    newValue: { status: dto.status, userId: application.userId },
+                    newValue: {
+                        status: dto.status,
+                        userId: targetUserId,
+                        rejectionReason: dto.rejectionReason,
+                    },
                 },
             });
             return updated;
         });
-        if (dto.status === client_1.OwnerApplicationStatus.APPROVED) {
-            await this.notifications.sendSMS(application.phone, `datxe: Ho so ${application.applicationNumber} da duoc duyet. Dang nhap tai https://datxe.linuxunity.com/auth de quan ly xe.`, 'owner-application-approved', application.userId, `owner-approved:${application.id}`);
+        if (dto.status === client_1.OwnerApplicationStatus.APPROVED && application.phone) {
+            await this.notifications.sendSMS(application.phone, `datxe: Ho so ${application.applicationNumber} da duoc duyet. Dang nhap tai https://datxe.linuxunity.com/auth de quan ly xe.`, 'owner-application-approved', targetUserId || undefined, `owner-approved:${application.id}`);
         }
         return result;
     }

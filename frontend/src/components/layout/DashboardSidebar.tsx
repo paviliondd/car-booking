@@ -26,7 +26,7 @@ export default function DashboardSidebar({ user, onNavigate }: { user: AuthUser;
   const [isMinimized, setIsMinimized] = useState(false);
 
   return (
-    <aside className={`z-30 flex min-h-dvh shrink-0 flex-col border-r border-night-border bg-night-surface text-night-secondary transition-[width] duration-200 ${isMinimized ? 'w-[76px]' : 'w-[248px]'}`}>
+    <aside className={`z-30 flex h-dvh max-h-dvh shrink-0 flex-col border-r border-night-border bg-night-surface text-night-secondary transition-[width] duration-200 ${isMinimized ? 'w-[76px]' : 'w-[248px]'}`}>
       <div className="flex h-[68px] items-center justify-between border-b border-night-border px-4">
         {!isMinimized && <Link href="/dashboard" onClick={onNavigate} className="flex min-h-11 items-center gap-2 rounded-xl font-bold text-on-brand"><span className="rounded-lg bg-brand px-2 py-1 text-sm text-on-brand">datxe</span><span className="text-xs tracking-wider text-night-secondary">ADMIN</span></Link>}
         <button type="button" onClick={() => setIsMinimized((value) => !value)} className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-xl text-night-secondary transition hover:bg-night-muted hover:text-night-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-night-accent" aria-label={isMinimized ? 'Mở rộng menu' : 'Thu gọn menu'}>

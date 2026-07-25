@@ -71,7 +71,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="admin-shell flex min-h-dvh max-w-full overflow-x-hidden bg-app-muted text-content transition-colors duration-300">
-      <div className="hidden md:block">
+      <div className="hidden md:block sticky top-0 h-dvh shrink-0 z-30">
         <DashboardSidebar user={user} />
       </div>
 

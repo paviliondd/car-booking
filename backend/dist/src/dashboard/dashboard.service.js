@@ -245,20 +245,35 @@ let DashboardService = DashboardService_1 = class DashboardService {
                 where: { ownerId: this.ownerId(actor) },
                 include: {
                     bookings: {
-                        where: { status: client_1.BookingStatus.COMPLETED },
+                        where: {
+                            status: {
+                                in: [
+                                    client_1.BookingStatus.CONFIRMED,
+                                    client_1.BookingStatus.RENTING,
+                                    client_1.BookingStatus.COMPLETED,
+                                ],
+                            },
+                        },
+                        select: { totalPrice: true },
                     },
-                    revenues: true,
+                    revenues: { select: { amount: true } },
                 },
             });
             const sorted = vehicles
-                .map((vehicle) => ({
-                name: `${vehicle.brand} ${vehicle.model} (${vehicle.plateNumber})`,
-                bookingsCount: vehicle.bookings.length,
-                revenue: vehicle.revenues.reduce((sum, revenue) => sum + revenue.amount, 0),
-            }))
-                .sort((a, b) => b.revenue - a.revenue);
-            const maxRevenue = sorted[0]?.revenue || 1;
-            return sorted.map((car) => ({ ...car, maxRevenue }));
+                .map((vehicle) => {
+                const bookingRevenue = vehicle.bookings.reduce((sum, b) => sum + b.totalPrice, 0);
+                const tableRevenue = vehicle.revenues.reduce((sum, r) => sum + r.amount, 0);
+                const totalRevenue = Math.max(bookingRevenue, tableRevenue);
+                return {
+                    name: `${vehicle.brand} ${vehicle.model} (${vehicle.plateNumber})`,
+                    bookingsCount: vehicle.bookings.length,
+                    revenue: totalRevenue,
+                };
+            })
+                .sort((a, b) => b.revenue - a.revenue || b.bookingsCount - a.bookingsCount);
+            const topItemRevenue = sorted[0]?.revenue || 0;
+            const maxRevenue = topItemRevenue > 0 ? topItemRevenue : 1;
+            return sorted.slice(0, limit).map((car) => ({ ...car, maxRevenue }));
         }
         catch (error) {
             const cars = [

@@ -43,19 +43,26 @@ export default function TopCarsTable({ cars }: TopCarsTableProps) {
               </tr>
             ) : (
               list.map((car, i) => {
-                const ratio = Math.max(5, Math.min(100, Math.round((car.revenue / car.maxRevenue) * 100)));
+                const ratio =
+                  car.maxRevenue > 0 && car.revenue > 0
+                    ? Math.max(8, Math.min(100, Math.round((car.revenue / car.maxRevenue) * 100)))
+                    : car.bookingsCount > 0
+                      ? 15
+                      : 0;
                 return (
-                  <tr key={i} className="border-b border-app-border/30 dark:border-app-border/30 hover:bg-app-muted dark:hover:bg-app-surface/1 flex-grow">
-                    <td className="py-3 px-2 text-content dark:text-content font-bold">{car.name}</td>
-                    <td className="py-3 px-2 text-center text-content-secondary dark:text-content-secondary font-bold">{car.bookingsCount}</td>
-                    <td className="whitespace-nowrap px-2 py-3 text-right font-bold tabular-nums text-brand dark:text-brand">{formatMoney(car.revenue)}</td>
+                  <tr key={i} className="border-b border-app-border/30 hover:bg-app-muted flex-grow">
+                    <td className="py-3 px-2 text-content font-bold">{car.name}</td>
+                    <td className="py-3 px-2 text-center text-content-secondary font-bold">{car.bookingsCount}</td>
+                    <td className="whitespace-nowrap px-2 py-3 text-right font-bold tabular-nums text-brand">{formatMoney(car.revenue)}</td>
                     <td className="hidden py-3 px-4 sm:table-cell">
-                      {/* Proportional progress bar */}
-                      <div className="w-full bg-app-muted dark:bg-app-surface/5 h-2 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full rounded-full bg-brand transition-all duration-500"
-                          style={{ width: `${ratio}%` }}
-                        />
+                      <div className="flex items-center gap-2">
+                        <div className="w-full bg-app-muted h-2.5 rounded-full overflow-hidden flex-1">
+                          <div 
+                            className="h-full rounded-full bg-brand transition-all duration-500"
+                            style={{ width: `${ratio}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-bold text-content-secondary w-9 text-right">{ratio}%</span>
                       </div>
                     </td>
                   </tr>

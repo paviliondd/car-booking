@@ -293,25 +293,47 @@ export class DashboardService {
         where: { ownerId: this.ownerId(actor) },
         include: {
           bookings: {
-            where: { status: BookingStatus.COMPLETED },
+            where: {
+              status: {
+                in: [
+                  BookingStatus.CONFIRMED,
+                  BookingStatus.RENTING,
+                  BookingStatus.COMPLETED,
+                ],
+              },
+            },
+            select: { totalPrice: true },
           },
-          revenues: true,
+          revenues: { select: { amount: true } },
         },
       });
 
       const sorted = vehicles
-        .map((vehicle) => ({
-          name: `${vehicle.brand} ${vehicle.model} (${vehicle.plateNumber})`,
-          bookingsCount: vehicle.bookings.length,
-          revenue: vehicle.revenues.reduce(
-            (sum, revenue) => sum + revenue.amount,
+        .map((vehicle) => {
+          const bookingRevenue = vehicle.bookings.reduce(
+            (sum, b) => sum + b.totalPrice,
             0,
-          ),
-        }))
-        .sort((a, b) => b.revenue - a.revenue);
-      const maxRevenue = sorted[0]?.revenue || 1;
+          );
+          const tableRevenue = vehicle.revenues.reduce(
+            (sum, r) => sum + r.amount,
+            0,
+          );
+          const totalRevenue = Math.max(bookingRevenue, tableRevenue);
 
-      return sorted.map((car) => ({ ...car, maxRevenue }));
+          return {
+            name: `${vehicle.brand} ${vehicle.model} (${vehicle.plateNumber})`,
+            bookingsCount: vehicle.bookings.length,
+            revenue: totalRevenue,
+          };
+        })
+        .sort(
+          (a, b) => b.revenue - a.revenue || b.bookingsCount - a.bookingsCount,
+        );
+
+      const topItemRevenue = sorted[0]?.revenue || 0;
+      const maxRevenue = topItemRevenue > 0 ? topItemRevenue : 1;
+
+      return sorted.slice(0, limit).map((car) => ({ ...car, maxRevenue }));
     } catch (error) {
       const cars = [
         {
