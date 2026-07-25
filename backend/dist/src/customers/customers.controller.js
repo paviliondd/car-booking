@@ -34,6 +34,9 @@ let CustomersController = class CustomersController {
     async update(id, dto, req) {
         return await this.customersService.update(id, dto, req.user.id);
     }
+    async delete(id, req) {
+        return await this.customersService.delete(id, req.user.id);
+    }
 };
 exports.CustomersController = CustomersController;
 __decorate([
@@ -58,6 +61,14 @@ __decorate([
     __metadata("design:paramtypes", [String, customer_dto_1.UpdateCustomerDto, Object]),
     __metadata("design:returntype", Promise)
 ], CustomersController.prototype, "update", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], CustomersController.prototype, "delete", null);
 exports.CustomersController = CustomersController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF),

@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Plus,
   Search,
+  Trash2,
   UserRound,
 } from "lucide-react";
 import { api, type AdminBookingResponse, type Booking } from "@/lib/api";
@@ -139,6 +140,29 @@ function AdminBookingsContent() {
     }
   };
 
+  const handleDeleteBooking = async (item: Booking) => {
+    if (
+      !window.confirm(
+        `Bạn có chắc chắn muốn XÓA VĨNH VIỄN đơn hàng ${item.bookingNumber}? Thao tác này không thể hoàn tác.`
+      )
+    )
+      return;
+    setBusy(item.id);
+    try {
+      await api.bookings.delete(item.id);
+      setItems((current) => current.filter((entry) => entry.id !== item.id));
+      toast.success(`Đã xóa đơn hàng ${item.bookingNumber}.`);
+    } catch (deleteError) {
+      toast.error(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Không thể xóa đơn hàng."
+      );
+    } finally {
+      setBusy("");
+    }
+  };
+
   const handleCreated = (response: AdminBookingResponse) => {
     setItems((current) => [response.booking, ...current]);
     setCreateOpen(false);
@@ -255,6 +279,17 @@ function AdminBookingsContent() {
                       {action.label}
                     </button>
                   ))}
+                  {item.status !== "RENTING" && (
+                    <button
+                      type="button"
+                      disabled={busy === item.id}
+                      onClick={() => void handleDeleteBooking(item)}
+                      className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-danger/40 px-3 text-sm font-bold text-danger hover:bg-danger-muted disabled:opacity-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Xóa đơn
+                    </button>
+                  )}
                 </div>
               </article>
             ))}
@@ -301,7 +336,7 @@ function AdminBookingsContent() {
                       <StatusBadge status={item.status} />
                     </td>
                     <td className="p-4">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex items-center justify-end gap-2">
                         <Link
                           href={`/dashboard/bookings/${item.id}`}
                           className="inline-flex min-h-11 items-center rounded-lg px-3 font-bold text-brand hover:bg-utility"
@@ -323,6 +358,17 @@ function AdminBookingsContent() {
                             {action.label}
                           </button>
                         ))}
+                        {item.status !== "RENTING" && (
+                          <button
+                            type="button"
+                            disabled={busy === item.id}
+                            onClick={() => void handleDeleteBooking(item)}
+                            title="Xóa đơn hàng"
+                            className="inline-flex min-h-11 items-center justify-center rounded-lg p-2 font-bold text-danger hover:bg-danger-muted disabled:opacity-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -138,4 +138,78 @@ export class CustomersService {
       throw error;
     }
   }
+
+  async delete(id: string, actorId: string) {
+    const customer = await this.prisma.customer.findUnique({
+      where: { id },
+      include: {
+        bookings: true,
+      },
+    });
+
+    if (!customer) {
+      throw new NotFoundException(`Không tìm thấy khách hàng với ID ${id}`);
+    }
+
+    const activeBookings = customer.bookings.filter((b) =>
+      ['PENDING', 'CONFIRMED', 'RENTING'].includes(b.status),
+    );
+
+    if (activeBookings.length > 0) {
+      throw new BadRequestException(
+        'Không thể xóa khách hàng đang có đơn đặt xe chưa hoàn thành hoặc chưa hủy. Vui lòng xử lý đơn trước khi xóa.',
+      );
+    }
+
+    return await this.prisma.$transaction(async (tx) => {
+      // 1. Xóa các đánh giá của khách hàng này
+      await tx.review.deleteMany({
+        where: { customerId: id },
+      });
+
+      // 2. Xóa các đơn hàng cũ và các liên kết phụ thuộc
+      const pastBookingIds = customer.bookings.map((b) => b.id);
+      if (pastBookingIds.length > 0) {
+        await tx.payment.deleteMany({
+          where: { bookingId: { in: pastBookingIds } },
+        });
+        await tx.contract.deleteMany({
+          where: { bookingId: { in: pastBookingIds } },
+        });
+        await tx.revenue.deleteMany({
+          where: { bookingId: { in: pastBookingIds } },
+        });
+        await tx.quickBookingRequest.updateMany({
+          where: { bookingId: { in: pastBookingIds } },
+          data: { bookingId: null },
+        });
+        await tx.booking.deleteMany({
+          where: { id: { in: pastBookingIds } },
+        });
+      }
+
+      // 3. Xóa Customer
+      const deleted = await tx.customer.delete({
+        where: { id },
+      });
+
+      // 4. Ghi Audit Log
+      await tx.auditLog.create({
+        data: {
+          userId: actorId,
+          action: 'DELETE_CUSTOMER',
+          targetTable: 'Customer',
+          targetId: id,
+          oldValue: {
+            fullName: customer.fullName,
+            phone: customer.phone,
+            idCardNo: customer.idCardNo,
+            segment: customer.segment,
+          },
+        },
+      });
+
+      return { success: true, id: deleted.id, fullName: deleted.fullName };
+    });
+  }
 }

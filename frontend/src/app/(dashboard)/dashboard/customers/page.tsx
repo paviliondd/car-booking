@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, Pencil, Save, UserRoundCheck, X } from 'lucide-react';
+import { Check, Pencil, Save, Trash2, UserRoundCheck, X } from 'lucide-react';
 import { api, type CustomerRecord, type CustomerUpdateInput, type OwnerRequest } from '@/lib/api';
 import { useToast } from '@/providers/ToastProvider';
 import AdminPageHeader from '@/components/dashboard/AdminPageHeader';
@@ -56,6 +56,20 @@ export default function CustomersPage() {
       segment: item.segment,
       notes: item.notes || '',
     });
+  };
+
+  const deleteCustomer = async (item: CustomerRecord) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn XÓA VĨNH VIỄN hồ sơ khách hàng "${item.fullName}"?`)) return;
+    setBusy(true);
+    try {
+      await api.customers.delete(item.id);
+      setItems((list) => list.filter((entry) => entry.id !== item.id));
+      toast.success(`Đã xóa khách hàng ${item.fullName}.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Không thể xóa khách hàng.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const reviewOwner = async (request: OwnerRequest, approve: boolean) => {
@@ -142,7 +156,16 @@ export default function CustomersPage() {
                 <td className="p-4">{item.phone}</td>
                 <td className="p-4">{item.idCardNo}</td>
                 <td className="p-4">{item.segment === 'VIP' ? 'VIP' : item.segment === 'BLACKLIST' ? 'Danh sách hạn chế' : 'Thông thường'}</td>
-                <td className="p-4 text-right"><button onClick={() => openEdit(item)} className="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 font-bold text-brand hover:bg-utility"><Pencil className="h-4 w-4" /> Chỉnh sửa</button></td>
+                <td className="p-4 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <button onClick={() => openEdit(item)} className="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 font-bold text-brand hover:bg-utility">
+                      <Pencil className="h-4 w-4" /> Chỉnh sửa
+                    </button>
+                    <button onClick={() => void deleteCustomer(item)} disabled={busy} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 font-bold text-danger hover:bg-danger-muted disabled:opacity-50">
+                      <Trash2 className="h-4 w-4" /> Xóa
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}</tbody>
           </table>

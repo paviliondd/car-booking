@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Patch,
+  Delete,
   Body,
   Query,
   Param,
@@ -95,5 +96,13 @@ export class BookingsController {
     @Req() req: AuthenticatedRequest,
   ) {
     return await this.bookingsService.updateStatus(id, dto.status, req.user);
+  }
+
+  // 6. Xóa đơn hàng (Admin/Staff)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.STAFF)
+  @Delete(':id')
+  async delete(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return await this.bookingsService.deleteBooking(id, req.user);
   }
 }

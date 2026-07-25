@@ -754,6 +754,55 @@ let BookingsService = BookingsService_1 = class BookingsService {
         }
         return updated;
     }
+    async deleteBooking(id, user) {
+        const booking = await this.prisma.booking.findUnique({
+            where: { id },
+            include: {
+                customer: true,
+                vehicle: true,
+                payment: true,
+                contract: true,
+            },
+        });
+        if (!booking) {
+            throw new common_1.NotFoundException(`Không tìm thấy đơn hàng với ID ${id}`);
+        }
+        if (booking.status === client_1.BookingStatus.RENTING) {
+            throw new common_1.BadRequestException('Không thể xóa đơn hàng đang trong trạng thái Đang thuê (RENTING). Vui lòng kết thúc thuê hoặc hủy đơn trước khi xóa.');
+        }
+        return await this.prisma.$transaction(async (tx) => {
+            await tx.payment.deleteMany({ where: { bookingId: id } });
+            await tx.contract.deleteMany({ where: { bookingId: id } });
+            await tx.revenue.deleteMany({ where: { bookingId: id } });
+            await tx.quickBookingRequest.updateMany({
+                where: { bookingId: id },
+                data: { bookingId: null },
+            });
+            const deleted = await tx.booking.delete({
+                where: { id },
+            });
+            await tx.auditLog.create({
+                data: {
+                    userId: user.id,
+                    action: 'DELETE_BOOKING',
+                    targetTable: 'Booking',
+                    targetId: id,
+                    oldValue: {
+                        bookingNumber: booking.bookingNumber,
+                        status: booking.status,
+                        totalPrice: booking.totalPrice,
+                        customerId: booking.customerId,
+                        vehicleId: booking.vehicleId,
+                    },
+                },
+            });
+            return {
+                success: true,
+                id: deleted.id,
+                bookingNumber: deleted.bookingNumber,
+            };
+        });
+    }
 };
 exports.BookingsService = BookingsService;
 exports.BookingsService = BookingsService = BookingsService_1 = __decorate([

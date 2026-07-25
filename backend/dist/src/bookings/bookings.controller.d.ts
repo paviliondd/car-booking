@@ -501,4 +501,9 @@ export declare class BookingsController {
         depositPercent: number;
         depositAmount: number | null;
     }>;
+    delete(id: string, req: AuthenticatedRequest): Promise<{
+        success: boolean;
+        id: string;
+        bookingNumber: string;
+    }>;
 }

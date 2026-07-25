@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Patch,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -38,5 +39,10 @@ export class CustomersController {
     @Req() req: AuthenticatedRequest,
   ) {
     return await this.customersService.update(id, dto, req.user.id);
+  }
+
+  @Delete(':id')
+  async delete(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return await this.customersService.delete(id, req.user.id);
   }
 }

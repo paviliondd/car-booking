@@ -969,4 +969,71 @@ export class BookingsService implements OnModuleInit {
 
     return updated;
   }
+
+  async deleteBooking(id: string, user: AuthenticatedUser) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id },
+      include: {
+        customer: true,
+        vehicle: true,
+        payment: true,
+        contract: true,
+      },
+    });
+
+    if (!booking) {
+      throw new NotFoundException(`Không tìm thấy đơn hàng với ID ${id}`);
+    }
+
+    if (booking.status === BookingStatus.RENTING) {
+      throw new BadRequestException(
+        'Không thể xóa đơn hàng đang trong trạng thái Đang thuê (RENTING). Vui lòng kết thúc thuê hoặc hủy đơn trước khi xóa.',
+      );
+    }
+
+    return await this.prisma.$transaction(async (tx) => {
+      // 1. Xóa Payment nếu có
+      await tx.payment.deleteMany({ where: { bookingId: id } });
+
+      // 2. Xóa Contract nếu có
+      await tx.contract.deleteMany({ where: { bookingId: id } });
+
+      // 3. Xóa Revenue nếu có
+      await tx.revenue.deleteMany({ where: { bookingId: id } });
+
+      // 4. Gỡ bookingId khỏi QuickBookingRequest nếu có
+      await tx.quickBookingRequest.updateMany({
+        where: { bookingId: id },
+        data: { bookingId: null },
+      });
+
+      // 5. Xóa Booking (VehicleInspection tự động cascade)
+      const deleted = await tx.booking.delete({
+        where: { id },
+      });
+
+      // 6. Ghi Audit Log
+      await tx.auditLog.create({
+        data: {
+          userId: user.id,
+          action: 'DELETE_BOOKING',
+          targetTable: 'Booking',
+          targetId: id,
+          oldValue: {
+            bookingNumber: booking.bookingNumber,
+            status: booking.status,
+            totalPrice: booking.totalPrice,
+            customerId: booking.customerId,
+            vehicleId: booking.vehicleId,
+          },
+        },
+      });
+
+      return {
+        success: true,
+        id: deleted.id,
+        bookingNumber: deleted.bookingNumber,
+      };
+    });
+  }
 }

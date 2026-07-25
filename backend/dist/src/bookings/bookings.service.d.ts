@@ -431,5 +431,10 @@ export declare class BookingsService implements OnModuleInit {
         depositPercent: number;
         depositAmount: number | null;
     }>;
+    deleteBooking(id: string, user: AuthenticatedUser): Promise<{
+        success: boolean;
+        id: string;
+        bookingNumber: string;
+    }>;
 }
 export {};

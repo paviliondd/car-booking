@@ -49,6 +49,9 @@ let BookingsController = class BookingsController {
     async updateStatus(id, dto, req) {
         return await this.bookingsService.updateStatus(id, dto.status, req.user);
     }
+    async delete(id, req) {
+        return await this.bookingsService.deleteBooking(id, req.user);
+    }
 };
 exports.BookingsController = BookingsController;
 __decorate([
@@ -123,6 +126,16 @@ __decorate([
     __metadata("design:paramtypes", [String, booking_dto_1.UpdateBookingStatusDto, Object]),
     __metadata("design:returntype", Promise)
 ], BookingsController.prototype, "updateStatus", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.STAFF),
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "delete", null);
 exports.BookingsController = BookingsController = __decorate([
     (0, common_1.Controller)('bookings'),
     __metadata("design:paramtypes", [bookings_service_1.BookingsService])

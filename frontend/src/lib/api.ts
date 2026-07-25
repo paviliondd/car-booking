@@ -641,6 +641,11 @@ export const api = {
         method: "PATCH",
         body: JSON.stringify({ status }),
       }),
+    delete: (id: string) =>
+      request<{ success: boolean; id: string; bookingNumber?: string }>(
+        `/bookings/${id}`,
+        { method: "DELETE" },
+      ),
   },
 
   // Contracts
@@ -724,6 +729,11 @@ export const api = {
         method: "PATCH",
         body: JSON.stringify(dto),
       }),
+    delete: (id: string) =>
+      request<{ success: boolean; id: string; fullName?: string }>(
+        `/customers/${id}`,
+        { method: "DELETE" },
+      ),
   },
 
   // Audit Logs (Admin only)

@@ -123,4 +123,9 @@ export declare class CustomersController {
         affiliateId: string | null;
         userId: string | null;
     }>;
+    delete(id: string, req: AuthenticatedRequest): Promise<{
+        success: boolean;
+        id: string;
+        fullName: string;
+    }>;
 }

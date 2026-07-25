@@ -122,4 +122,9 @@ export declare class CustomersService {
         affiliateId: string | null;
         userId: string | null;
     }>;
+    delete(id: string, actorId: string): Promise<{
+        success: boolean;
+        id: string;
+        fullName: string;
+    }>;
 }
